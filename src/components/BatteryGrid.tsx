@@ -1,28 +1,41 @@
 import { useMemo, useState } from "react";
-import { batteries, brands, Battery } from "@/data/batteries";
+import { useQuery } from "@tanstack/react-query";
+import { useSearchParams } from "react-router-dom";
+import { brands, Battery } from "@/data/batteries";
+import { fetchBatteries } from "@/lib/api/batteries";
 import { BatteryCard } from "./BatteryCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
-import { SlidersHorizontal } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { SlidersHorizontal, AlertCircle } from "lucide-react";
 
 const amperageOptions = [45, 50, 60, 70, 75, 90, 100];
 
 export function BatteryGrid() {
+  const [searchParams] = useSearchParams();
+  const search = searchParams.get("q") ?? "";
+
+  const { data: results = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ["batteries", search],
+    queryFn: () => fetchBatteries({ search: search || undefined, perPage: 30 }),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedAmps, setSelectedAmps] = useState<number[]>([]);
-  const [priceMax, setPriceMax] = useState<number>(1500);
+  const [priceMax, setPriceMax] = useState<number>(2000);
   const [active, setActive] = useState<Battery | null>(null);
 
   const filtered = useMemo(() => {
-    return batteries.filter((b) => {
+    return results.filter((b) => {
       if (selectedBrands.length && !selectedBrands.includes(b.brand)) return false;
       if (selectedAmps.length && !selectedAmps.includes(b.amperage)) return false;
       if (b.price > priceMax) return false;
       return true;
     });
-  }, [selectedBrands, selectedAmps, priceMax]);
+  }, [results, selectedBrands, selectedAmps, priceMax]);
 
   const toggle = <T,>(arr: T[], v: T, set: (a: T[]) => void) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
@@ -30,7 +43,7 @@ export function BatteryGrid() {
   const clearAll = () => {
     setSelectedBrands([]);
     setSelectedAmps([]);
-    setPriceMax(1500);
+    setPriceMax(2000);
   };
 
   return (
@@ -120,14 +133,28 @@ export function BatteryGrid() {
                 value={[priceMax]}
                 onValueChange={(v) => setPriceMax(v[0])}
                 min={300}
-                max={1500}
+                max={2000}
                 step={50}
               />
             </div>
           </aside>
 
           <div>
-            {filtered.length === 0 ? (
+            {isLoading ? (
+              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <Skeleton key={i} className="h-[420px] rounded-2xl" />
+                ))}
+              </div>
+            ) : isError ? (
+              <div className="rounded-2xl border border-dashed border-destructive/40 bg-destructive/5 p-12 text-center">
+                <AlertCircle className="mx-auto mb-3 h-8 w-8 text-destructive" />
+                <p className="text-muted-foreground">Não foi possível carregar as baterias.</p>
+                <Button onClick={() => refetch()} variant="outline" className="mt-4">
+                  Tentar novamente
+                </Button>
+              </div>
+            ) : filtered.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-12 text-center">
                 <p className="text-muted-foreground">Nenhuma bateria encontrada com esses filtros.</p>
                 <Button onClick={clearAll} variant="outline" className="mt-4">
