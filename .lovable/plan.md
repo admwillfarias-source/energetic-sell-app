@@ -1,66 +1,40 @@
 
-Vou usar o site da Moura como referência visual e de produto para construir o app de venda de baterias automotivas.
+## Objetivo
+Substituir os dados mock de baterias por uma busca real no seu site WordPress.com (posts/produtos de bateria).
 
-## O que vou construir
+## Como vai funcionar
 
-Uma loja online de baterias automotivas inspirada no Moura Fácil, com tipografia tech moderna (Space Grotesk + DM Sans) e identidade visual de confiança automotiva (azul profundo + amarelo/âmbar de destaque, similar à marca Moura).
+1. **Conectar o WordPress.com** via connector da Lovable (OAuth — você autoriza o site).
+2. **Ativar o Lovable Cloud** (necessário para rodar a edge function que chama a API do WordPress com segurança — a chave nunca fica exposta no navegador).
+3. **Edge function `search-batteries`**: recebe `marca`, `modelo`, `ano` (ou texto livre) e consulta posts do WP via `/rest/v1.1/sites/{site}/posts?search=...`.
+4. **Mapear posts → Battery**: extrai do post título, imagem destacada, preço/amperagem/garantia (de campos customizados, tags ou do conteúdo), e devolve no mesmo formato `Battery` que o catálogo já usa.
+5. **Frontend**: 
+   - Hero "Encontrar minha bateria" passa a chamar a edge function e rola para os resultados.
+   - `BatteryGrid` carrega via React Query (loading skeletons + estado vazio).
+   - Mantém os filtros locais (marca, amperagem, preço) sobre os resultados.
 
-## Estrutura inicial (MVP visual + catálogo)
+## Decisões que preciso confirmar
 
-**1. Header**
-- Logo "BateriaJá" (placeholder, fácil de trocar)
-- Nav: Início, Baterias, Como funciona, Contato
-- Busca rápida + ícone de carrinho
+```text
+Pergunta 1: Qual a URL do seu site WordPress.com? (ex: meusite.wordpress.com)
+Pergunta 2: Onde estão as informações estruturadas (preço, amperagem, garantia)?
+  a) Campos customizados (ACF / custom fields)
+  b) Tags / categorias do post
+  c) Só no texto/título — extraio por parsing
+Pergunta 3: Os "modelos de bateria" são posts normais, uma categoria específica,
+            ou um custom post type? (se custom, qual o slug?)
+```
 
-**2. Hero section**
-- Título forte: "Bateria nova em casa, em até 2 horas"
-- Subtítulo sobre instalação grátis e troca da bateria antiga
-- Busca por veículo (Marca → Modelo → Ano) — campo principal de conversão
-- CTA: "Encontrar minha bateria"
+## Arquivos que vou criar/editar
 
-**3. Bloco "Como funciona"** (3 passos)
-- Escolha sua bateria → Agende a entrega → Instalamos no local
+- `supabase/functions/search-batteries/index.ts` — proxy autenticado para o WordPress via gateway
+- `src/lib/api/batteries.ts` — cliente React Query que chama a function
+- `src/components/Hero.tsx` — submit dispara a busca real
+- `src/components/BatteryGrid.tsx` — consome resultados da API + estados de loading/erro/vazio
+- `src/data/batteries.ts` — vira fallback para dev (opcional)
 
-**4. Catálogo de baterias** (grid de cards)
-- 8–12 baterias mock (Moura 60Ah, 70Ah, Heliar, etc.)
-- Cada card: imagem, nome, amperagem, garantia, preço, botão "Comprar"
-- Filtros laterais: amperagem, marca, faixa de preço
-
-**5. Página/seção de detalhe** (modal ou rota)
-- Specs completas, garantia, compatibilidade, botão adicionar ao carrinho
-
-**6. Carrinho** (drawer lateral)
-- Itens, subtotal, CTA checkout
-
-**7. Seção de benefícios**
-- Instalação grátis · Troca da bateria velha · Garantia de fábrica · Pagamento na entrega
-
-**8. Footer**
-- Contato, WhatsApp, formas de pagamento, redes sociais
-
-## Decisões de design
-- **Cores**: azul-marinho profundo (#0a1f44) + amarelo Moura (#ffd400) como accent + branco/cinza claro
-- **Tipografia**: Space Grotesk (títulos) + DM Sans (corpo) — tech moderno
-- **Layout**: hero-grid com busca em destaque, cards limpos, muito espaço em branco
-- **Tom**: confiança, rapidez, profissional
-
-## Funcionalidades nesta primeira versão
-- Catálogo navegável com filtros (estado local)
-- Busca por veículo (UI funcional, retorna resultados mock)
-- Carrinho persistente (localStorage)
-- Tudo client-side, sem backend ainda
-
-## Próximos passos (não nesta entrega)
-- Checkout real + pagamento (Stripe/Mercado Pago)
-- Backend (Lovable Cloud) para produtos, pedidos e área admin
-- Integração WhatsApp
-- Cálculo de frete por CEP
-- Agendamento de instalação
-
-## Detalhes técnicos
-- Atualizar `src/index.css` com tokens HSL (azul/amarelo) e fontes Google
-- Atualizar `tailwind.config.ts` com fontFamily customizada
-- Componentes em `src/components/`: Header, Hero, VehicleSearch, BatteryCard, BatteryGrid, CartDrawer, HowItWorks, Benefits, Footer
-- Dados mock em `src/data/batteries.ts`
-- Carrinho via Context + localStorage em `src/context/CartContext.tsx`
-- `src/pages/Index.tsx` monta a landing completa
+## Próximos passos quando aprovar
+1. Pergunto as 3 dúvidas acima
+2. Ativo Lovable Cloud
+3. Conecto o WordPress.com (você escolhe o site na tela do OAuth)
+4. Implemento a function + integração no frontend
