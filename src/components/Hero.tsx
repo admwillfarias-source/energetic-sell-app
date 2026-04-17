@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, ShieldCheck, Truck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -7,6 +8,7 @@ import heroImg from "@/assets/hero-battery.jpg";
 import { toast } from "@/hooks/use-toast";
 
 export function Hero() {
+  const navigate = useNavigate();
   const [brand, setBrand] = useState<string>("");
   const [model, setModel] = useState<string>("");
   const [year, setYear] = useState<string>("");
@@ -21,11 +23,13 @@ export function Hero() {
       });
       return;
     }
+    const q = `${model}`;
     toast({
-      title: "Encontramos baterias para o seu veículo",
-      description: `${brand} ${model} ${year} — confira o catálogo abaixo.`,
+      title: "Buscando baterias",
+      description: `${brand} ${model} ${year}`,
     });
-    document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" });
+    navigate(`/?q=${encodeURIComponent(q)}#catalogo`);
+    setTimeout(() => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" }), 50);
   };
 
   return (
