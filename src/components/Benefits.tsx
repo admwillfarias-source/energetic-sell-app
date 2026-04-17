@@ -1,4 +1,4 @@
-import { ShieldCheck, Truck, Recycle, Wallet } from "lucide-react";
+import { ShieldCheck, Recycle, Wallet, Wrench } from "lucide-react";
 
 const items = [
   { icon: Wrench, title: "Instalação grátis", desc: "Nosso técnico instala onde estiver." },
@@ -6,8 +6,6 @@ const items = [
   { icon: ShieldCheck, title: "Garantia de fábrica", desc: "Até 36 meses de garantia." },
   { icon: Wallet, title: "Pague na entrega", desc: "Pix, cartão ou dinheiro." },
 ];
-
-import { Wrench } from "lucide-react";
 
 export function Benefits() {
   return (
