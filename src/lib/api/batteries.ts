@@ -69,6 +69,7 @@ function mapToBattery(p: WCProduct): Battery {
     description: shortDesc || fullDesc.slice(0, 180),
     compatibility: p.categories.map((c) => c.name),
     features: KNOWN_BRANDS.filter((b) => fullDesc.toLowerCase().includes(b.toLowerCase())).slice(0, 3),
+    permalink: p.permalink,
   };
 }
 

@@ -10,6 +10,7 @@ export type Battery = {
   description: string;
   compatibility: string[];
   features: string[];
+  permalink?: string;
 };
 
 export const batteries: Battery[] = [

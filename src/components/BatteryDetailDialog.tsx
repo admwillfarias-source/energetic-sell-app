@@ -2,7 +2,7 @@ import { Battery } from "@/data/batteries";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
-import { ShoppingCart, ShieldCheck, Zap, Check } from "lucide-react";
+import { ShoppingCart, ShieldCheck, Zap, Check, ExternalLink } from "lucide-react";
 import batteryImg from "@/assets/battery-product.png";
 import { toast } from "@/hooks/use-toast";
 
@@ -109,6 +109,17 @@ export function BatteryDetailDialog({ battery, onOpenChange }: Props) {
                 <ShoppingCart className="h-4 w-4" />
                 Adicionar ao carrinho
               </Button>
+              {battery.permalink && (
+                <a
+                  href={battery.permalink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex w-full items-center justify-center gap-1.5 text-sm font-medium text-muted-foreground hover:text-foreground"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Ver no site original
+                </a>
+              )}
             </div>
           </div>
         </div>
