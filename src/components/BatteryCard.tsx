@@ -1,4 +1,4 @@
-import { ShoppingCart, ShieldCheck, Zap } from "lucide-react";
+import { ShoppingCart, ShieldCheck, Zap, ExternalLink } from "lucide-react";
 import { Battery } from "@/data/batteries";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
@@ -89,6 +89,18 @@ export function BatteryCard({ battery, onSelect }: Props) {
             <ShoppingCart className="h-4 w-4" />
             Comprar
           </Button>
+          {battery.permalink && (
+            <a
+              href={battery.permalink}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="mt-2 inline-flex w-full items-center justify-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              <ExternalLink className="h-3.5 w-3.5" />
+              Ver no site
+            </a>
+          )}
         </div>
       </div>
     </article>
