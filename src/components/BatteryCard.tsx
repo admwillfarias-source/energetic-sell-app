@@ -5,6 +5,8 @@ import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
 import batteryImg from "@/assets/battery-product.png";
 
+const isRemote = (s: string) => /^https?:\/\//.test(s);
+
 type Props = {
   battery: Battery;
   onSelect?: (b: Battery) => void;
@@ -40,8 +42,9 @@ export function BatteryCard({ battery, onSelect }: Props) {
           </span>
         )}
         <img
-          src={batteryImg}
+          src={isRemote(battery.image) ? battery.image : batteryImg}
           alt={battery.name}
+          onError={(e) => ((e.currentTarget as HTMLImageElement).src = batteryImg)}
           loading="lazy"
           width={400}
           height={400}
