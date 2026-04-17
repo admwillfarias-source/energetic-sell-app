@@ -1,6 +1,5 @@
 import type { Battery } from "@/data/batteries";
-
-const WP_BASE = "https://awrbaterias.com.br/wp-json/wc/store";
+import { supabase } from "@/integrations/supabase/client";
 
 type WCImage = { src: string; thumbnail?: string; alt?: string };
 type WCCategory = { id: number; name: string; slug: string };
@@ -79,12 +78,14 @@ export type SearchParams = {
 };
 
 export async function fetchBatteries({ search, perPage = 30 }: SearchParams = {}): Promise<Battery[]> {
-  const url = new URL(`${WP_BASE}/products`);
-  url.searchParams.set("per_page", String(perPage));
-  if (search) url.searchParams.set("search", search);
+  const params = new URLSearchParams({ per_page: String(perPage) });
+  if (search) params.set("search", search);
 
-  const res = await fetch(url.toString());
-  if (!res.ok) throw new Error(`Falha ao buscar produtos (${res.status})`);
-  const data = (await res.json()) as WCProduct[];
+  const { data, error } = await supabase.functions.invoke<WCProduct[]>(
+    `wc-products?${params.toString()}`,
+    { method: "GET" },
+  );
+  if (error) throw new Error(`Falha ao buscar produtos: ${error.message}`);
+  if (!data) return [];
   return data.map(mapToBattery);
 }
