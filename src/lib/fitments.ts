@@ -43,3 +43,106 @@ export function findCompatibleCodes(
   }
   return Array.from(codes);
 }
+
+export type VehicleSuggestion = {
+  brand: string;
+  model: string;
+  year: number;
+  label: string;
+  codes: string[];
+};
+
+function normalize(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+/**
+ * Busca livre estilo Moura Fácil: usuário digita "fiat uno 2015" ou "onix 2018"
+ * e recebe sugestões marca+modelo+ano com códigos compatíveis.
+ */
+export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
+  const q = normalize(query);
+  if (q.length < 2) return [];
+  const tokens = q.split(" ").filter(Boolean);
+  const yearToken = tokens.find((t) => /^(19|20)\d{2}$/.test(t));
+  const year = yearToken ? Number(yearToken) : null;
+  const textTokens = tokens.filter((t) => t !== yearToken);
+
+  type Row = { brand: string; model: string; codes: Set<string>; yStart: number; yEnd: number };
+  const byKey = new Map<string, Row>();
+  for (const f of getFitments()) {
+    const key = `${f.brand}|${f.model}`;
+    let row = byKey.get(key);
+    if (!row) {
+      row = { brand: f.brand, model: f.model, codes: new Set(), yStart: f.yearStart, yEnd: f.yearEnd };
+      byKey.set(key, row);
+    }
+    row.codes.add(f.code);
+    row.yStart = Math.min(row.yStart, f.yearStart);
+    row.yEnd = Math.max(row.yEnd, f.yearEnd);
+  }
+
+  const scored: { row: Row; score: number; matchedYear: number }[] = [];
+  for (const row of byKey.values()) {
+    const hay = normalize(`${row.brand} ${row.model}`);
+    let score = 0;
+    let allMatch = true;
+    for (const t of textTokens) {
+      if (hay.includes(t)) {
+        score += t.length;
+        if (hay.startsWith(t)) score += 2;
+      } else {
+        allMatch = false;
+        break;
+      }
+    }
+    if (!allMatch && textTokens.length > 0) continue;
+    if (textTokens.length === 0 && !year) continue;
+    let matchedYear = year ?? row.yEnd;
+    if (year) {
+      if (year < row.yStart || year > row.yEnd) continue;
+      score += 5;
+    }
+    scored.push({ row, score, matchedYear });
+  }
+
+  scored.sort((a, b) => b.score - a.score);
+
+  // Se ano informado: 1 sugestão por modelo. Se não: explodir em alguns anos chave.
+  const out: VehicleSuggestion[] = [];
+  for (const { row, matchedYear } of scored) {
+    if (year) {
+      // resolver códigos do ano específico
+      const codesForYear = new Set<string>();
+      for (const f of getFitments()) {
+        if (f.brand === row.brand && f.model === row.model && year >= f.yearStart && year <= f.yearEnd) {
+          for (const c of [f.code]) codesForYear.add(c);
+        }
+      }
+      if (codesForYear.size === 0) continue;
+      out.push({
+        brand: row.brand,
+        model: row.model,
+        year,
+        label: `${row.brand} ${row.model} ${year}`,
+        codes: Array.from(codesForYear),
+      });
+    } else {
+      out.push({
+        brand: row.brand,
+        model: row.model,
+        year: matchedYear,
+        label: `${row.brand} ${row.model} (${row.yStart}-${row.yEnd})`,
+        codes: Array.from(row.codes),
+      });
+    }
+    if (out.length >= limit) break;
+  }
+  return out;
+}

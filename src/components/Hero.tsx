@@ -1,60 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search, ShieldCheck, Truck, Wrench } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCarBrands, getModels, getYears, findCompatibleCodes } from "@/lib/fitments";
-import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { ShieldCheck, Truck, Wrench } from "lucide-react";
 import heroImg from "@/assets/hero-battery.jpg";
-import { toast } from "@/hooks/use-toast";
+import VehicleAutocomplete from "@/components/VehicleAutocomplete";
 
 export function Hero() {
-  const navigate = useNavigate();
-  const [brand, setBrand] = useState<string>("");
-  const [model, setModel] = useState<string>("");
-  const [year, setYear] = useState<string>("");
-  const [version, setVersion] = useState(0);
-
-  useEffect(() => {
-    ensureCatalogLoaded()
-      .then(() => setVersion((v) => v + 1))
-      .catch((e) => console.error("Falha ao carregar catálogo", e));
-    const onUpdate = () => {
-      ensureCatalogLoaded().then(() => setVersion((v) => v + 1));
-    };
-    window.addEventListener("catalog-data-updated", onUpdate);
-    return () => window.removeEventListener("catalog-data-updated", onUpdate);
-  }, []);
-
-  const carBrands = useMemo(() => getCarBrands(), [version]);
-  const models = useMemo(() => getModels(brand), [brand, version]);
-  const years = useMemo(() => getYears(brand, model), [brand, model, version]);
-
-  const onSearch = () => {
-    if (!brand || !model || !year) {
-      toast({
-        title: "Selecione veículo, modelo e ano",
-        description: "Precisamos dessas informações para encontrar a bateria certa.",
-      });
-      return;
-    }
-    const codes = findCompatibleCodes(brand, model, year);
-    if (codes.length === 0) {
-      toast({
-        title: "Nenhuma bateria encontrada",
-        description: `Não temos aplicação cadastrada para ${brand} ${model} ${year}.`,
-      });
-      return;
-    }
-    const vehicle = `${brand} ${model} ${year}`;
-    toast({
-      title: "Buscando baterias compatíveis",
-      description: vehicle,
-    });
-    navigate(`/?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(vehicle)}#catalogo`);
-    setTimeout(() => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" }), 50);
-  };
-
   return (
     <section id="inicio" className="relative overflow-hidden bg-gradient-hero text-primary-foreground">
       <div className="absolute inset-0 opacity-25">
@@ -105,86 +53,11 @@ export function Hero() {
               Encontre a bateria do seu carro
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              Selecione marca, modelo e ano do veículo.
+              Digite a marca, modelo e ano. Ex: <strong>Fiat Uno 2015</strong>.
             </p>
 
-            <div className="mt-6 grid gap-3">
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                  Marca
-                </label>
-                <Select
-                  value={brand}
-                  onValueChange={(v) => {
-                    setBrand(v);
-                    setModel("");
-                    setYear("");
-                  }}
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Selecione a marca" />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    {carBrands.map((b) => (
-                      <SelectItem key={b} value={b}>
-                        {b}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                  Modelo
-                </label>
-                <Select
-                  value={model}
-                  onValueChange={(v) => {
-                    setModel(v);
-                    setYear("");
-                  }}
-                  disabled={!brand}
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder={brand ? "Selecione o modelo" : "Escolha a marca primeiro"} />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-72">
-                    {models.map((m) => (
-                      <SelectItem key={m} value={m}>
-                        {m}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div>
-                <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
-                  Ano
-                </label>
-                <Select value={year} onValueChange={setYear} disabled={!model}>
-                  <SelectTrigger className="h-11">
-                    <SelectValue placeholder={model ? "Selecione o ano" : "Escolha o modelo primeiro"} />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {years.map((y) => (
-                      <SelectItem key={y} value={y}>
-                        {y}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <Button
-                size="lg"
-                onClick={onSearch}
-                className="mt-2 h-12 w-full gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
-              >
-                <Search className="h-4 w-4" />
-                Encontrar minha bateria
-              </Button>
+            <div className="mt-6">
+              <VehicleAutocomplete variant="inline" />
             </div>
           </div>
         </div>
