@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, ShoppingCart } from "lucide-react";
 import { z } from "zod";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Número da loja (formato internacional, só dígitos). Edite aqui.
-const WHATSAPP_NUMBER = "5511999999999";
+const WHATSAPP_NUMBER = "5551993199486";
+const WOOCOMMERCE_URL = "https://awrbaterias.com.br";
 
 const schema = z.object({
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
@@ -30,6 +32,7 @@ type Props = {
 
 export function CheckoutDialog({ open, onOpenChange }: Props) {
   const { items, subtotal, clear, setOpen: setCartOpen } = useCart();
+  const isMobile = useIsMobile();
   const [form, setForm] = useState({
     nome: "",
     documento: "",
@@ -43,6 +46,19 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [k]: e.target.value }));
+
+  const handleWooCommerce = () => {
+    if (items.length === 0) {
+      toast({ title: "Carrinho vazio", description: "Adicione uma bateria antes de continuar." });
+      return;
+    }
+    const query = items.map((i) => i.battery.name).join(" ");
+    const url = `${WOOCOMMERCE_URL}/?s=${encodeURIComponent(query)}&post_type=product`;
+    window.open(url, "_blank", "noopener,noreferrer");
+    toast({ title: "Redirecionando para a loja", description: "Finalize seu pedido no site." });
+    onOpenChange(false);
+    setCartOpen(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -155,14 +171,39 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
             <span className="font-display text-xl font-bold">{formatBRL(subtotal)}</span>
           </div>
 
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full bg-[#25D366] text-white hover:bg-[#20bd5a]"
-          >
-            <MessageCircle className="h-4 w-4" />
-            Enviar pedido pelo WhatsApp
-          </Button>
+          <div className="space-y-2">
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full bg-[#25D366] text-white hover:bg-[#20bd5a]"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Enviar pedido pelo WhatsApp
+            </Button>
+
+            {!isMobile && (
+              <>
+                <div className="flex items-center gap-3 py-1">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">ou</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleWooCommerce}
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  Comprar pela loja online
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  Você será redirecionado para awrbaterias.com.br
+                </p>
+              </>
+            )}
+          </div>
         </form>
       </DialogContent>
     </Dialog>
