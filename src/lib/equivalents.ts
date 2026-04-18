@@ -6,7 +6,7 @@ const BY_AH: Record<number, string[]> = {
   45: ["Heliar 45Ah", "Excell 45Ah", "Zetta 45Ah"],
   48: ["Heliar 48Ah", "Excell 50Ah", "Zetta 50Ah"],
   50: ["Heliar 50Ah", "Excell 50Ah", "Zetta 50Ah"],
-  60: ["Heliar 60Ah", "Excell 60Ah", "Zetta 60Ah"],
+  60: ["Moura 60AD", "Moura 60G", "Heliar 60Ah", "Excell 60Ah", "Zetta 60Ah"],
   70: ["Heliar 70Ah", "Excell 70Ah", "Zetta 70Ah"],
   72: ["Heliar 72Ah", "Excell 70Ah"],
   75: ["Heliar 75Ah", "Excell 75Ah"],
@@ -34,19 +34,23 @@ export function getEquivalentsForMouraCode(code: string): string[] {
     g.moura.some((c) => c.toUpperCase() === upper),
   );
   const out = new Set<string>();
+  // Para 60Ah, priorizar Moura 60AD e 60G ao invés da AGM60AD.
+  const ah = ahFromMouraCode(code);
+  if (ah === 60) {
+    out.add("Moura 60AD");
+    out.add("Moura 60G");
+  }
   // Sempre incluir o fallback amigável por amperagem — o WooCommerce indexa
   // produtos por nome ("Heliar 50Ah") e nem sempre por SKU técnico (H50GD).
-  const ah = ahFromMouraCode(code);
   if (ah && BY_AH[ah]) {
     for (const n of BY_AH[ah]) out.add(n);
-    out.add(`Tudor ${ah}Ah`);
   }
   if (group) {
     for (const c of group.moura) if (c.toUpperCase() !== upper) out.add(c);
     for (const c of group.heliar) out.add(c);
     for (const c of group.zetta) out.add(c);
     for (const c of group.excell) out.add(c);
-    for (const c of group.tudor ?? []) out.add(c);
+    // Tudor removido: site não vende a linha automotiva Tudor.
   }
   return Array.from(out);
 }
