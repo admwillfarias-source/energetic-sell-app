@@ -1,23 +1,19 @@
+import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import batteryImg from "@/assets/battery-product.png";
-import { toast } from "@/hooks/use-toast";
+import { CheckoutDialog } from "@/components/CheckoutDialog";
 
 export function CartDrawer() {
-  const { items, isOpen, setOpen, setQuantity, remove, subtotal, clear } = useCart();
+  const { items, isOpen, setOpen, setQuantity, remove, subtotal } = useCart();
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
 
-  const checkout = () => {
-    toast({
-      title: "Pedido enviado!",
-      description: "Em breve um técnico entrará em contato para agendar a entrega.",
-    });
-    clear();
-    setOpen(false);
-  };
+  const checkout = () => setCheckoutOpen(true);
 
   return (
+    <>
     <Sheet open={isOpen} onOpenChange={setOpen}>
       <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-md">
         <SheetHeader className="border-b border-border p-6">
@@ -122,5 +118,7 @@ export function CartDrawer() {
         )}
       </SheetContent>
     </Sheet>
+    <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
+    </>
   );
 }
