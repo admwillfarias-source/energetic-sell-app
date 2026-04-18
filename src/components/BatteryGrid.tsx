@@ -46,9 +46,9 @@ export function BatteryGrid() {
       return true;
     });
     if (!vehicle) return list;
-    // Quando há veículo: 1 bateria de cada marca (Moura, Heliar, Excell, Zetta)
+    // Quando há veículo: 1 bateria de cada marca (Moura, Heliar, Excell, Zetta, Tudor)
     // ordenadas do mais caro para o mais barato.
-    const preferred = ["Moura", "Heliar", "Excell", "Zetta"];
+    const preferred = ["Moura", "Heliar", "Excell", "Zetta", "Tudor"];
     const picked: Battery[] = [];
     for (const brand of preferred) {
       const best = list

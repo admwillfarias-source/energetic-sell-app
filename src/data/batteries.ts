@@ -22,6 +22,7 @@ export const brands = [
   "Moura Moto",
   "Motobatt",
   "Zetta",
+  "Tudor",
   "Eletran",
 ] as const;
 

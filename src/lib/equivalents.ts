@@ -33,15 +33,22 @@ export function getEquivalentsForMouraCode(code: string): string[] {
   const group = getEquivalents().find((g) =>
     g.moura.some((c) => c.toUpperCase() === upper),
   );
-  if (group) {
-    const out: string[] = [];
-    for (const c of group.moura) if (c.toUpperCase() !== upper) out.push(c);
-    out.push(...group.heliar, ...group.zetta, ...group.excell, ...(group.tudor ?? []));
-    return out;
-  }
+  const out = new Set<string>();
+  // Sempre incluir o fallback amigável por amperagem — o WooCommerce indexa
+  // produtos por nome ("Heliar 50Ah") e nem sempre por SKU técnico (H50GD).
   const ah = ahFromMouraCode(code);
-  if (!ah) return [];
-  return BY_AH[ah] ?? [];
+  if (ah && BY_AH[ah]) {
+    for (const n of BY_AH[ah]) out.add(n);
+    out.add(`Tudor ${ah}Ah`);
+  }
+  if (group) {
+    for (const c of group.moura) if (c.toUpperCase() !== upper) out.add(c);
+    for (const c of group.heliar) out.add(c);
+    for (const c of group.zetta) out.add(c);
+    for (const c of group.excell) out.add(c);
+    for (const c of group.tudor ?? []) out.add(c);
+  }
+  return Array.from(out);
 }
 
 export function expandWithEquivalents(codes: string[]): string[] {
