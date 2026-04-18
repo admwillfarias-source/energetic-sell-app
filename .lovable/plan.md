@@ -1,67 +1,40 @@
 
 
 ## Objetivo
-Substituir a busca atual (que envia só o nome do modelo para o WooCommerce) por uma **busca por aplicação veicular real**, baseada nos catálogos oficiais Moura/Heliar. Reformular os filtros do catálogo com a lista correta de marcas e amperagens.
+Importar as 66 linhas da planilha enviada para a tabela `equivalents`, consolidando por código Moura (várias linhas com mesmo Moura viram um único grupo com todos os Tudors agregados).
 
-## Como vai funcionar
+## Análise dos dados
+- Planilha tem 5 colunas: Tudor, Moura, Heliar, Excell, Zetta
+- ~66 linhas, mas com Mouras repetidos. Exemplo: `M48FD` aparece 5x (TFS45PVD, TFS36PVD, TFS40PVD, TFS45PVD, etc) → vira 1 grupo com 5 Tudors
+- Banco já tem 1 grupo (`M50ED/M50EX` ↔ `H50GD` ↔ `Z50ED`) — a planilha confirma e adiciona o Tudor `TFS50PHP, TFS50PVD`
+- Coluna `tudor` já existe na tabela (vista no Admin.tsx)
 
-```text
-Cliente seleciona: Marca → Modelo → Ano (ex: Fiat → Uno → 2015)
-        ↓
-Sistema consulta catálogo de aplicações local (JSON gerado dos PDFs)
-        ↓
-Encontra o(s) código(s) técnico(s) compatíveis: ex "M50ED", "M60AD"
-        ↓
-Busca esses códigos no WooCommerce (via edge function wc-products)
-        ↓
-Mostra produtos compatíveis + aviso "Compatível com seu Fiat Uno 2015"
-```
+## Estratégia de consolidação
+Agrupar por **código Moura único**. Para cada grupo:
+- `moura`: [código único]
+- `heliar`, `excell`, `zetta`, `tudor`: união (set) de todos os valores das linhas com aquele Moura, removendo vazios e duplicatas
 
-## Etapas de implementação
+Resultado estimado: ~25-30 grupos únicos a partir das 66 linhas.
 
-### 1. Extrair catálogo de aplicações (build-time)
-- Script Node em `scripts/build-fitments.ts` que lê o PDF Moura via `pdf-parse`, extrai linhas `VEÍCULO | ANO | CÓDIGO MOURA` e gera `src/data/fitments.json` no formato:
-  ```json
-  [{ "brand": "Fiat", "model": "Uno", "yearStart": 2010, "yearEnd": 2018, "codes": ["M50ED"] }]
-  ```
-- Heliar: o PDF não pôde ser parseado (provavelmente escaneado). Vou tentar OCR via `pdftoppm + tesseract` no script. Se falhar, uso só Moura no MVP e adiciono Heliar depois.
-- O JSON final fica versionado no repo (~200-500KB) — sem custo em runtime.
+## Conflito a resolver
+O grupo existente no banco tem `moura: [M50ED, M50EX]`. A planilha só tem `M50ED`. Vou **manter o grupo existente** e apenas **adicionar os Tudors** (`TFS50PHP, TFS50PVD`) via UPDATE, sem duplicar.
 
-### 2. Helper de lookup
-- `src/lib/fitments.ts`:
-  - `getCarBrands()` — lista única de marcas extraída do JSON
-  - `getModels(brand)` — modelos daquela marca
-  - `getYears(brand, model)` — anos disponíveis
-  - `findCompatibleCodes(brand, model, year): string[]` — códigos de bateria
+## Implementação
+1. **Script de consolidação** (Python local, em /tmp): lê as linhas, agrupa por Moura, gera SQL de INSERT/UPDATE
+2. **Migration SQL**: 
+   - UPDATE no grupo existente (M50ED) adicionando os Tudors
+   - INSERT dos demais ~25-30 grupos novos
+3. **Invalidar cache** automaticamente — já acontece pois `Admin.tsx` chama `invalidateCatalogCache()` após edições, e o front recarrega via `ensureCatalogLoaded()`
 
-### 3. Hero busca real
-- `Hero.tsx`: trocar `carBrands`/`years` mocks por dados de fitments (cascata Marca→Modelo→Ano só com opções válidas).
-- Ao buscar, navega para `/?codes=M50ED,M60AD&v=Fiat+Uno+2015#catalogo`.
+## Mudanças de código
+Nenhuma. Apenas migration SQL com os dados. O Admin.tsx já mostra/edita a coluna `tudor` e `equivalents.ts` já consome via `getEquivalents()`.
 
-### 4. BatteryGrid usa códigos
-- Lê `?codes` do query string e chama `fetchBatteries({ codes })`.
-- `wc-products` (edge function) aceita `?codes=M50ED,M60AD` e faz uma busca por SKU/título no WooCommerce para cada código (em paralelo), deduplicando.
-- Banner no topo do catálogo: "Mostrando baterias compatíveis com **Fiat Uno 2015**" + botão "Limpar".
-
-### 5. Reformular filtros (corrigir lista)
-Atualizar em `BatteryGrid.tsx` e `src/data/batteries.ts`:
-- **Marcas**: Moura, Heliar, Excell, Freedom, Moura Nobreak, Moura Moto, Motobatt, Zetta, Eletran
-- **Amperagens**: 5, 6, 7, 45, 50, 60, 70, 72, 80, 90, 92, 95, 100, 150, 180
-- Melhorar `detectBrand`/`detectAmperage` em `src/lib/api/batteries.ts` para reconhecer todas essas marcas (hoje só detecta 4) e amperagens pequenas (5-7Ah de moto/nobreak).
-- Filtros aplicados sobre o resultado da API (client-side), igual hoje, mas com a lista correta.
+## Após importar
+Você poderá:
+- Abrir `/admin` → aba "Equivalências" e ver/editar todos os grupos
+- O motor de busca por veículo passará a sugerir Tudor também (precisa que `equivalents.ts` inclua `tudor` no retorno — atualmente só retorna heliar/zetta/excell). **Adicionarei `...group.tudor` no retorno de `getEquivalentsForMouraCode`** para que Tudors equivalentes sejam considerados ao buscar produtos no WooCommerce.
 
 ## Arquivos
-- `scripts/build-fitments.ts` (novo) — parser dos PDFs
-- `src/data/fitments.json` (gerado)
-- `src/lib/fitments.ts` (novo) — API de lookup
-- `src/components/Hero.tsx` — selects em cascata reais
-- `src/components/BatteryGrid.tsx` — banner de compatibilidade + filtros corrigidos
-- `src/lib/api/batteries.ts` — aceitar `codes[]`, melhorar detecção
-- `supabase/functions/wc-products/index.ts` — suportar busca multi-código
-- `src/data/batteries.ts` — atualizar listas `brands` e `amperageOptions`
-
-## Observações
-- Heliar: se o OCR falhar no script, sigo só com Moura (cobre ~80% do mercado BR) e te aviso para gerarmos Heliar depois.
-- Os PDFs ficam só em build-time — não vão para o bundle do cliente.
-- Não precisa de novas tabelas no Cloud — tudo em JSON estático.
+- Nova migration SQL (gerada do script)
+- `src/lib/equivalents.ts` — incluir `tudor` no spread de retorno
 
