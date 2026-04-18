@@ -1,12 +1,12 @@
 import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import { QuickNavigation } from "@/components/QuickNavigation";
-import { ManufacturerLogos } from "@/components/ManufacturerLogos";
+import QuickNavigation from "@/components/QuickNavigation";
+import ManufacturerLogos from "@/components/ManufacturerLogos";
 import { Benefits } from "@/components/Benefits";
-import { Services } from "@/components/Services";
+import Services from "@/components/Services";
 import { HowItWorks } from "@/components/HowItWorks";
-import { WhyChoose } from "@/components/WhyChoose";
+import WhyChoose from "@/components/WhyChoose";
 import { BatteryGrid } from "@/components/BatteryGrid";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
