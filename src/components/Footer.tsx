@@ -1,75 +1,120 @@
-import { Battery as BatteryIcon, MessageCircle, Phone, Mail, Instagram, Facebook } from "lucide-react";
+import { Phone, MessageCircle, Clock } from "lucide-react";
+import { cityPages } from "@/data/cityContent";
+import { brandPages } from "@/data/brandContent";
+import { handleCallClick } from "@/lib/tracking";
+
+const links = [
+  { label: "Início", href: "#inicio" },
+  { label: "Serviços", href: "#servicos" },
+  { label: "Buscar Bateria", href: "#busca" },
+  { label: "Catálogo", href: "#catalogo" },
+  { label: "Contato", href: "#contato" },
+];
 
 export function Footer() {
   return (
-    <footer id="contato" className="bg-primary text-primary-foreground">
-      <div className="container py-14">
-        <div className="grid gap-10 md:grid-cols-4">
+    <footer id="contato" className="bg-secondary text-secondary-foreground py-12">
+      <div className="container mx-auto px-4">
+        <div className="grid md:grid-cols-5 gap-8 mb-8">
+          {/* Brand */}
           <div>
-            <a href="#inicio" className="flex items-center gap-2">
-              <span className="grid h-9 w-9 place-items-center rounded-md bg-gradient-accent">
-                <BatteryIcon className="h-5 w-5 text-accent-foreground" strokeWidth={2.5} />
+            <div className="flex items-center gap-2 mb-4">
+              <span className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-display font-extrabold text-lg">
+                A
               </span>
-              <span className="font-display text-xl font-bold">
-                Bateria<span className="text-accent">Já</span>
+              <span className="font-display font-bold text-xl">
+                AWR <span className="text-primary">Baterias</span>
               </span>
-            </a>
-            <p className="mt-4 text-sm text-primary-foreground/70">
-              Bateria nova entregue e instalada onde você estiver. Atendimento em até 2h.
+            </div>
+            <p className="text-secondary-foreground/60 text-sm mb-4">
+              +15 anos atendendo a região metropolitana de Porto Alegre com qualidade e agilidade.
+            </p>
+            <p className="flex items-center gap-2 text-secondary-foreground/60 text-sm">
+              <Clock className="h-4 w-4" aria-hidden="true" />
+              POA: 6h-22h | Demais: 8:30-18h
             </p>
           </div>
 
+          {/* Links */}
           <div>
-            <h4 className="mb-4 font-display text-sm font-bold uppercase tracking-wider text-accent">
-              Atendimento
-            </h4>
-            <ul className="space-y-2.5 text-sm text-primary-foreground/80">
-              <li className="flex items-center gap-2">
-                <Phone className="h-4 w-4" /> 0800 123 4567
-              </li>
-              <li className="flex items-center gap-2">
-                <MessageCircle className="h-4 w-4" /> WhatsApp 24h
-              </li>
-              <li className="flex items-center gap-2">
-                <Mail className="h-4 w-4" /> contato@bateriaja.com.br
-              </li>
-            </ul>
+            <h4 className="font-bold mb-4">Navegação</h4>
+            <nav className="flex flex-col gap-2">
+              {links.map((l) => (
+                <a
+                  key={l.href}
+                  href={l.href}
+                  className="text-secondary-foreground/60 hover:text-primary transition-colors text-sm"
+                >
+                  {l.label}
+                </a>
+              ))}
+            </nav>
           </div>
 
+          {/* City Pages */}
           <div>
-            <h4 className="mb-4 font-display text-sm font-bold uppercase tracking-wider text-accent">
-              Empresa
-            </h4>
-            <ul className="space-y-2.5 text-sm text-primary-foreground/80">
-              <li><a href="#inicio" className="hover:text-accent">Sobre nós</a></li>
-              <li><a href="#como-funciona" className="hover:text-accent">Como funciona</a></li>
-              <li><a href="#catalogo" className="hover:text-accent">Catálogo</a></li>
-              <li><a href="#" className="hover:text-accent">Garantia</a></li>
-            </ul>
+            <h4 className="font-bold mb-4">Cidades</h4>
+            <nav className="flex flex-col gap-2">
+              {cityPages.map((c) => (
+                <a
+                  key={c.slug}
+                  href={`#busca`}
+                  className="text-secondary-foreground/60 hover:text-primary transition-colors text-sm"
+                >
+                  Bateria em {c.name}
+                </a>
+              ))}
+            </nav>
           </div>
 
+          {/* Brands */}
           <div>
-            <h4 className="mb-4 font-display text-sm font-bold uppercase tracking-wider text-accent">
-              Pagamento
-            </h4>
-            <p className="text-sm text-primary-foreground/80">
-              Pix, cartão de crédito (até 10x), débito ou dinheiro. Pagamento na entrega.
-            </p>
-            <div className="mt-4 flex gap-3">
-              <a href="#" aria-label="Instagram" className="grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 hover:bg-accent hover:text-accent-foreground">
-                <Instagram className="h-4 w-4" />
+            <h4 className="font-bold mb-4">Marcas</h4>
+            <nav className="flex flex-col gap-2">
+              {brandPages.map((b) => (
+                <a
+                  key={b.slug}
+                  href={`#catalogo`}
+                  className="text-secondary-foreground/60 hover:text-primary transition-colors text-sm"
+                >
+                  Baterias {b.name}
+                </a>
+              ))}
+            </nav>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <h4 className="font-bold mb-4">Contato</h4>
+            <div className="space-y-3">
+              <a
+                href="tel:+555135165472"
+                onClick={(event) => handleCallClick(event, "home", "footer")}
+                className="flex items-center gap-2 text-secondary-foreground/60 hover:text-accent transition-colors text-sm"
+              >
+                <Phone className="h-4 w-4" aria-hidden="true" /> (51) 3516-5472
               </a>
-              <a href="#" aria-label="Facebook" className="grid h-9 w-9 place-items-center rounded-full bg-primary-foreground/10 hover:bg-accent hover:text-accent-foreground">
-                <Facebook className="h-4 w-4" />
+              <a
+                href="https://wa.me/5551993199486"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 text-secondary-foreground/60 hover:text-primary transition-colors text-sm"
+              >
+                <MessageCircle className="h-4 w-4" aria-hidden="true" /> WhatsApp
               </a>
+              <p className="flex items-start gap-2 text-secondary-foreground/60 text-sm">
+                📍 6 lojas na região metropolitana
+              </p>
             </div>
           </div>
         </div>
 
-        <div className="mt-10 border-t border-primary-foreground/10 pt-6 text-center text-xs text-primary-foreground/60">
-          © {new Date().getFullYear()} BateriaJá. Todos os direitos reservados.
+        <div className="border-t border-border pt-6 text-center text-secondary-foreground/40 text-sm pb-20 lg:pb-0">
+          © {new Date().getFullYear()} AWR Baterias. Todos os direitos reservados.
         </div>
       </div>
     </footer>
   );
 }
+
+export default Footer;
