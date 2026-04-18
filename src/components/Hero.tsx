@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, ShieldCheck, Truck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCarBrands, getModels, getYears, findCompatibleCodes } from "@/lib/fitments";
+import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import heroImg from "@/assets/hero-battery.jpg";
 import { toast } from "@/hooks/use-toast";
 
@@ -12,6 +13,18 @@ export function Hero() {
   const [brand, setBrand] = useState<string>("");
   const [model, setModel] = useState<string>("");
   const [year, setYear] = useState<string>("");
+  const [, setVersion] = useState(0);
+
+  useEffect(() => {
+    ensureCatalogLoaded()
+      .then(() => setVersion((v) => v + 1))
+      .catch((e) => console.error("Falha ao carregar catálogo", e));
+    const onUpdate = () => {
+      ensureCatalogLoaded().then(() => setVersion((v) => v + 1));
+    };
+    window.addEventListener("catalog-data-updated", onUpdate);
+    return () => window.removeEventListener("catalog-data-updated", onUpdate);
+  }, []);
 
   const carBrands = useMemo(() => getCarBrands(), []);
   const models = useMemo(() => getModels(brand), [brand]);
