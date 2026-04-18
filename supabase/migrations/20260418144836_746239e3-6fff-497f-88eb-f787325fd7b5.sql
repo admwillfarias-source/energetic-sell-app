@@ -1,0 +1,1 @@
+ALTER TABLE public.equivalents ADD COLUMN IF NOT EXISTS tudor text[] NOT NULL DEFAULT '{}'::text[];
