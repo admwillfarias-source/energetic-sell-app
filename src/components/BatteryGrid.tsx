@@ -1,7 +1,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { useSearchParams } from "react-router-dom";
-import { brands, Battery } from "@/data/batteries";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { brands, amperageOptions, Battery } from "@/data/batteries";
 import { fetchBatteries } from "@/lib/api/batteries";
 import { BatteryCard } from "./BatteryCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
@@ -9,17 +9,27 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SlidersHorizontal, AlertCircle } from "lucide-react";
-
-const amperageOptions = [45, 50, 60, 70, 75, 90, 100];
+import { SlidersHorizontal, AlertCircle, X, CarFront } from "lucide-react";
 
 export function BatteryGrid() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const search = searchParams.get("q") ?? "";
+  const codesParam = searchParams.get("codes") ?? "";
+  const vehicle = searchParams.get("v") ?? "";
+  const codes = useMemo(
+    () => (codesParam ? codesParam.split(",").map((c) => c.trim()).filter(Boolean) : []),
+    [codesParam],
+  );
 
   const { data: results = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["batteries", search],
-    queryFn: () => fetchBatteries({ search: search || undefined, perPage: 30 }),
+    queryKey: ["batteries", { search, codes }],
+    queryFn: () =>
+      fetchBatteries({
+        search: search || undefined,
+        codes: codes.length ? codes : undefined,
+        perPage: 30,
+      }),
     staleTime: 5 * 60 * 1000,
   });
 
@@ -46,6 +56,10 @@ export function BatteryGrid() {
     setPriceMax(2000);
   };
 
+  const clearVehicle = () => {
+    navigate("/#catalogo");
+  };
+
   return (
     <section id="catalogo" className="bg-background py-16 md:py-24">
       <div className="container">
@@ -65,6 +79,31 @@ export function BatteryGrid() {
             {filtered.length} {filtered.length === 1 ? "produto" : "produtos"}
           </span>
         </div>
+
+        {vehicle && (
+          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4">
+            <div className="flex items-center gap-3">
+              <div className="rounded-full bg-accent/20 p-2">
+                <CarFront className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                  Compatível com o seu veículo
+                </p>
+                <p className="font-display text-base font-bold">{vehicle}</p>
+                {codes.length > 0 && (
+                  <p className="text-xs text-muted-foreground">
+                    Códigos: {codes.join(", ")}
+                  </p>
+                )}
+              </div>
+            </div>
+            <Button variant="ghost" size="sm" onClick={clearVehicle} className="gap-1.5">
+              <X className="h-4 w-4" />
+              Limpar
+            </Button>
+          </div>
+        )}
 
         <div className="grid gap-8 lg:grid-cols-[260px_1fr]">
           <aside className="h-fit rounded-2xl border border-border bg-card p-5 shadow-card lg:sticky lg:top-20">

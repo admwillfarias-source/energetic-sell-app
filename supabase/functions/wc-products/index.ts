@@ -7,6 +7,18 @@ const corsHeaders = {
 
 const WC_BASE = "https://awrbaterias.com.br/wp-json/wc/store/products";
 
+async function fetchByQuery(q: string, perPage: string): Promise<unknown[]> {
+  const target = new URL(WC_BASE);
+  target.searchParams.set("per_page", perPage);
+  target.searchParams.set("search", q);
+  const res = await fetch(target.toString(), {
+    headers: { Accept: "application/json" },
+  });
+  if (!res.ok) return [];
+  const data = await res.json();
+  return Array.isArray(data) ? data : [];
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
@@ -15,19 +27,41 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const search = url.searchParams.get("search") ?? "";
+    const codesParam = url.searchParams.get("codes") ?? "";
     const perPage = url.searchParams.get("per_page") ?? "30";
 
-    const target = new URL(WC_BASE);
-    target.searchParams.set("per_page", perPage);
-    if (search) target.searchParams.set("search", search);
+    let body: string;
+    let status = 200;
 
-    const res = await fetch(target.toString(), {
-      headers: { Accept: "application/json" },
-    });
-    const body = await res.text();
+    if (codesParam) {
+      // Multi-code: fetch each in parallel, dedupe by id
+      const codes = codesParam.split(",").map((c) => c.trim()).filter(Boolean);
+      const results = await Promise.all(codes.map((c) => fetchByQuery(c, perPage)));
+      const seen = new Set<number>();
+      const merged: unknown[] = [];
+      for (const arr of results) {
+        for (const p of arr) {
+          const id = (p as { id: number }).id;
+          if (!seen.has(id)) {
+            seen.add(id);
+            merged.push(p);
+          }
+        }
+      }
+      body = JSON.stringify(merged);
+    } else {
+      const target = new URL(WC_BASE);
+      target.searchParams.set("per_page", perPage);
+      if (search) target.searchParams.set("search", search);
+      const res = await fetch(target.toString(), {
+        headers: { Accept: "application/json" },
+      });
+      body = await res.text();
+      status = res.status;
+    }
 
     return new Response(body, {
-      status: res.status,
+      status,
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json",
