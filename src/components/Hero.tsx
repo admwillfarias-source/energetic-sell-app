@@ -1,12 +1,6 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Search, ShieldCheck, Truck, Wrench } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCarBrands, getModels, getYears, findCompatibleCodes } from "@/lib/fitments";
-import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import heroImg from "@/assets/hero-battery.jpg";
-import { toast } from "@/hooks/use-toast";
+import VehicleAutocomplete from "@/components/VehicleAutocomplete";
 
 export function Hero() {
   const navigate = useNavigate();
