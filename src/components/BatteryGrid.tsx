@@ -45,8 +45,18 @@ export function BatteryGrid() {
       if (b.price > priceMax) return false;
       return true;
     });
-    // Quando há um veículo selecionado, mostrar no máx. 4 modelos por carro.
-    return vehicle ? list.slice(0, 4) : list;
+    if (!vehicle) return list;
+    // Quando há veículo: 1 bateria de cada marca (Moura, Heliar, Excell, Zetta)
+    // ordenadas do mais caro para o mais barato.
+    const preferred = ["Moura", "Heliar", "Excell", "Zetta"];
+    const picked: Battery[] = [];
+    for (const brand of preferred) {
+      const best = list
+        .filter((b) => b.brand === brand)
+        .sort((a, b) => b.price - a.price)[0];
+      if (best) picked.push(best);
+    }
+    return picked.sort((a, b) => b.price - a.price);
   }, [results, selectedBrands, selectedAmps, priceMax, vehicle]);
 
   const toggle = <T,>(arr: T[], v: T, set: (a: T[]) => void) =>
