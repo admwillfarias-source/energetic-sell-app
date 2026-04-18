@@ -21,7 +21,20 @@ type WCProduct = {
   description: string;
 };
 
-const KNOWN_BRANDS = ["Moura", "Heliar", "Bosch", "Acdelco", "ACDelco"] as const;
+// Order matters: more specific first
+const BRAND_PATTERNS: Array<[string, RegExp]> = [
+  ["Moura Nobreak", /\bmoura\b.*\bnobreak\b|\bnobreak\b.*\bmoura\b/i],
+  ["Moura Moto", /\bmoura\b.*\bmoto\b|\bmoto\b.*\bmoura\b/i],
+  ["Motobatt", /\bmotobatt\b/i],
+  ["Heliar", /\bheliar\b/i],
+  ["Excell", /\bexcell?\b/i],
+  ["Freedom", /\bfreedom\b/i],
+  ["Zetta", /\bzetta\b/i],
+  ["Eletran", /\beletr[aã]n\b/i],
+  ["Moura", /\bmoura\b/i],
+  ["Bosch", /\bbosch\b/i],
+  ["Acdelco", /\bac\s*delco\b|\bacdelco\b|\bdelco\b/i],
+];
 
 function stripHtml(html: string): string {
   return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
@@ -34,18 +47,23 @@ function parsePrice(p: WCProduct["prices"]): { price: number; oldPrice?: number 
   return regular > price ? { price, oldPrice: regular } : { price };
 }
 
-function detectBrand(name: string): Battery["brand"] {
-  const n = name.toLowerCase();
-  if (n.includes("moura")) return "Moura";
-  if (n.includes("heliar")) return "Heliar";
-  if (n.includes("bosch")) return "Bosch";
-  if (n.includes("delco") || n.includes("acdelco")) return "Acdelco";
+function detectBrand(name: string, desc: string): string {
+  const text = `${name} ${desc}`;
+  for (const [brand, re] of BRAND_PATTERNS) {
+    if (re.test(text)) return brand;
+  }
   return "Moura";
 }
 
 function detectAmperage(name: string, desc: string): number {
-  const m = (name + " " + desc).match(/(\d{2,3})\s*ah/i);
-  return m ? Number(m[1]) : 60;
+  const text = `${name} ${desc}`;
+  // Try patterns like "60Ah", "60 Ah", "60ah"
+  const m = text.match(/(\d{1,3})\s*ah\b/i);
+  if (m) return Number(m[1]);
+  // Patterns like "M60GD" -> 60, "M100QD" -> 100
+  const code = text.match(/\bm[a-z]?(\d{2,3})[a-z]{1,3}\b/i);
+  if (code) return Number(code[1]);
+  return 60;
 }
 
 function detectWarranty(text: string): number {
@@ -60,7 +78,7 @@ function mapToBattery(p: WCProduct): Battery {
   return {
     id: String(p.id),
     name: p.name,
-    brand: detectBrand(p.name),
+    brand: detectBrand(p.name, fullDesc),
     amperage: detectAmperage(p.name, fullDesc),
     warranty: detectWarranty(fullDesc),
     price,
@@ -68,19 +86,25 @@ function mapToBattery(p: WCProduct): Battery {
     image: p.images?.[0]?.src ?? "/placeholder.svg",
     description: shortDesc || fullDesc.slice(0, 180),
     compatibility: p.categories.map((c) => c.name),
-    features: KNOWN_BRANDS.filter((b) => fullDesc.toLowerCase().includes(b.toLowerCase())).slice(0, 3),
+    features: [],
     permalink: p.permalink,
   };
 }
 
 export type SearchParams = {
   search?: string;
+  codes?: string[];
   perPage?: number;
 };
 
-export async function fetchBatteries({ search, perPage = 30 }: SearchParams = {}): Promise<Battery[]> {
+export async function fetchBatteries({
+  search,
+  codes,
+  perPage = 30,
+}: SearchParams = {}): Promise<Battery[]> {
   const params = new URLSearchParams({ per_page: String(perPage) });
-  if (search) params.set("search", search);
+  if (codes && codes.length) params.set("codes", codes.join(","));
+  else if (search) params.set("search", search);
 
   const { data, error } = await supabase.functions.invoke<WCProduct[]>(
     `wc-products?${params.toString()}`,

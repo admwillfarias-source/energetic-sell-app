@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, ShieldCheck, Truck, Wrench } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { carBrands, years } from "@/data/batteries";
+import { getCarBrands, getModels, getYears, findCompatibleCodes } from "@/lib/fitments";
 import heroImg from "@/assets/hero-battery.jpg";
 import { toast } from "@/hooks/use-toast";
 
@@ -13,7 +13,9 @@ export function Hero() {
   const [model, setModel] = useState<string>("");
   const [year, setYear] = useState<string>("");
 
-  const models = carBrands.find((b) => b.name === brand)?.models ?? [];
+  const carBrands = useMemo(() => getCarBrands(), []);
+  const models = useMemo(() => getModels(brand), [brand]);
+  const years = useMemo(() => getYears(brand, model), [brand, model]);
 
   const onSearch = () => {
     if (!brand || !model || !year) {
@@ -23,12 +25,20 @@ export function Hero() {
       });
       return;
     }
-    const q = `${model}`;
+    const codes = findCompatibleCodes(brand, model, year);
+    if (codes.length === 0) {
+      toast({
+        title: "Nenhuma bateria encontrada",
+        description: `Não temos aplicação cadastrada para ${brand} ${model} ${year}.`,
+      });
+      return;
+    }
+    const vehicle = `${brand} ${model} ${year}`;
     toast({
-      title: "Buscando baterias",
-      description: `${brand} ${model} ${year}`,
+      title: "Buscando baterias compatíveis",
+      description: vehicle,
     });
-    navigate(`/?q=${encodeURIComponent(q)}#catalogo`);
+    navigate(`/?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(vehicle)}#catalogo`);
     setTimeout(() => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" }), 50);
   };
 
@@ -95,15 +105,16 @@ export function Hero() {
                   onValueChange={(v) => {
                     setBrand(v);
                     setModel("");
+                    setYear("");
                   }}
                 >
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder="Selecione a marca" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-72">
                     {carBrands.map((b) => (
-                      <SelectItem key={b.name} value={b.name}>
-                        {b.name}
+                      <SelectItem key={b} value={b}>
+                        {b}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -114,11 +125,18 @@ export function Hero() {
                 <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
                   Modelo
                 </label>
-                <Select value={model} onValueChange={setModel} disabled={!brand}>
+                <Select
+                  value={model}
+                  onValueChange={(v) => {
+                    setModel(v);
+                    setYear("");
+                  }}
+                  disabled={!brand}
+                >
                   <SelectTrigger className="h-11">
                     <SelectValue placeholder={brand ? "Selecione o modelo" : "Escolha a marca primeiro"} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="max-h-72">
                     {models.map((m) => (
                       <SelectItem key={m} value={m}>
                         {m}
@@ -132,9 +150,9 @@ export function Hero() {
                 <label className="mb-1.5 block text-xs font-semibold text-muted-foreground">
                   Ano
                 </label>
-                <Select value={year} onValueChange={setYear}>
+                <Select value={year} onValueChange={setYear} disabled={!model}>
                   <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Selecione o ano" />
+                    <SelectValue placeholder={model ? "Selecione o ano" : "Escolha o modelo primeiro"} />
                   </SelectTrigger>
                   <SelectContent className="max-h-60">
                     {years.map((y) => (
