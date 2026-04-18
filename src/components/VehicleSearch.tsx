@@ -13,7 +13,7 @@ export default function VehicleSearch() {
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
-  const [, setVersion] = useState(0);
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     ensureCatalogLoaded().then(() => setVersion((v) => v + 1)).catch((e) => {
@@ -26,9 +26,9 @@ export default function VehicleSearch() {
     return () => window.removeEventListener("catalog-data-updated", onUpdate);
   }, []);
 
-  const carBrands = useMemo(() => getCarBrands(), []);
-  const models = useMemo(() => getModels(brand), [brand]);
-  const years = useMemo(() => getYears(brand, model), [brand, model]);
+  const carBrands = useMemo(() => getCarBrands(), [version]);
+  const models = useMemo(() => getModels(brand), [brand, version]);
+  const years = useMemo(() => getYears(brand, model), [brand, model, version]);
 
   const onSearch = () => {
     if (!brand || !model || !year) {
