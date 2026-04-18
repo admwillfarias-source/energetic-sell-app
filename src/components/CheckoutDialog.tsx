@@ -6,13 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import { MessageCircle, ShoppingCart } from "lucide-react";
+import { MessageCircle, ShoppingCart, Loader2 } from "lucide-react";
 import { z } from "zod";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { supabase } from "@/integrations/supabase/client";
 
 // Número da loja (formato internacional, só dígitos). Edite aqui.
 const WHATSAPP_NUMBER = "5551993199486";
-const WOOCOMMERCE_URL = "https://awrbaterias.com.br";
 
 const schema = z.object({
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
@@ -33,6 +33,7 @@ type Props = {
 export function CheckoutDialog({ open, onOpenChange }: Props) {
   const { items, subtotal, clear, setOpen: setCartOpen } = useCart();
   const isMobile = useIsMobile();
+  const [submittingWC, setSubmittingWC] = useState(false);
   const [form, setForm] = useState({
     nome: "",
     documento: "",
@@ -47,17 +48,57 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [k]: e.target.value }));
 
-  const handleWooCommerce = () => {
+  const handleWooCommerce = async () => {
     if (items.length === 0) {
       toast({ title: "Carrinho vazio", description: "Adicione uma bateria antes de continuar." });
       return;
     }
-    const query = items.map((i) => i.battery.name).join(" ");
-    const url = `${WOOCOMMERCE_URL}/?s=${encodeURIComponent(query)}&post_type=product`;
-    window.open(url, "_blank", "noopener,noreferrer");
-    toast({ title: "Redirecionando para a loja", description: "Finalize seu pedido no site." });
-    onOpenChange(false);
-    setCartOpen(false);
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) {
+      const first = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
+      toast({ title: "Dados incompletos", description: first ?? "Preencha o formulário antes de enviar." });
+      return;
+    }
+
+    setSubmittingWC(true);
+    try {
+      const payload = {
+        customer: form,
+        items: items.map((i) => {
+          const pid = Number(i.battery.id);
+          return {
+            product_id: Number.isFinite(pid) && pid > 0 ? pid : undefined,
+            name: i.battery.name,
+            quantity: i.quantity,
+            price: i.battery.price,
+          };
+        }),
+      };
+
+      const { data, error } = await supabase.functions.invoke("wc-create-order", {
+        body: payload,
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({
+        title: `Pedido #${data.number ?? data.id} criado!`,
+        description: "Você será redirecionado para o pagamento.",
+      });
+
+      if (data?.payment_url) {
+        window.open(data.payment_url, "_blank", "noopener,noreferrer");
+      }
+
+      clear();
+      onOpenChange(false);
+      setCartOpen(false);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Tente novamente em instantes.";
+      toast({ title: "Erro ao criar pedido", description: msg });
+    } finally {
+      setSubmittingWC(false);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -194,12 +235,17 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   size="lg"
                   className="w-full"
                   onClick={handleWooCommerce}
+                  disabled={submittingWC}
                 >
-                  <ShoppingCart className="h-4 w-4" />
-                  Comprar pela loja online
+                  {submittingWC ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <ShoppingCart className="h-4 w-4" />
+                  )}
+                  {submittingWC ? "Criando pedido..." : "Finalizar na loja online"}
                 </Button>
                 <p className="text-center text-xs text-muted-foreground">
-                  Você será redirecionado para awrbaterias.com.br
+                  Cria o pedido em awrbaterias.com.br e abre a página de pagamento
                 </p>
               </>
             )}
