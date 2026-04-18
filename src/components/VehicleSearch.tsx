@@ -4,6 +4,7 @@ import { Search, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCarBrands, getModels, getYears, findCompatibleCodes } from "@/lib/fitments";
+import { expandWithEquivalents } from "@/lib/equivalents";
 import { toast } from "@/hooks/use-toast";
 
 export default function VehicleSearch() {
@@ -24,7 +25,8 @@ export default function VehicleSearch() {
       });
       return;
     }
-    const codes = findCompatibleCodes(brand, model, year);
+    const baseCodes = findCompatibleCodes(brand, model, year);
+    const codes = expandWithEquivalents(baseCodes);
     if (codes.length === 0) {
       toast({
         title: "Nenhuma bateria encontrada",
