@@ -12,7 +12,7 @@ import { Plus, Pencil, Trash2, LogOut, Search } from "lucide-react";
 import { invalidateCatalogCache } from "@/lib/catalogStore";
 
 type DBFit = { id: string; brand: string; model: string; year_start: number; year_end: number; code: string };
-type DBEq = { id: string; moura: string[]; heliar: string[]; zetta: string[]; excell: string[] };
+type DBEq = { id: string; moura: string[]; heliar: string[]; zetta: string[]; excell: string[]; tudor: string[] };
 
 export default function Admin() {
   const { user, isAdmin, loading } = useAuth();
