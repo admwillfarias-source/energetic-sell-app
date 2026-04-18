@@ -65,7 +65,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       const payload = {
         customer: form,
         items: items.map((i) => {
-          const pid = Number((i.battery as { wcId?: number; id: string }).wcId ?? i.battery.id);
+          const pid = Number(i.battery.id);
           return {
             product_id: Number.isFinite(pid) && pid > 0 ? pid : undefined,
             name: i.battery.name,
