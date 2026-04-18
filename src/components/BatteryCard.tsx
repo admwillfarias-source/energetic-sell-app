@@ -58,13 +58,13 @@ export function BatteryCard({ battery, onSelect }: Props) {
         </span>
         <h3 className="mt-1 font-display text-base font-bold leading-tight">{battery.name}</h3>
 
-        <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
-          <span className="inline-flex items-center gap-1">
-            <Zap className="h-3.5 w-3.5 text-accent" />
+        <div className="mt-3 flex flex-wrap gap-2 text-xs">
+          <span className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 font-semibold text-white">
+            <Zap className="h-3.5 w-3.5" />
             {battery.amperage}Ah
           </span>
-          <span className="inline-flex items-center gap-1">
-            <ShieldCheck className="h-3.5 w-3.5 text-accent" />
+          <span className="inline-flex items-center gap-1 rounded-md bg-primary px-2 py-1 font-semibold text-white">
+            <ShieldCheck className="h-3.5 w-3.5" />
             {battery.warranty} meses
           </span>
         </div>
