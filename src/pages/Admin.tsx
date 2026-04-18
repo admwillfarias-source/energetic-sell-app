@@ -287,6 +287,7 @@ function EquivalentDialog({ open, onOpenChange, item, onSaved }: {
   const [heliar, setHeliar] = useState("");
   const [zetta, setZetta] = useState("");
   const [excell, setExcell] = useState("");
+  const [tudor, setTudor] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -294,13 +295,14 @@ function EquivalentDialog({ open, onOpenChange, item, onSaved }: {
       setHeliar(item?.heliar.join(", ") ?? "");
       setZetta(item?.zetta.join(", ") ?? "");
       setExcell(item?.excell.join(", ") ?? "");
+      setTudor(item?.tudor?.join(", ") ?? "");
     }
   }, [open, item]);
 
   const parse = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 
   const save = async () => {
-    const payload = { moura: parse(moura), heliar: parse(heliar), zetta: parse(zetta), excell: parse(excell) };
+    const payload = { moura: parse(moura), heliar: parse(heliar), zetta: parse(zetta), excell: parse(excell), tudor: parse(tudor) };
     if (payload.moura.length === 0) {
       toast({ title: "Adicione pelo menos um código Moura", variant: "destructive" });
       return;
@@ -328,6 +330,7 @@ function EquivalentDialog({ open, onOpenChange, item, onSaved }: {
           <div><Label>Heliar</Label><Input value={heliar} onChange={(e) => setHeliar(e.target.value)} placeholder="H50GD" /></div>
           <div><Label>Zetta</Label><Input value={zetta} onChange={(e) => setZetta(e.target.value)} placeholder="50ED" /></div>
           <div><Label>Excell</Label><Input value={excell} onChange={(e) => setExcell(e.target.value)} placeholder="(opcional)" /></div>
+          <div><Label>Tudor</Label><Input value={tudor} onChange={(e) => setTudor(e.target.value)} placeholder="60HE/60PHE, TFS50TD" /></div>
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
