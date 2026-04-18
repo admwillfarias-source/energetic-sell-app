@@ -13,7 +13,7 @@ export function Hero() {
   const [brand, setBrand] = useState<string>("");
   const [model, setModel] = useState<string>("");
   const [year, setYear] = useState<string>("");
-  const [, setVersion] = useState(0);
+  const [version, setVersion] = useState(0);
 
   useEffect(() => {
     ensureCatalogLoaded()
@@ -26,9 +26,9 @@ export function Hero() {
     return () => window.removeEventListener("catalog-data-updated", onUpdate);
   }, []);
 
-  const carBrands = useMemo(() => getCarBrands(), []);
-  const models = useMemo(() => getModels(brand), [brand]);
-  const years = useMemo(() => getYears(brand, model), [brand, model]);
+  const carBrands = useMemo(() => getCarBrands(), [version]);
+  const models = useMemo(() => getModels(brand), [brand, version]);
+  const years = useMemo(() => getYears(brand, model), [brand, model, version]);
 
   const onSearch = () => {
     if (!brand || !model || !year) {
