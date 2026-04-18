@@ -36,7 +36,7 @@ export function getEquivalentsForMouraCode(code: string): string[] {
   if (group) {
     const out: string[] = [];
     for (const c of group.moura) if (c.toUpperCase() !== upper) out.push(c);
-    out.push(...group.heliar, ...group.zetta, ...group.excell);
+    out.push(...group.heliar, ...group.zetta, ...group.excell, ...(group.tudor ?? []));
     return out;
   }
   const ah = ahFromMouraCode(code);
