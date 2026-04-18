@@ -32,6 +32,7 @@ type Props = {
 
 export function CheckoutDialog({ open, onOpenChange }: Props) {
   const { items, subtotal, clear, setOpen: setCartOpen } = useCart();
+  const isMobile = useIsMobile();
   const [form, setForm] = useState({
     nome: "",
     documento: "",
@@ -45,6 +46,19 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [k]: e.target.value }));
+
+  const handleWooCommerce = () => {
+    if (items.length === 0) {
+      toast({ title: "Carrinho vazio", description: "Adicione uma bateria antes de continuar." });
+      return;
+    }
+    const query = items.map((i) => i.battery.name).join(" ");
+    const url = `${WOOCOMMERCE_URL}/?s=${encodeURIComponent(query)}&post_type=product`;
+    window.open(url, "_blank", "noopener,noreferrer");
+    toast({ title: "Redirecionando para a loja", description: "Finalize seu pedido no site." });
+    onOpenChange(false);
+    setCartOpen(false);
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
