@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
@@ -9,6 +9,15 @@ import { CheckoutDialog } from "@/components/CheckoutDialog";
 export function CartDrawer() {
   const { items, isOpen, setOpen, setQuantity, remove, subtotal } = useCart();
   const [checkoutOpen, setCheckoutOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = () => {
+      setOpen(false);
+      setCheckoutOpen(true);
+    };
+    window.addEventListener("open-checkout", handler);
+    return () => window.removeEventListener("open-checkout", handler);
+  }, [setOpen]);
 
   const checkout = () => setCheckoutOpen(true);
 
