@@ -248,11 +248,12 @@ function EquivalentsAdmin() {
       <div className="grid gap-3">
         {items.map((g) => (
           <div key={g.id} className="rounded-lg border border-border bg-card p-4">
-            <div className="grid sm:grid-cols-4 gap-3 text-sm">
+            <div className="grid sm:grid-cols-5 gap-3 text-sm">
               <Pill label="Moura" values={g.moura} />
               <Pill label="Heliar" values={g.heliar} />
               <Pill label="Zetta" values={g.zetta} />
               <Pill label="Excell" values={g.excell} />
+              <Pill label="Tudor" values={g.tudor ?? []} />
             </div>
             <div className="mt-3 flex justify-end gap-2">
               <button onClick={() => { setEditing(g); setOpen(true); }} className="p-1.5 hover:text-primary"><Pencil className="h-4 w-4" /></button>
