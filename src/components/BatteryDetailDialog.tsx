@@ -27,10 +27,11 @@ export function BatteryDetailDialog({ battery, onOpenChange }: Props) {
     <Dialog open={!!battery} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl overflow-hidden p-0">
         <div className="grid md:grid-cols-2">
-          <div className="flex aspect-square items-center justify-center bg-secondary/60 p-8">
+          <div className="flex aspect-square items-center justify-center bg-white p-8">
             <img
-              src={batteryImg}
+              src={battery.image && /^https?:\/\//.test(battery.image) ? battery.image : batteryImg}
               alt={battery.name}
+              onError={(e) => ((e.currentTarget as HTMLImageElement).src = batteryImg)}
               className="h-full w-full object-contain"
               width={500}
               height={500}
