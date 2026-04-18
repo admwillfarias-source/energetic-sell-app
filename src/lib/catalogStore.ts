@@ -15,6 +15,7 @@ export type EquivalenceGroup = {
   heliar: string[];
   zetta: string[];
   excell: string[];
+  tudor: string[];
 };
 
 type DBFitment = {
@@ -32,6 +33,7 @@ type DBEquiv = {
   heliar: string[];
   zetta: string[];
   excell: string[];
+  tudor: string[];
 };
 
 // Cache em memória — invalidado via window event "catalog-data-updated"
@@ -70,6 +72,7 @@ export async function ensureCatalogLoaded(): Promise<void> {
       heliar: r.heliar ?? [],
       zetta: r.zetta ?? [],
       excell: r.excell ?? [],
+      tudor: r.tudor ?? [],
     }));
   })();
   try {
