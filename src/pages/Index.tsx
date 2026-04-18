@@ -1,8 +1,12 @@
 import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
+import { QuickNavigation } from "@/components/QuickNavigation";
+import { ManufacturerLogos } from "@/components/ManufacturerLogos";
 import { Benefits } from "@/components/Benefits";
+import { Services } from "@/components/Services";
 import { HowItWorks } from "@/components/HowItWorks";
+import { WhyChoose } from "@/components/WhyChoose";
 import { BatteryGrid } from "@/components/BatteryGrid";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -14,9 +18,13 @@ const Index = () => {
         <Header />
         <main>
           <HeroSection />
+          <QuickNavigation />
+          <ManufacturerLogos />
           <Benefits />
-          <HowItWorks />
+          <Services />
           <BatteryGrid />
+          <HowItWorks />
+          <WhyChoose />
         </main>
         <Footer />
         <CartDrawer />
