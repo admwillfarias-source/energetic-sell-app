@@ -39,13 +39,15 @@ export function BatteryGrid() {
   const [active, setActive] = useState<Battery | null>(null);
 
   const filtered = useMemo(() => {
-    return results.filter((b) => {
+    const list = results.filter((b) => {
       if (selectedBrands.length && !selectedBrands.includes(b.brand)) return false;
       if (selectedAmps.length && !selectedAmps.includes(b.amperage)) return false;
       if (b.price > priceMax) return false;
       return true;
     });
-  }, [results, selectedBrands, selectedAmps, priceMax]);
+    // Quando há um veículo selecionado, mostrar no máx. 4 modelos por carro.
+    return vehicle ? list.slice(0, 4) : list;
+  }, [results, selectedBrands, selectedAmps, priceMax, vehicle]);
 
   const toggle = <T,>(arr: T[], v: T, set: (a: T[]) => void) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);

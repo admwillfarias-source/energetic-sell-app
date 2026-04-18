@@ -35,7 +35,7 @@ export function BatteryCard({ battery, onSelect }: Props) {
       onClick={() => onSelect?.(battery)}
       className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-card transition-all hover:-translate-y-1 hover:border-accent/60 hover:shadow-elevated"
     >
-      <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-secondary/60 p-6">
+      <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-white p-6">
         {discount > 0 && (
           <span className="absolute left-3 top-3 rounded-full bg-accent px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-accent-foreground">
             -{discount}%
