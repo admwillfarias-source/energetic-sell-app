@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, ShoppingCart } from "lucide-react";
 import { z } from "zod";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Número da loja (formato internacional, só dígitos). Edite aqui.
-const WHATSAPP_NUMBER = "5511999999999";
+const WHATSAPP_NUMBER = "5551993199486";
+const WOOCOMMERCE_URL = "https://awrbaterias.com.br";
 
 const schema = z.object({
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
