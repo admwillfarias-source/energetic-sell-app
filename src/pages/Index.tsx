@@ -1,6 +1,6 @@
 import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
-import { Hero } from "@/components/Hero";
+import HeroSection from "@/components/HeroSection";
 import { Benefits } from "@/components/Benefits";
 import { HowItWorks } from "@/components/HowItWorks";
 import { BatteryGrid } from "@/components/BatteryGrid";
@@ -13,7 +13,7 @@ const Index = () => {
       <div className="min-h-screen bg-background">
         <Header />
         <main>
-          <Hero />
+          <HeroSection />
           <Benefits />
           <HowItWorks />
           <BatteryGrid />
