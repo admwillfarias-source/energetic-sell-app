@@ -13,7 +13,7 @@ type Props = {
 };
 
 export function BatteryCard({ battery, onSelect }: Props) {
-  const { add, setOpen } = useCart();
+  const { add } = useCart();
 
   const onBuy = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -22,7 +22,7 @@ export function BatteryCard({ battery, onSelect }: Props) {
       title: "Adicionada ao carrinho",
       description: `${battery.name} • ${battery.amperage}Ah`,
     });
-    setOpen(true);
+    window.dispatchEvent(new CustomEvent("open-checkout"));
   };
 
   const discount =
