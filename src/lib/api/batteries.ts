@@ -30,6 +30,7 @@ const BRAND_PATTERNS: Array<[string, RegExp]> = [
   ["Excell", /\bexcell?\b/i],
   ["Freedom", /\bfreedom\b/i],
   ["Zetta", /\bzetta\b/i],
+  ["Tudor", /\btudor\b/i],
   ["Eletran", /\beletr[aã]n\b/i],
   ["Moura", /\bmoura\b/i],
   ["Bosch", /\bbosch\b/i],
