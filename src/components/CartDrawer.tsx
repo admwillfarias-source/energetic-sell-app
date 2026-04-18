@@ -13,6 +13,7 @@ export function CartDrawer() {
   const checkout = () => setCheckoutOpen(true);
 
   return (
+    <>
     <Sheet open={isOpen} onOpenChange={setOpen}>
       <SheetContent side="right" className="flex w-full flex-col p-0 sm:max-w-md">
         <SheetHeader className="border-b border-border p-6">
