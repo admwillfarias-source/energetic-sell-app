@@ -171,14 +171,39 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
             <span className="font-display text-xl font-bold">{formatBRL(subtotal)}</span>
           </div>
 
-          <Button
-            type="submit"
-            size="lg"
-            className="w-full bg-[#25D366] text-white hover:bg-[#20bd5a]"
-          >
-            <MessageCircle className="h-4 w-4" />
-            Enviar pedido pelo WhatsApp
-          </Button>
+          <div className="space-y-2">
+            <Button
+              type="submit"
+              size="lg"
+              className="w-full bg-[#25D366] text-white hover:bg-[#20bd5a]"
+            >
+              <MessageCircle className="h-4 w-4" />
+              Enviar pedido pelo WhatsApp
+            </Button>
+
+            {!isMobile && (
+              <>
+                <div className="flex items-center gap-3 py-1">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">ou</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="lg"
+                  className="w-full"
+                  onClick={handleWooCommerce}
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  Comprar pela loja online
+                </Button>
+                <p className="text-center text-xs text-muted-foreground">
+                  Você será redirecionado para awrbaterias.com.br
+                </p>
+              </>
+            )}
+          </div>
         </form>
       </DialogContent>
     </Dialog>
