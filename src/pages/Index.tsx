@@ -1,6 +1,7 @@
 import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
+import VehicleSearch from "@/components/VehicleSearch";
 import QuickNavigation from "@/components/QuickNavigation";
 import ManufacturerLogos from "@/components/ManufacturerLogos";
 import { Benefits } from "@/components/Benefits";
@@ -18,6 +19,7 @@ const Index = () => {
         <Header />
         <main>
           <HeroSection />
+          <VehicleSearch />
           <QuickNavigation />
           <ManufacturerLogos />
           <Benefits />
