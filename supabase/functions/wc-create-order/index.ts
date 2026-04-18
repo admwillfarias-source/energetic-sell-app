@@ -24,6 +24,7 @@ type Payload = {
     cep: string;
     pagamento: string;
     carroAno: string;
+    entrega?: string;
   };
   items: Item[];
 };
@@ -96,9 +97,10 @@ Deno.serve(async (req) => {
       meta_data: [
         { key: "_cpf_cnpj", value: c.documento },
         { key: "_carro_ano", value: c.carroAno },
+        { key: "_entrega", value: c.entrega ?? "" },
         { key: "_origem", value: "BateriaJá - site" },
       ],
-      customer_note: `Veículo: ${c.carroAno}\nCPF/CNPJ: ${c.documento}\nPagamento: ${c.pagamento}`,
+      customer_note: `Veículo: ${c.carroAno}\nCPF/CNPJ: ${c.documento}\nPagamento: ${c.pagamento}${c.entrega ? `\nEntrega: ${c.entrega}` : ""}`,
     };
 
     const auth = btoa(`${ck}:${cs}`);
