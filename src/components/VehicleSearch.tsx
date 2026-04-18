@@ -1,10 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getCarBrands, getModels, getYears, findCompatibleCodes } from "@/lib/fitments";
 import { expandWithEquivalents } from "@/lib/equivalents";
+import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { toast } from "@/hooks/use-toast";
 
 export default function VehicleSearch() {
@@ -12,6 +13,18 @@ export default function VehicleSearch() {
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
   const [year, setYear] = useState("");
+  const [, setVersion] = useState(0);
+
+  useEffect(() => {
+    ensureCatalogLoaded().then(() => setVersion((v) => v + 1)).catch((e) => {
+      console.error("Falha ao carregar catálogo", e);
+    });
+    const onUpdate = () => {
+      ensureCatalogLoaded().then(() => setVersion((v) => v + 1));
+    };
+    window.addEventListener("catalog-data-updated", onUpdate);
+    return () => window.removeEventListener("catalog-data-updated", onUpdate);
+  }, []);
 
   const carBrands = useMemo(() => getCarBrands(), []);
   const models = useMemo(() => getModels(brand), [brand]);
@@ -69,7 +82,7 @@ export default function VehicleSearch() {
                 }}
               >
                 <SelectTrigger className="h-11">
-                  <SelectValue placeholder="Selecione" />
+                  <SelectValue placeholder={carBrands.length ? "Selecione" : "Carregando..."} />
                 </SelectTrigger>
                 <SelectContent className="max-h-72">
                   {carBrands.map((b) => (
