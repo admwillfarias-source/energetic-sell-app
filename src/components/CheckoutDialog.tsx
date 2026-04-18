@@ -4,9 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import { MessageCircle, ShoppingCart, Loader2 } from "lucide-react";
+import { MessageCircle, ShoppingCart, Loader2, Zap, CalendarClock } from "lucide-react";
 import { z } from "zod";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,7 +15,7 @@ import { supabase } from "@/integrations/supabase/client";
 // Número da loja (formato internacional, só dígitos). Edite aqui.
 const WHATSAPP_NUMBER = "5551993199486";
 
-const schema = z.object({
+const baseSchema = {
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
   documento: z.string().trim().min(11, "CPF/CNPJ inválido").max(20),
   endereco: z.string().trim().min(5, "Informe o endereço").max(200),
@@ -23,7 +24,17 @@ const schema = z.object({
   telefone: z.string().trim().min(10, "Telefone inválido").max(20),
   pagamento: z.string().trim().min(2, "Informe a forma de pagamento").max(60),
   carroAno: z.string().trim().min(2, "Informe carro e ano").max(100),
-});
+};
+
+const schema = z.discriminatedUnion("entregaTipo", [
+  z.object({ ...baseSchema, entregaTipo: z.literal("rapida") }),
+  z.object({
+    ...baseSchema,
+    entregaTipo: z.literal("agendada"),
+    entregaData: z.string().trim().min(1, "Selecione a data"),
+    entregaHora: z.string().trim().min(1, "Selecione o horário"),
+  }),
+]);
 
 type Props = {
   open: boolean;
@@ -43,10 +54,20 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     telefone: "",
     pagamento: "",
     carroAno: "",
+    entregaTipo: "rapida" as "rapida" | "agendada",
+    entregaData: "",
+    entregaHora: "",
   });
 
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [k]: e.target.value }));
+
+  const today = new Date().toISOString().split("T")[0];
+
+  const entregaResumo = () =>
+    form.entregaTipo === "rapida"
+      ? "Entrega rápida (até 35 min)"
+      : `Agendada para ${form.entregaData} às ${form.entregaHora}`;
 
   const handleWooCommerce = async () => {
     if (items.length === 0) {
@@ -63,7 +84,17 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     setSubmittingWC(true);
     try {
       const payload = {
-        customer: form,
+        customer: {
+          nome: form.nome,
+          documento: form.documento,
+          telefone: form.telefone,
+          endereco: form.endereco,
+          numero: form.numero,
+          cep: form.cep,
+          pagamento: form.pagamento,
+          carroAno: form.carroAno,
+          entrega: entregaResumo(),
+        },
         items: items.map((i) => {
           const pid = Number(i.battery.id);
           return {
@@ -127,7 +158,8 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `*Entrega*\n` +
       `Endereço: ${form.endereco}\n` +
       `Número: ${form.numero}\n` +
-      `CEP: ${form.cep}\n\n` +
+      `CEP: ${form.cep}\n` +
+      `Modalidade: ${entregaResumo()}\n\n` +
       `*Veículo*\n${form.carroAno}\n\n` +
       `*Bateria(s) solicitada(s)*\n${bateriaLinhas}\n\n` +
       `*Pagamento*\n${form.pagamento}\n\n` +
@@ -185,6 +217,76 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
               <Label htmlFor="cep">CEP</Label>
               <Input id="cep" value={form.cep} onChange={update("cep")} placeholder="00000-000" />
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label>Modalidade de entrega</Label>
+            <RadioGroup
+              value={form.entregaTipo}
+              onValueChange={(v) =>
+                setForm((p) => ({ ...p, entregaTipo: v as "rapida" | "agendada" }))
+              }
+              className="grid gap-2 sm:grid-cols-2"
+            >
+              <label
+                htmlFor="entrega-rapida"
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                  form.entregaTipo === "rapida"
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-secondary/40"
+                }`}
+              >
+                <RadioGroupItem id="entrega-rapida" value="rapida" className="mt-0.5" />
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <Zap className="h-4 w-4 text-primary" />
+                    Entrega rápida
+                  </div>
+                  <p className="text-xs text-muted-foreground">Em até 35 min</p>
+                </div>
+              </label>
+              <label
+                htmlFor="entrega-agendada"
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                  form.entregaTipo === "agendada"
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-secondary/40"
+                }`}
+              >
+                <RadioGroupItem id="entrega-agendada" value="agendada" className="mt-0.5" />
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <CalendarClock className="h-4 w-4 text-primary" />
+                    Agendar entrega
+                  </div>
+                  <p className="text-xs text-muted-foreground">Escolha data e horário</p>
+                </div>
+              </label>
+            </RadioGroup>
+
+            {form.entregaTipo === "agendada" && (
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="entregaData">Data</Label>
+                  <Input
+                    id="entregaData"
+                    type="date"
+                    min={today}
+                    value={form.entregaData}
+                    onChange={update("entregaData")}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="entregaHora">Horário</Label>
+                  <Input
+                    id="entregaHora"
+                    type="time"
+                    value={form.entregaHora}
+                    onChange={update("entregaHora")}
+                  />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="space-y-1.5">
