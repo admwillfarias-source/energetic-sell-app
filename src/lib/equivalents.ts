@@ -1,37 +1,6 @@
-// Mapeamento de equivalências entre códigos Moura e modelos similares
-// das marcas Heliar, Excell e Zetta.
-//
-// Fonte primária: src/data/equivalents.json — equivalências EXATAS modelo a modelo.
-// Fallback: equivalência por amperagem (caso o código Moura ainda não esteja
-// cadastrado no JSON).
+import { getEquivalents } from "@/lib/catalogStore";
 
-import equivalentsData from "@/data/equivalents.json";
-
-export type EquivalenceGroup = {
-  moura: string[];
-  heliar: string[];
-  zetta: string[];
-  excell: string[];
-};
-
-const GROUPS = equivalentsData as EquivalenceGroup[];
-
-// Índice rápido: código Moura (uppercase) -> grupo de equivalência
-const BY_MOURA: Map<string, EquivalenceGroup> = (() => {
-  const m = new Map<string, EquivalenceGroup>();
-  for (const g of GROUPS) {
-    for (const code of g.moura) m.set(code.toUpperCase(), g);
-  }
-  return m;
-})();
-
-// Extrai a amperagem nominal do código Moura (ex: "M60AD" -> 60, "MA92QD" -> 92).
-function ahFromMouraCode(code: string): number | null {
-  const m = code.match(/m[a-z]?(\d{2,3})/i);
-  return m ? Number(m[1]) : null;
-}
-
-// Fallback por amperagem (busca textual genérica)
+// Fallback por amperagem — usado quando o código Moura não está cadastrado.
 const BY_AH: Record<number, string[]> = {
   40: ["Heliar 40Ah", "Excell 40Ah", "Zetta 40Ah"],
   45: ["Heliar 45Ah", "Excell 45Ah", "Zetta 45Ah"],
@@ -54,19 +23,19 @@ const BY_AH: Record<number, string[]> = {
   220: ["Heliar 220Ah"],
 };
 
-/**
- * Dado um código Moura, devolve termos de busca equivalentes
- * para Heliar / Excell / Zetta.
- *
- * Prioriza equivalências exatas do equivalents.json. Se não houver,
- * cai no fallback por amperagem.
- */
+function ahFromMouraCode(code: string): number | null {
+  const m = code.match(/m[a-z]?(\d{2,3})/i);
+  return m ? Number(m[1]) : null;
+}
+
 export function getEquivalentsForMouraCode(code: string): string[] {
-  const group = BY_MOURA.get(code.toUpperCase());
+  const upper = code.toUpperCase();
+  const group = getEquivalents().find((g) =>
+    g.moura.some((c) => c.toUpperCase() === upper),
+  );
   if (group) {
-    // Inclui também outros códigos Moura do mesmo grupo (ex: M50EX gera busca por M50ED também)
     const out: string[] = [];
-    for (const c of group.moura) if (c.toUpperCase() !== code.toUpperCase()) out.push(c);
+    for (const c of group.moura) if (c.toUpperCase() !== upper) out.push(c);
     out.push(...group.heliar, ...group.zetta, ...group.excell);
     return out;
   }
@@ -75,10 +44,6 @@ export function getEquivalentsForMouraCode(code: string): string[] {
   return BY_AH[ah] ?? [];
 }
 
-/**
- * Recebe uma lista de códigos Moura e devolve a lista expandida
- * incluindo termos equivalentes (sem duplicatas).
- */
 export function expandWithEquivalents(codes: string[]): string[] {
   const out = new Set<string>(codes);
   for (const c of codes) {

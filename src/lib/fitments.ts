@@ -1,4 +1,4 @@
-import fitmentsData from "@/data/fitments.json";
+import { getFitments } from "@/lib/catalogStore";
 
 export type Fitment = {
   brand: string;
@@ -8,23 +8,21 @@ export type Fitment = {
   code: string;
 };
 
-const fitments = fitmentsData as Fitment[];
-
 export function getCarBrands(): string[] {
-  return Array.from(new Set(fitments.map((f) => f.brand))).sort();
+  return Array.from(new Set(getFitments().map((f) => f.brand))).sort();
 }
 
 export function getModels(brand: string): string[] {
   if (!brand) return [];
   return Array.from(
-    new Set(fitments.filter((f) => f.brand === brand).map((f) => f.model)),
+    new Set(getFitments().filter((f) => f.brand === brand).map((f) => f.model)),
   ).sort();
 }
 
 export function getYears(brand: string, model: string): string[] {
   if (!brand || !model) return [];
   const years = new Set<number>();
-  for (const f of fitments) {
+  for (const f of getFitments()) {
     if (f.brand !== brand || f.model !== model) continue;
     for (let y = f.yearStart; y <= f.yearEnd; y++) years.add(y);
   }
@@ -38,7 +36,7 @@ export function findCompatibleCodes(
 ): string[] {
   const y = Number(year);
   const codes = new Set<string>();
-  for (const f of fitments) {
+  for (const f of getFitments()) {
     if (f.brand === brand && f.model === model && y >= f.yearStart && y <= f.yearEnd) {
       codes.add(f.code);
     }
