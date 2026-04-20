@@ -1,0 +1,1 @@
+-- @SQL_FILE_REF /tmp/fit_full.sql

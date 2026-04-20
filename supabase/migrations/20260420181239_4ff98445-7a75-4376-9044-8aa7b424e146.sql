@@ -1,0 +1,1 @@
+ALTER TABLE public.equivalents DROP COLUMN IF EXISTS tudor;
