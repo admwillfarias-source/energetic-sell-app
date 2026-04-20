@@ -12,7 +12,7 @@ import { Plus, Pencil, Trash2, LogOut, Search } from "lucide-react";
 import { invalidateCatalogCache } from "@/lib/catalogStore";
 
 type DBFit = { id: string; brand: string; model: string; year_start: number; year_end: number; code: string };
-type DBEq = { id: string; moura: string[]; heliar: string[]; zetta: string[]; excell: string[]; tudor: string[] };
+type DBEq = { id: string; moura: string[]; heliar: string[]; zetta: string[]; excell: string[] };
 
 export default function Admin() {
   const { user, isAdmin, loading } = useAuth();
@@ -248,12 +248,11 @@ function EquivalentsAdmin() {
       <div className="grid gap-3">
         {items.map((g) => (
           <div key={g.id} className="rounded-lg border border-border bg-card p-4">
-            <div className="grid sm:grid-cols-5 gap-3 text-sm">
+            <div className="grid sm:grid-cols-4 gap-3 text-sm">
               <Pill label="Moura" values={g.moura} />
               <Pill label="Heliar" values={g.heliar} />
               <Pill label="Zetta" values={g.zetta} />
               <Pill label="Excell" values={g.excell} />
-              <Pill label="Tudor" values={g.tudor ?? []} />
             </div>
             <div className="mt-3 flex justify-end gap-2">
               <button onClick={() => { setEditing(g); setOpen(true); }} className="p-1.5 hover:text-primary"><Pencil className="h-4 w-4" /></button>
@@ -287,7 +286,6 @@ function EquivalentDialog({ open, onOpenChange, item, onSaved }: {
   const [heliar, setHeliar] = useState("");
   const [zetta, setZetta] = useState("");
   const [excell, setExcell] = useState("");
-  const [tudor, setTudor] = useState("");
 
   useEffect(() => {
     if (open) {
@@ -295,14 +293,13 @@ function EquivalentDialog({ open, onOpenChange, item, onSaved }: {
       setHeliar(item?.heliar.join(", ") ?? "");
       setZetta(item?.zetta.join(", ") ?? "");
       setExcell(item?.excell.join(", ") ?? "");
-      setTudor(item?.tudor?.join(", ") ?? "");
     }
   }, [open, item]);
 
   const parse = (s: string) => s.split(",").map((x) => x.trim()).filter(Boolean);
 
   const save = async () => {
-    const payload = { moura: parse(moura), heliar: parse(heliar), zetta: parse(zetta), excell: parse(excell), tudor: parse(tudor) };
+    const payload = { moura: parse(moura), heliar: parse(heliar), zetta: parse(zetta), excell: parse(excell) };
     if (payload.moura.length === 0) {
       toast({ title: "Adicione pelo menos um código Moura", variant: "destructive" });
       return;

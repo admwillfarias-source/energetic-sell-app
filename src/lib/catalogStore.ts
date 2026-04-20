@@ -70,7 +70,6 @@ export async function ensureCatalogLoaded(): Promise<void> {
       heliar: r.heliar ?? [],
       zetta: r.zetta ?? [],
       excell: r.excell ?? [],
-      tudor: r.tudor ?? [],
     }));
   })();
   try {
