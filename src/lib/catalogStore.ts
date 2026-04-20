@@ -50,12 +50,27 @@ export async function ensureCatalogLoaded(): Promise<void> {
   if (fitmentsCache && equivalentsCache) return;
   if (loadingPromise) return loadingPromise;
   loadingPromise = (async () => {
-    const [fitsRes, equivsRes] = await Promise.all([
-      supabase.from("fitments").select("*").order("brand").order("model"),
-      supabase.from("equivalents").select("*"),
-    ]);
-    if (fitsRes.error) throw fitsRes.error;
+    // Supabase tem limite default de 1000 linhas; paginamos manualmente para
+    // garantir que TODOS os fitments cheguem ao cliente (a planilha Heliar
+    // tem ~1.800 linhas).
+    const PAGE = 1000;
+    const fitsAll: DBFitment[] = [];
+    for (let from = 0; ; from += PAGE) {
+      const { data, error } = await supabase
+        .from("fitments")
+        .select("*")
+        .order("brand")
+        .order("model")
+        .range(from, from + PAGE - 1);
+      if (error) throw error;
+      if (!data || data.length === 0) break;
+      fitsAll.push(...(data as DBFitment[]));
+      if (data.length < PAGE) break;
+    }
+    const equivsRes = await supabase.from("equivalents").select("*").range(0, 4999);
+    const fitsRes = { data: fitsAll, error: null as null };
     if (equivsRes.error) throw equivsRes.error;
+    if (fitsRes.error) throw fitsRes.error;
     fitmentsCache = (fitsRes.data as DBFitment[]).map((r) => ({
       id: r.id,
       brand: r.brand,
