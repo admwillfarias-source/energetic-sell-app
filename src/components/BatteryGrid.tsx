@@ -53,7 +53,7 @@ export function BatteryGrid() {
 
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedAmps, setSelectedAmps] = useState<number[]>([]);
-  const [priceMax, setPriceMax] = useState<number>(2000);
+  const [priceMax, setPriceMax] = useState<number>(5000);
   const [active, setActive] = useState<Battery | null>(null);
 
   const filtered = useMemo(() => {
@@ -73,7 +73,7 @@ export function BatteryGrid() {
   const clearAll = () => {
     setSelectedBrands([]);
     setSelectedAmps([]);
-    setPriceMax(2000);
+    setPriceMax(5000);
   };
 
   const clearVehicle = () => {
