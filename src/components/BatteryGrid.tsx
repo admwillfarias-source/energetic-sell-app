@@ -35,13 +35,37 @@ export function BatteryGrid() {
     queryKey: ["batteries", { search, codes, vehicle: isVehicleSearch, catalogReady }],
     queryFn: () => {
       if (isVehicleSearch) {
-        // monta os grupos por marca a partir das equivalências de TODOS os códigos do fitment
+        // Os códigos do fitment agora vêm da tabela Heliar (ex.: HF60HE, DF60HE).
+        // Estratégia: extrair a amperagem e buscar as 4 marcas a partir dela,
+        // complementando com equivalências cadastradas (quando o código também
+        // existir como grupo Moura).
         const groups: Partial<Record<VehicleBrand, string[]>> = {
           Moura: [],
           Heliar: [],
           Excell: [],
           Zetta: [],
         };
+
+        // Extrai amperagens dos códigos (Heliar: HF60HE, DF60HE; Moura: M60GD; etc.)
+        const ahs = new Set<number>();
+        for (const code of codes) {
+          const m = code.match(/(\d{2,3})/);
+          if (m) ahs.add(Number(m[1]));
+        }
+
+        // Sempre incluir os próprios códigos do fitment no grupo Heliar
+        groups.Heliar!.push(...codes);
+
+        // Para cada Ah encontrado, monta queries por marca
+        for (const ah of ahs) {
+          groups.Moura!.push(`Moura ${ah}Ah`);
+          groups.Heliar!.push(`Heliar ${ah}Ah`);
+          groups.Excell!.push(`Excell ${ah}Ah`);
+          groups.Zetta!.push(`Zetta ${ah}Ah`);
+        }
+
+        // Se algum código do fitment coincidir com um grupo Moura cadastrado,
+        // adiciona as equivalências completas (reforça os SKUs técnicos).
         for (const code of codes) {
           const g = getGroupForMouraCode(code);
           if (!g) continue;
@@ -50,12 +74,12 @@ export function BatteryGrid() {
           groups.Excell!.push(...g.excell);
           groups.Zetta!.push(...g.zetta);
         }
+
         // dedupe
         for (const k of Object.keys(groups) as VehicleBrand[]) {
           groups[k] = Array.from(new Set(groups[k]));
         }
-        // garante o próprio código Moura no grupo Moura
-        groups.Moura = Array.from(new Set([...(groups.Moura ?? []), ...codes]));
+
         return fetchBatteriesByVehicle(codes, groups);
       }
       return fetchBatteries({
