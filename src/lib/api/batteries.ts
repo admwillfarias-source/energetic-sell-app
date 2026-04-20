@@ -89,6 +89,7 @@ function mapToBattery(p: WCProduct): Battery {
     compatibility: p.categories.map((c) => c.name),
     features: [],
     permalink: p.permalink,
+    sku: p.sku,
   };
 }
 
@@ -155,13 +156,8 @@ export async function fetchBatteriesByVehicle(
   const wanted = new Set(codes.map((c) => c.trim().toUpperCase()).filter(Boolean));
   const list = await fetchBatteries({ codes: Array.from(wanted), perPage: 30 });
 
-  // Mantém só produtos cujo SKU está na lista da planilha.
-  const filtered = list.filter((p) => {
-    // O `Battery.id` é o WC product id; SKU não está no tipo, mas o nome
-    // raramente carrega o SKU. Usamos o WC product `sku` via campo extra.
-    const sku = (p as Battery & { sku?: string }).sku;
-    return sku ? wanted.has(sku.toUpperCase()) : true;
-  });
+  // Mantém só produtos cujo SKU está exatamente na lista da planilha.
+  const filtered = list.filter((p) => !!p.sku && wanted.has(p.sku.toUpperCase()));
 
   return filtered.sort((a, b) => b.price - a.price);
 }

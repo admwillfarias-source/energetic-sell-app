@@ -11,6 +11,7 @@ export type Battery = {
   compatibility: string[];
   features: string[];
   permalink?: string;
+  sku?: string;
 };
 
 export const brands = [
