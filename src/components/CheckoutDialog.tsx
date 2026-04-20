@@ -83,11 +83,31 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
   const [carroOpen, setCarroOpen] = useState(false);
   const [carroHighlight, setCarroHighlight] = useState(0);
   const [catalogReady, setCatalogReady] = useState(false);
+  const [carroFromSearch, setCarroFromSearch] = useState(false);
   const carroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
   }, []);
+
+  // Pré-preenche carro/ano com a busca feita pelo cliente (?v= na URL ou sessionStorage)
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get("v") || sessionStorage.getItem("lastVehicleSearch") || "";
+      const decoded = v.trim();
+      if (decoded && !form.carroAno) {
+        setForm((p) => ({ ...p, carroAno: decoded }));
+        setCarroFromSearch(true);
+      } else if (decoded) {
+        setCarroFromSearch(true);
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
