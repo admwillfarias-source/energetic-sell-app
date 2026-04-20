@@ -4,7 +4,7 @@ const steps = [
   { icon: Search, title: "Escolha sua bateria", desc: "Use o catálogo ou informe seu carro." },
   { icon: MessageCircle, title: "Confirme no WhatsApp", desc: "Atendimento rápido e sem burocracia." },
   { icon: Truck, title: "Entrega em até 35 min", desc: "Plantão das 6h às 22h em Porto Alegre." },
-  { icon: Wrench, title: "Instalação gratuita", desc: "Técnico com scanner automotivo." },
+  { icon: Wrench, title: "Instalação gratuita", desc: "Técnico especializado no local." },
 ];
 
 export function HowItWorks() {

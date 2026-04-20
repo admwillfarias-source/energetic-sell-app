@@ -3,7 +3,7 @@ import { ShieldCheck, Recycle, Wallet, Wrench } from "lucide-react";
 const items = [
   { icon: Wrench, title: "Instalação grátis", desc: "Nosso técnico instala onde estiver." },
   { icon: Recycle, title: "Troca da bateria velha", desc: "Recolhemos sem custo adicional." },
-  { icon: ShieldCheck, title: "Garantia de fábrica", desc: "Até 36 meses de garantia." },
+  { icon: ShieldCheck, title: "Garantia de fábrica", desc: "Até 24 meses de garantia." },
   { icon: Wallet, title: "Pague na entrega", desc: "Pix, cartão ou dinheiro." },
 ];
 
