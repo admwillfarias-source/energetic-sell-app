@@ -80,16 +80,22 @@ export function BatteryGrid() {
     navigate("/#catalogo");
   };
 
+  const hasSearch = isVehicleSearch || codes.length > 0 || !!search;
+
+  if (!hasSearch) {
+    return null;
+  }
+
   return (
     <section id="catalogo" className="bg-background py-16 md:py-24">
       <div className="container">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
           <div>
             <span className="text-xs font-semibold uppercase tracking-wider text-accent-foreground/70">
-              Catálogo
+              Resultado
             </span>
             <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">
-              Baterias automotivas
+              Baterias compatíveis
             </h2>
             <p className="mt-2 text-muted-foreground">
               Marcas líderes com garantia de fábrica e entrega rápida.
