@@ -87,10 +87,19 @@ export function getEquivalentsForMouraCode(code: string): string[] {
   return Array.from(out);
 }
 
+/**
+ * Expansão ESTRITA: apenas o código original + códigos cadastrados em
+ * `equivalents` (qualquer marca). Não injeta fallback "<Marca> <Ah>Ah".
+ */
 export function expandWithEquivalents(codes: string[]): string[] {
   const out = new Set<string>(codes);
   for (const c of codes) {
-    for (const eq of getEquivalentsForMouraCode(c)) out.add(eq);
+    const g = getGroupForAnyCode(c);
+    if (!g) continue;
+    for (const x of g.moura) out.add(x);
+    for (const x of g.heliar) out.add(x);
+    for (const x of g.excell) out.add(x);
+    for (const x of g.zetta) out.add(x);
   }
   return Array.from(out);
 }
