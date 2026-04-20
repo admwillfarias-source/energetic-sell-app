@@ -115,3 +115,76 @@ export async function fetchBatteries({
   if (!data) return [];
   return data.map(mapToBattery);
 }
+
+export type VehicleBrand = "Moura" | "Heliar" | "Excell" | "Zetta";
+
+const VEHICLE_BRANDS: VehicleBrand[] = ["Moura", "Heliar", "Excell", "Zetta"];
+
+const BRAND_NAME_RE: Record<VehicleBrand, RegExp> = {
+  Moura: /\bmoura\b/i,
+  Heliar: /\bheliar\b/i,
+  Excell: /\bexcell?\b/i,
+  Zetta: /\bzetta\b/i,
+};
+
+function brandFromProductName(name: string): VehicleBrand | null {
+  for (const b of VEHICLE_BRANDS) {
+    if (BRAND_NAME_RE[b].test(name)) return b;
+  }
+  return null;
+}
+
+function ahFromAny(text: string): number | null {
+  const m = text.match(/(\d{2,3})\s*ah\b/i);
+  if (m) return Number(m[1]);
+  const code = text.match(/[a-z]?(\d{2,3})[a-z]{1,3}\b/i);
+  return code ? Number(code[1]) : null;
+}
+
+/**
+ * Busca até 1 bateria por marca (Moura, Heliar, Excell, Zetta) para um veículo.
+ * Usa equivalências por marca quando disponíveis; senão, fallback "<Marca> <Ah>Ah".
+ */
+export async function fetchBatteriesByVehicle(
+  codes: string[],
+  groups: Partial<Record<VehicleBrand, string[]>> = {},
+): Promise<Battery[]> {
+  const ah = codes.map((c) => ahFromAny(c)).find((n): n is number => !!n);
+
+  const queriesByBrand: Record<VehicleBrand, string[]> = {
+    Moura: [],
+    Heliar: [],
+    Excell: [],
+    Zetta: [],
+  };
+
+  for (const b of VEHICLE_BRANDS) {
+    const list = groups[b] ?? [];
+    if (list.length) queriesByBrand[b].push(...list);
+    if (ah) queriesByBrand[b].push(`${b} ${ah}Ah`);
+    if (!queriesByBrand[b].length) queriesByBrand[b].push(b);
+  }
+
+  const results = await Promise.all(
+    VEHICLE_BRANDS.map(async (brand) => {
+      try {
+        const list = await fetchBatteries({
+          codes: queriesByBrand[brand],
+          perPage: 20,
+        });
+        const onlyBrand = list
+          .filter((p) => brandFromProductName(p.name) === brand)
+          .map((p) => ({ ...p, brand }));
+        if (!onlyBrand.length) return null;
+        onlyBrand.sort((a, b) => b.price - a.price);
+        return onlyBrand[0];
+      } catch {
+        return null;
+      }
+    }),
+  );
+
+  return results
+    .filter((b): b is Battery => !!b)
+    .sort((a, b) => b.price - a.price);
+}
