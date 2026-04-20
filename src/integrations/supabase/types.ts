@@ -21,7 +21,6 @@ export type Database = {
           heliar: string[]
           id: string
           moura: string[]
-          tudor: string[]
           updated_at: string
           zetta: string[]
         }
@@ -31,7 +30,6 @@ export type Database = {
           heliar?: string[]
           id?: string
           moura?: string[]
-          tudor?: string[]
           updated_at?: string
           zetta?: string[]
         }
@@ -41,7 +39,6 @@ export type Database = {
           heliar?: string[]
           id?: string
           moura?: string[]
-          tudor?: string[]
           updated_at?: string
           zetta?: string[]
         }
