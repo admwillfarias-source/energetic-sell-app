@@ -184,7 +184,7 @@ export async function fetchBatteriesByVehicle(
     }),
   );
 
-  return results
-    .filter((b): b is Battery => !!b)
-    .sort((a, b) => b.price - a.price);
+  return (results.filter((b) => !!b) as Battery[]).sort(
+    (a, b) => b.price - a.price,
+  );
 }
