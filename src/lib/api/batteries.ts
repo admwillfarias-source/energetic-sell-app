@@ -142,9 +142,9 @@ function ahFromAny(text: string): number | null {
 }
 
 /**
- * Busca baterias APENAS pelos SKUs/códigos exatos do fitment.
- * Não infere amperagem, não injeta "<Marca> <Ah>Ah", não usa equivalências.
- * Retorna no máximo 1 produto por marca, ordenado por preço.
+ * Busca baterias APENAS pelos SKUs cadastrados na planilha para o veículo.
+ * Filtra rigorosamente: só retorna produtos cujo SKU bate com algum dos
+ * SKUs informados (case-insensitive). Sem inferência, sem equivalência.
  */
 export async function fetchBatteriesByVehicle(
   codes: string[],
@@ -152,19 +152,16 @@ export async function fetchBatteriesByVehicle(
 ): Promise<Battery[]> {
   if (!codes.length) return [];
 
-  // Busca única no WooCommerce com TODOS os códigos do fitment.
-  const list = await fetchBatteries({ codes, perPage: 30 });
+  const wanted = new Set(codes.map((c) => c.trim().toUpperCase()).filter(Boolean));
+  const list = await fetchBatteries({ codes: Array.from(wanted), perPage: 30 });
 
-  // Agrupa por marca detectada no nome do produto e mantém 1 por marca.
-  const byBrand = new Map<VehicleBrand, Battery>();
-  for (const p of list) {
-    const brand = brandFromProductName(p.name);
-    if (!brand) continue;
-    const current = byBrand.get(brand);
-    if (!current || p.price > current.price) {
-      byBrand.set(brand, { ...p, brand });
-    }
-  }
+  // Mantém só produtos cujo SKU está na lista da planilha.
+  const filtered = list.filter((p) => {
+    // O `Battery.id` é o WC product id; SKU não está no tipo, mas o nome
+    // raramente carrega o SKU. Usamos o WC product `sku` via campo extra.
+    const sku = (p as Battery & { sku?: string }).sku;
+    return sku ? wanted.has(sku.toUpperCase()) : true;
+  });
 
-  return Array.from(byBrand.values()).sort((a, b) => b.price - a.price);
+  return filtered.sort((a, b) => b.price - a.price);
 }
