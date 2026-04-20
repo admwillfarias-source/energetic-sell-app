@@ -14,36 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      equivalents: {
-        Row: {
-          created_at: string
-          excell: string[]
-          heliar: string[]
-          id: string
-          moura: string[]
-          updated_at: string
-          zetta: string[]
-        }
-        Insert: {
-          created_at?: string
-          excell?: string[]
-          heliar?: string[]
-          id?: string
-          moura?: string[]
-          updated_at?: string
-          zetta?: string[]
-        }
-        Update: {
-          created_at?: string
-          excell?: string[]
-          heliar?: string[]
-          id?: string
-          moura?: string[]
-          updated_at?: string
-          zetta?: string[]
-        }
-        Relationships: []
-      }
       fitments: {
         Row: {
           brand: string
