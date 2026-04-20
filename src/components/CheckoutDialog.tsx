@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,20 +7,27 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import { MessageCircle, ShoppingCart, Loader2, Zap, CalendarClock } from "lucide-react";
+import { MessageCircle, ShoppingCart, Loader2, Zap, CalendarClock, Car } from "lucide-react";
 import { z } from "zod";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { searchVehicles, type VehicleSuggestion } from "@/lib/fitments";
+import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { cn } from "@/lib/utils";
 
 // Número da loja (formato internacional, só dígitos). Edite aqui.
 const WHATSAPP_NUMBER = "5551993199486";
+
+// Janela de entrega rápida (horário local — America/Sao_Paulo do navegador do cliente)
+const RAPIDA_INICIO_MIN = 8 * 60 + 30; // 08:30
+const RAPIDA_FIM_MIN = 18 * 60; // 18:00
 
 const baseSchema = {
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
   documento: z.string().trim().min(11, "CPF/CNPJ inválido").max(20),
   endereco: z.string().trim().min(5, "Informe o endereço").max(200),
   numero: z.string().trim().min(1, "Informe o número").max(20),
-  cep: z.string().trim().min(8, "CEP inválido").max(10),
+  cep: z.string().trim().max(10).optional().or(z.literal("")),
   telefone: z.string().trim().min(10, "Telefone inválido").max(20),
   pagamento: z.string().trim().min(2, "Informe a forma de pagamento").max(60),
   carroAno: z.string().trim().min(2, "Informe carro e ano").max(100),
@@ -41,10 +48,23 @@ type Props = {
   onOpenChange: (o: boolean) => void;
 };
 
+function rapidaDisponivelAgora(): boolean {
+  const d = new Date();
+  const min = d.getHours() * 60 + d.getMinutes();
+  return min >= RAPIDA_INICIO_MIN && min <= RAPIDA_FIM_MIN;
+}
+
+function maskCep(value: string): string {
+  const d = value.replace(/\D/g, "").slice(0, 8);
+  if (d.length <= 5) return d;
+  return `${d.slice(0, 5)}-${d.slice(5)}`;
+}
+
 export function CheckoutDialog({ open, onOpenChange }: Props) {
   const { items, subtotal, clear, setOpen: setCartOpen } = useCart();
   const isMobile = useIsMobile();
   const [submittingWC, setSubmittingWC] = useState(false);
+  const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState({
     nome: "",
     documento: "",
@@ -59,25 +79,115 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     entregaHora: "",
   });
 
+  // Autocomplete carro/ano
+  const [carroOpen, setCarroOpen] = useState(false);
+  const [carroHighlight, setCarroHighlight] = useState(0);
+  const [catalogReady, setCatalogReady] = useState(false);
+  const carroRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
+  }, []);
+
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      if (carroRef.current && !carroRef.current.contains(e.target as Node)) {
+        setCarroOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, []);
+
+  const carroSuggestions = useMemo<VehicleSuggestion[]>(() => {
+    if (!catalogReady || form.carroAno.trim().length < 2) return [];
+    return searchVehicles(form.carroAno, 8);
+  }, [form.carroAno, catalogReady]);
+
+  useEffect(() => setCarroHighlight(0), [carroSuggestions.length]);
+
   const update = (k: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
     setForm((p) => ({ ...p, [k]: e.target.value }));
 
   const today = new Date().toISOString().split("T")[0];
 
+  // ViaCEP — busca endereço quando CEP completo
+  const handleCepChange = async (raw: string) => {
+    const masked = maskCep(raw);
+    setForm((p) => ({ ...p, cep: masked }));
+    const digits = masked.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+    setCepLoading(true);
+    try {
+      const r = await fetch(`https://viacep.com.br/ws/${digits}/json/`);
+      const data = await r.json();
+      if (data?.erro) {
+        toast({ title: "CEP não encontrado", description: "Confira o número ou preencha manualmente." });
+        return;
+      }
+      const linha = [data.logradouro, data.bairro, data.localidade && `${data.localidade}/${data.uf}`]
+        .filter(Boolean)
+        .join(", ");
+      if (linha) {
+        setForm((p) => ({ ...p, endereco: linha }));
+        toast({ title: "Endereço preenchido", description: linha });
+      }
+    } catch {
+      toast({ title: "Falha ao buscar CEP", description: "Preencha o endereço manualmente." });
+    } finally {
+      setCepLoading(false);
+    }
+  };
+
+  const escolherCarro = (s: VehicleSuggestion) => {
+    setForm((p) => ({ ...p, carroAno: s.label }));
+    setCarroOpen(false);
+  };
+
+  const onCarroKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!carroOpen || carroSuggestions.length === 0) return;
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      setCarroHighlight((h) => Math.min(h + 1, carroSuggestions.length - 1));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setCarroHighlight((h) => Math.max(h - 1, 0));
+    } else if (e.key === "Enter") {
+      e.preventDefault();
+      escolherCarro(carroSuggestions[carroHighlight]);
+    } else if (e.key === "Escape") {
+      setCarroOpen(false);
+    }
+  };
+
   const entregaResumo = () =>
     form.entregaTipo === "rapida"
-      ? "Entrega rápida (até 35 min)"
+      ? "Entrega rápida (até 35 min — 8h30 às 18h)"
       : `Agendada para ${form.entregaData} às ${form.entregaHora}`;
+
+  const validar = (): { ok: boolean; msg?: string } => {
+    const parsed = schema.safeParse(form);
+    if (!parsed.success) {
+      const first = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
+      return { ok: false, msg: first ?? "Verifique o formulário." };
+    }
+    if (form.entregaTipo === "rapida" && !rapidaDisponivelAgora()) {
+      return {
+        ok: false,
+        msg: "Entrega rápida disponível das 8h30 às 18h. Selecione 'Agendar entrega' para outro horário.",
+      };
+    }
+    return { ok: true };
+  };
 
   const handleWooCommerce = async () => {
     if (items.length === 0) {
       toast({ title: "Carrinho vazio", description: "Adicione uma bateria antes de continuar." });
       return;
     }
-    const parsed = schema.safeParse(form);
-    if (!parsed.success) {
-      const first = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
-      toast({ title: "Dados incompletos", description: first ?? "Preencha o formulário antes de enviar." });
+    const v = validar();
+    if (!v.ok) {
+      toast({ title: "Dados incompletos", description: v.msg });
       return;
     }
 
@@ -90,7 +200,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           telefone: form.telefone,
           endereco: form.endereco,
           numero: form.numero,
-          cep: form.cep,
+          cep: form.cep || "",
           pagamento: form.pagamento,
           carroAno: form.carroAno,
           entrega: entregaResumo(),
@@ -138,10 +248,9 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       toast({ title: "Carrinho vazio", description: "Adicione uma bateria antes de finalizar." });
       return;
     }
-    const parsed = schema.safeParse(form);
-    if (!parsed.success) {
-      const first = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
-      toast({ title: "Dados incompletos", description: first ?? "Verifique o formulário." });
+    const v = validar();
+    if (!v.ok) {
+      toast({ title: "Dados incompletos", description: v.msg });
       return;
     }
 
@@ -158,7 +267,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `*Entrega*\n` +
       `Endereço: ${form.endereco}\n` +
       `Número: ${form.numero}\n` +
-      `CEP: ${form.cep}\n` +
+      (form.cep ? `CEP: ${form.cep}\n` : "") +
       `Modalidade: ${entregaResumo()}\n\n` +
       `*Veículo*\n${form.carroAno}\n\n` +
       `*Bateria(s) solicitada(s)*\n${bateriaLinhas}\n\n` +
@@ -175,6 +284,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
   };
 
   const bateriaResumo = items.map((i) => `${i.quantity}x ${i.battery.name}`).join(", ") || "—";
+  const rapidaAgora = rapidaDisponivelAgora();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -204,19 +314,31 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           </div>
 
           <div className="space-y-1.5">
+            <Label htmlFor="cep">
+              CEP <span className="text-xs font-normal text-muted-foreground">(opcional — preenche o endereço)</span>
+            </Label>
+            <div className="relative">
+              <Input
+                id="cep"
+                value={form.cep}
+                onChange={(e) => handleCepChange(e.target.value)}
+                placeholder="00000-000"
+                inputMode="numeric"
+              />
+              {cepLoading && (
+                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+              )}
+            </div>
+          </div>
+
+          <div className="space-y-1.5">
             <Label htmlFor="endereco">Endereço de entrega</Label>
             <Input id="endereco" value={form.endereco} onChange={update("endereco")} placeholder="Rua, bairro, cidade" />
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="numero">Número (Casa/Apto)</Label>
-              <Input id="numero" value={form.numero} onChange={update("numero")} placeholder="123 / Apto 45" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="cep">CEP</Label>
-              <Input id="cep" value={form.cep} onChange={update("cep")} placeholder="00000-000" />
-            </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="numero">Número (Casa/Apto)</Label>
+            <Input id="numero" value={form.numero} onChange={update("numero")} placeholder="123 / Apto 45" />
           </div>
 
           <div className="space-y-2">
@@ -242,7 +364,9 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     <Zap className="h-4 w-4 text-primary" />
                     Entrega rápida
                   </div>
-                  <p className="text-xs text-muted-foreground">Em até 35 min</p>
+                  <p className="text-xs text-muted-foreground">
+                    Em até 35 min · 8h30 às 18h
+                  </p>
                 </div>
               </label>
               <label
@@ -263,6 +387,12 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                 </div>
               </label>
             </RadioGroup>
+
+            {form.entregaTipo === "rapida" && !rapidaAgora && (
+              <p className="text-xs text-destructive">
+                Fora do horário de entrega rápida (8h30 às 18h). Selecione "Agendar entrega".
+              </p>
+            )}
 
             {form.entregaTipo === "agendada" && (
               <div className="grid gap-4 sm:grid-cols-2">
@@ -299,9 +429,54 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
             />
           </div>
 
-          <div className="space-y-1.5">
+          <div className="space-y-1.5" ref={carroRef}>
             <Label htmlFor="carroAno">Carro e ano</Label>
-            <Input id="carroAno" value={form.carroAno} onChange={update("carroAno")} placeholder="Fiat Uno 2015" />
+            <div className="relative">
+              <Input
+                id="carroAno"
+                value={form.carroAno}
+                onChange={(e) => {
+                  setForm((p) => ({ ...p, carroAno: e.target.value }));
+                  setCarroOpen(true);
+                }}
+                onFocus={() => setCarroOpen(true)}
+                onKeyDown={onCarroKeyDown}
+                placeholder="Ex: Fiat Uno 2015, Onix 2018..."
+                autoComplete="off"
+              />
+              {carroOpen && carroSuggestions.length > 0 && (
+                <ul
+                  role="listbox"
+                  className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg"
+                >
+                  {carroSuggestions.map((s, i) => (
+                    <li
+                      key={`${s.brand}-${s.model}-${s.year}-${i}`}
+                      role="option"
+                      aria-selected={i === carroHighlight}
+                      onMouseEnter={() => setCarroHighlight(i)}
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        escolherCarro(s);
+                      }}
+                      className={cn(
+                        "flex cursor-pointer items-center gap-3 px-3 py-2 text-sm",
+                        i === carroHighlight ? "bg-accent/15" : "hover:bg-muted",
+                      )}
+                    >
+                      <Car className="h-4 w-4 shrink-0 text-muted-foreground" />
+                      <div className="flex-1">
+                        <div className="font-medium">{s.label}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {s.codes.length} código{s.codes.length > 1 ? "s" : ""} compatível
+                          {s.codes.length > 1 ? "is" : ""}
+                        </div>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           <div className="space-y-1.5">
