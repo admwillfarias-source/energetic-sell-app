@@ -83,11 +83,31 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
   const [carroOpen, setCarroOpen] = useState(false);
   const [carroHighlight, setCarroHighlight] = useState(0);
   const [catalogReady, setCatalogReady] = useState(false);
+  const [carroFromSearch, setCarroFromSearch] = useState(false);
   const carroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
   }, []);
+
+  // Pré-preenche carro/ano com a busca feita pelo cliente (?v= na URL ou sessionStorage)
+  useEffect(() => {
+    if (!open) return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const v = params.get("v") || sessionStorage.getItem("lastVehicleSearch") || "";
+      const decoded = v.trim();
+      if (decoded && !form.carroAno) {
+        setForm((p) => ({ ...p, carroAno: decoded }));
+        setCarroFromSearch(true);
+      } else if (decoded) {
+        setCarroFromSearch(true);
+      }
+    } catch {
+      // ignore
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
 
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
@@ -429,55 +449,72 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
             />
           </div>
 
-          <div className="space-y-1.5" ref={carroRef}>
-            <Label htmlFor="carroAno">Carro e ano</Label>
-            <div className="relative">
-              <Input
-                id="carroAno"
-                value={form.carroAno}
-                onChange={(e) => {
-                  setForm((p) => ({ ...p, carroAno: e.target.value }));
-                  setCarroOpen(true);
-                }}
-                onFocus={() => setCarroOpen(true)}
-                onKeyDown={onCarroKeyDown}
-                placeholder="Ex: Fiat Uno 2015, Onix 2018..."
-                autoComplete="off"
-              />
-              {carroOpen && carroSuggestions.length > 0 && (
-                <ul
-                  role="listbox"
-                  className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg"
+          {carroFromSearch && form.carroAno ? (
+            <div className="space-y-1.5">
+              <Label>Carro e ano</Label>
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm">
+                <Car className="h-4 w-4 text-muted-foreground" />
+                <span className="flex-1 font-medium">{form.carroAno}</span>
+                <button
+                  type="button"
+                  onClick={() => setCarroFromSearch(false)}
+                  className="text-xs text-primary hover:underline"
                 >
-                  {carroSuggestions.map((s, i) => (
-                    <li
-                      key={`${s.brand}-${s.model}-${s.year}-${i}`}
-                      role="option"
-                      aria-selected={i === carroHighlight}
-                      onMouseEnter={() => setCarroHighlight(i)}
-                      onMouseDown={(e) => {
-                        e.preventDefault();
-                        escolherCarro(s);
-                      }}
-                      className={cn(
-                        "flex cursor-pointer items-center gap-3 px-3 py-2 text-sm",
-                        i === carroHighlight ? "bg-accent/15" : "hover:bg-muted",
-                      )}
-                    >
-                      <Car className="h-4 w-4 shrink-0 text-muted-foreground" />
-                      <div className="flex-1">
-                        <div className="font-medium">{s.label}</div>
-                        <div className="text-xs text-muted-foreground">
-                          {s.codes.length} código{s.codes.length > 1 ? "s" : ""} compatível
-                          {s.codes.length > 1 ? "is" : ""}
-                        </div>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+                  alterar
+                </button>
+              </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-1.5" ref={carroRef}>
+              <Label htmlFor="carroAno">Carro e ano</Label>
+              <div className="relative">
+                <Input
+                  id="carroAno"
+                  value={form.carroAno}
+                  onChange={(e) => {
+                    setForm((p) => ({ ...p, carroAno: e.target.value }));
+                    setCarroOpen(true);
+                  }}
+                  onFocus={() => setCarroOpen(true)}
+                  onKeyDown={onCarroKeyDown}
+                  placeholder="Ex: Fiat Uno 2015, Onix 2018..."
+                  autoComplete="off"
+                />
+                {carroOpen && carroSuggestions.length > 0 && (
+                  <ul
+                    role="listbox"
+                    className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg"
+                  >
+                    {carroSuggestions.map((s, i) => (
+                      <li
+                        key={`${s.brand}-${s.model}-${s.year}-${i}`}
+                        role="option"
+                        aria-selected={i === carroHighlight}
+                        onMouseEnter={() => setCarroHighlight(i)}
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          escolherCarro(s);
+                        }}
+                        className={cn(
+                          "flex cursor-pointer items-center gap-3 px-3 py-2 text-sm",
+                          i === carroHighlight ? "bg-accent/15" : "hover:bg-muted",
+                        )}
+                      >
+                        <Car className="h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="flex-1">
+                          <div className="font-medium">{s.label}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {s.codes.length} código{s.codes.length > 1 ? "s" : ""} compatível
+                            {s.codes.length > 1 ? "is" : ""}
+                          </div>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-1.5">
             <Label>Bateria solicitada</Label>

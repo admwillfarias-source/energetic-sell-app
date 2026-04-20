@@ -74,6 +74,11 @@ export default function VehicleAutocomplete({
     }
     setQuery(s.label);
     setOpen(false);
+    try {
+      sessionStorage.setItem("lastVehicleSearch", s.label);
+    } catch {
+      // ignore
+    }
     toast({ title: "Buscando baterias compatíveis", description: s.label });
     navigate(
       `/?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(s.label)}#catalogo`,
