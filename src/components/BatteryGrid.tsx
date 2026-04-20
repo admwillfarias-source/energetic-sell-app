@@ -35,36 +35,11 @@ export function BatteryGrid() {
     queryKey: ["batteries", { search, codes, vehicle: isVehicleSearch, catalogReady }],
     queryFn: () => {
       if (isVehicleSearch) {
-        // SOMENTE códigos cadastrados na planilha (fitments) e suas equivalências
-        // explícitas em `equivalents`. NÃO inferimos amperagem nem injetamos
-        // "<Marca> <Ah>Ah" como fallback — assim o resultado é sempre fiel ao
-        // que está cadastrado.
-        const groups: Partial<Record<VehicleBrand, string[]>> = {
-          Moura: [],
-          Heliar: [],
-          Excell: [],
-          Zetta: [],
-        };
-
-        // Os códigos do fitment são Heliar (ex.: HAGM60HD)
-        groups.Heliar!.push(...codes);
-
-        // Para cada código do fitment, busca o grupo de equivalência
-        // (procurando em qualquer marca, já que o código é Heliar)
-        for (const code of codes) {
-          const g = getGroupForAnyCode(code);
-          if (!g) continue;
-          groups.Moura!.push(...g.moura);
-          groups.Heliar!.push(...g.heliar);
-          groups.Excell!.push(...g.excell);
-          groups.Zetta!.push(...g.zetta);
-        }
-
-        // dedupe + remove vazios
-        for (const k of Object.keys(groups) as VehicleBrand[]) {
-          groups[k] = Array.from(new Set(groups[k]));
-        }
-
+        // ESTRITO: usar SOMENTE os códigos cadastrados no fitment da planilha.
+        // NÃO expandir via tabela de equivalências (estava trazendo SKUs errados
+        // em alguns veículos, ex.: Creta retornando equivalentes incorretos).
+        // Cada código do fitment é buscado no WooCommerce exatamente como está.
+        const groups: Partial<Record<VehicleBrand, string[]>> = {};
         return fetchBatteriesByVehicle(codes, groups);
       }
       return fetchBatteries({
