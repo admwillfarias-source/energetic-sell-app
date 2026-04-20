@@ -7,16 +7,44 @@ const corsHeaders = {
 
 const WC_BASE = "https://awrbaterias.com.br/wp-json/wc/store/products";
 
-async function fetchByQuery(q: string, perPage: string): Promise<unknown[]> {
-  const target = new URL(WC_BASE);
-  target.searchParams.set("per_page", perPage);
-  target.searchParams.set("search", q);
-  const res = await fetch(target.toString(), {
-    headers: { Accept: "application/json" },
-  });
+type WCProduct = { id: number; sku?: string; name?: string };
+
+async function fetchJson(url: string): Promise<unknown[]> {
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) return [];
   const data = await res.json();
   return Array.isArray(data) ? data : [];
+}
+
+// Heurística: termos sem espaço e curtos (<=12) que não parecem nome são tratados como SKU.
+// Ex.: "M60GD", "H60DD", "EXF60DPD", "Z50ED" → SKU.
+//      "Heliar 60Ah", "Moura 60AD" → texto (search).
+function looksLikeSku(term: string): boolean {
+  const t = term.trim();
+  if (!t || t.includes(" ")) return false;
+  if (t.length > 14) return false;
+  // ao menos 1 letra e 1 dígito, sem caracteres exóticos
+  return /^[A-Za-z0-9-]+$/.test(t) && /[A-Za-z]/.test(t) && /\d/.test(t);
+}
+
+async function fetchByTerm(term: string, perPage: string): Promise<unknown[]> {
+  const t = term.trim();
+  if (!t) return [];
+
+  // 1) SKU exato — endpoint store/products aceita ?sku=
+  if (looksLikeSku(t)) {
+    const skuUrl = new URL(WC_BASE);
+    skuUrl.searchParams.set("per_page", perPage);
+    skuUrl.searchParams.set("sku", t);
+    const bySku = await fetchJson(skuUrl.toString());
+    if (bySku.length) return bySku;
+    // 2) fallback: search pelo SKU como texto (alguns SKUs aparecem no título)
+  }
+
+  const searchUrl = new URL(WC_BASE);
+  searchUrl.searchParams.set("per_page", perPage);
+  searchUrl.searchParams.set("search", t);
+  return fetchJson(searchUrl.toString());
 }
 
 Deno.serve(async (req) => {
@@ -34,14 +62,14 @@ Deno.serve(async (req) => {
     let status = 200;
 
     if (codesParam) {
-      // Multi-code: fetch each in parallel, dedupe by id
-      const codes = codesParam.split(",").map((c) => c.trim()).filter(Boolean);
-      const results = await Promise.all(codes.map((c) => fetchByQuery(c, perPage)));
+      // Multi-termo: busca cada um (SKU exato ou search), dedupe por id
+      const terms = codesParam.split(",").map((c) => c.trim()).filter(Boolean);
+      const results = await Promise.all(terms.map((c) => fetchByTerm(c, perPage)));
       const seen = new Set<number>();
       const merged: unknown[] = [];
       for (const arr of results) {
         for (const p of arr) {
-          const id = (p as { id: number }).id;
+          const id = (p as WCProduct).id;
           if (!seen.has(id)) {
             seen.add(id);
             merged.push(p);
@@ -49,10 +77,12 @@ Deno.serve(async (req) => {
         }
       }
       body = JSON.stringify(merged);
+    } else if (search) {
+      const arr = await fetchByTerm(search, perPage);
+      body = JSON.stringify(arr);
     } else {
       const target = new URL(WC_BASE);
       target.searchParams.set("per_page", perPage);
-      if (search) target.searchParams.set("search", search);
       const res = await fetch(target.toString(), {
         headers: { Accept: "application/json" },
       });
