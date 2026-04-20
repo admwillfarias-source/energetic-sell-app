@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { brands, amperageOptions, Battery } from "@/data/batteries";
-import { fetchBatteries } from "@/lib/api/batteries";
+import { fetchBatteries, fetchBatteriesByVehicle, type VehicleBrand } from "@/lib/api/batteries";
+import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { getGroupForMouraCode } from "@/lib/equivalents";
 import { BatteryCard } from "./BatteryCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Button } from "@/components/ui/button";
@@ -22,14 +24,47 @@ export function BatteryGrid() {
     [codesParam],
   );
 
+  const [catalogReady, setCatalogReady] = useState(false);
+  useEffect(() => {
+    ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
+  }, []);
+
+  const isVehicleSearch = !!vehicle && codes.length > 0;
+
   const { data: results = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["batteries", { search, codes }],
-    queryFn: () =>
-      fetchBatteries({
+    queryKey: ["batteries", { search, codes, vehicle: isVehicleSearch, catalogReady }],
+    queryFn: () => {
+      if (isVehicleSearch) {
+        // monta os grupos por marca a partir das equivalências de TODOS os códigos do fitment
+        const groups: Partial<Record<VehicleBrand, string[]>> = {
+          Moura: [],
+          Heliar: [],
+          Excell: [],
+          Zetta: [],
+        };
+        for (const code of codes) {
+          const g = getGroupForMouraCode(code);
+          if (!g) continue;
+          groups.Moura!.push(...g.moura);
+          groups.Heliar!.push(...g.heliar);
+          groups.Excell!.push(...g.excell);
+          groups.Zetta!.push(...g.zetta);
+        }
+        // dedupe
+        for (const k of Object.keys(groups) as VehicleBrand[]) {
+          groups[k] = Array.from(new Set(groups[k]));
+        }
+        // garante o próprio código Moura no grupo Moura
+        groups.Moura = Array.from(new Set([...(groups.Moura ?? []), ...codes]));
+        return fetchBatteriesByVehicle(codes, groups);
+      }
+      return fetchBatteries({
         search: search || undefined,
         codes: codes.length ? codes : undefined,
         perPage: 30,
-      }),
+      });
+    },
+    enabled: !isVehicleSearch || catalogReady,
     staleTime: 5 * 60 * 1000,
   });
 
@@ -45,19 +80,9 @@ export function BatteryGrid() {
       if (b.price > priceMax) return false;
       return true;
     });
-    if (!vehicle) return list;
-    // Quando há veículo: 1 bateria de cada marca (Moura, Heliar, Excell, Zetta, Tudor)
-    // ordenadas do mais caro para o mais barato.
-    const preferred = ["Moura", "Heliar", "Excell", "Zetta"];
-    const picked: Battery[] = [];
-    for (const brand of preferred) {
-      const best = list
-        .filter((b) => b.brand === brand)
-        .sort((a, b) => b.price - a.price)[0];
-      if (best) picked.push(best);
-    }
-    return picked.sort((a, b) => b.price - a.price);
-  }, [results, selectedBrands, selectedAmps, priceMax, vehicle]);
+    // Quando há veículo, fetchBatteriesByVehicle já devolve 1 por marca ordenado; só aplica filtros.
+    return list;
+  }, [results, selectedBrands, selectedAmps, priceMax]);
 
   const toggle = <T,>(arr: T[], v: T, set: (a: T[]) => void) =>
     set(arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
