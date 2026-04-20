@@ -69,8 +69,8 @@ export async function ensureCatalogLoaded(): Promise<void> {
     }
     const equivsRes = await supabase.from("equivalents").select("*").range(0, 4999);
     const fitsRes = { data: fitsAll, error: null as null };
-    if (fitsRes.error) throw fitsRes.error;
     if (equivsRes.error) throw equivsRes.error;
+    if (fitsRes.error) throw fitsRes.error;
     fitmentsCache = (fitsRes.data as DBFitment[]).map((r) => ({
       id: r.id,
       brand: r.brand,
