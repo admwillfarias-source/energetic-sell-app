@@ -35,11 +35,6 @@ export const homepageFaqs: FaqItem[] = [
       "Sim! Nosso técnico realiza o teste gratuito da bateria e do sistema elétrico. Se a bateria estiver boa, não cobramos nada. Se precisar trocar, fazemos na hora com instalação grátis.",
   },
   {
-    question: "Vocês oferecem serviço de scanner automotivo?",
-    answer:
-      "Sim! Oferecemos o serviço de scanner automotivo, realizado por agendamento na loja. O custo varia de R$ 120 a R$ 250, dependendo do veículo e da complexidade do diagnóstico.",
-  },
-  {
     question: "Quais formas de pagamento vocês aceitam?",
     answer:
       "Aceitamos PIX, cartão de crédito (até 10x sem juros), cartão de débito e dinheiro. O pagamento é feito apenas na entrega, após a instalação e teste. Sem surpresas!",

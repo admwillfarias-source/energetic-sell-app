@@ -10,7 +10,7 @@ const WHATSAPP_URL =
 const badges = [
   { icon: CreditCard, text: "Pagamento na Entrega" },
   { icon: Wrench, text: "Instalação Gratuita" },
-  { icon: Gauge, text: "Scanner Automotivo" },
+  { icon: Gauge, text: "Garantia de Fábrica" },
 ];
 
 export default function HeroSection() {
