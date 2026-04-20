@@ -1,12 +1,6 @@
-import { getFitments } from "@/lib/catalogStore";
+import { getFitments, type Fitment } from "@/lib/catalogStore";
 
-export type Fitment = {
-  brand: string;
-  model: string;
-  yearStart: number;
-  yearEnd: number;
-  code: string;
-};
+export type { Fitment };
 
 export function getCarBrands(): string[] {
   return Array.from(new Set(getFitments().map((f) => f.brand))).sort();
@@ -29,19 +23,11 @@ export function getYears(brand: string, model: string): string[] {
   return Array.from(years).sort((a, b) => b - a).map(String);
 }
 
-export function findCompatibleCodes(
-  brand: string,
-  model: string,
-  year: string | number,
-): string[] {
-  const y = Number(year);
-  const codes = new Set<string>();
-  for (const f of getFitments()) {
-    if (f.brand === brand && f.model === model && y >= f.yearStart && y <= f.yearEnd) {
-      codes.add(f.code);
-    }
-  }
-  return Array.from(codes);
+/** Coleta todos os SKUs (Heliar/Moura/Zetta/Excell) do fitment. */
+function collectSkus(f: Fitment): string[] {
+  return [f.skuHeliar, f.skuMoura, f.skuZetta, f.skuExcell]
+    .filter((s): s is string => !!s && s.trim().length > 0)
+    .map((s) => s.trim().toUpperCase());
 }
 
 export type VehicleSuggestion = {
@@ -49,6 +35,7 @@ export type VehicleSuggestion = {
   model: string;
   year: number;
   label: string;
+  /** SKUs únicos das 4 marcas para o veículo. */
   codes: string[];
 };
 
@@ -62,10 +49,6 @@ function normalize(s: string): string {
     .trim();
 }
 
-/**
- * Busca livre estilo Moura Fácil: usuário digita "fiat uno 2015" ou "onix 2018"
- * e recebe sugestões marca+modelo+ano com códigos compatíveis.
- */
 export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
   const q = normalize(query);
   if (q.length < 2) return [];
@@ -74,16 +57,16 @@ export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
   const year = yearToken ? Number(yearToken) : null;
   const textTokens = tokens.filter((t) => t !== yearToken);
 
-  type Row = { brand: string; model: string; codes: Set<string>; yStart: number; yEnd: number };
+  type Row = { brand: string; model: string; skus: Set<string>; yStart: number; yEnd: number };
   const byKey = new Map<string, Row>();
   for (const f of getFitments()) {
     const key = `${f.brand}|${f.model}`;
     let row = byKey.get(key);
     if (!row) {
-      row = { brand: f.brand, model: f.model, codes: new Set(), yStart: f.yearStart, yEnd: f.yearEnd };
+      row = { brand: f.brand, model: f.model, skus: new Set(), yStart: f.yearStart, yEnd: f.yearEnd };
       byKey.set(key, row);
     }
-    row.codes.add(f.code);
+    for (const s of collectSkus(f)) row.skus.add(s);
     row.yStart = Math.min(row.yStart, f.yearStart);
     row.yEnd = Math.max(row.yEnd, f.yearEnd);
   }
@@ -104,7 +87,7 @@ export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
     }
     if (!allMatch && textTokens.length > 0) continue;
     if (textTokens.length === 0 && !year) continue;
-    let matchedYear = year ?? row.yEnd;
+    const matchedYear = year ?? row.yEnd;
     if (year) {
       if (year < row.yStart || year > row.yEnd) continue;
       score += 5;
@@ -114,24 +97,22 @@ export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
 
   scored.sort((a, b) => b.score - a.score);
 
-  // Se ano informado: 1 sugestão por modelo. Se não: explodir em alguns anos chave.
   const out: VehicleSuggestion[] = [];
   for (const { row, matchedYear } of scored) {
     if (year) {
-      // resolver códigos do ano específico
-      const codesForYear = new Set<string>();
+      const skusForYear = new Set<string>();
       for (const f of getFitments()) {
         if (f.brand === row.brand && f.model === row.model && year >= f.yearStart && year <= f.yearEnd) {
-          for (const c of [f.code]) codesForYear.add(c);
+          for (const s of collectSkus(f)) skusForYear.add(s);
         }
       }
-      if (codesForYear.size === 0) continue;
+      if (skusForYear.size === 0) continue;
       out.push({
         brand: row.brand,
         model: row.model,
         year,
         label: `${row.brand} ${row.model} ${year}`,
-        codes: Array.from(codesForYear),
+        codes: Array.from(skusForYear),
       });
     } else {
       out.push({
@@ -139,7 +120,7 @@ export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
         model: row.model,
         year: matchedYear,
         label: `${row.brand} ${row.model} (${row.yStart}-${row.yEnd})`,
-        codes: Array.from(row.codes),
+        codes: Array.from(row.skus),
       });
     }
     if (out.length >= limit) break;
