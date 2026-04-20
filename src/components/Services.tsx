@@ -9,8 +9,8 @@ const services = [
   { icon: Battery, title: "Carga de Bateria", desc: "Serviço de carga e recuperação de baterias" },
   {
     icon: TestTube,
-    title: "Scanner Automotivo",
-    desc: "Diagnóstico com scanner para apresentação da bateria nova e limpeza de DTCs",
+    title: "Teste Gratuito",
+    desc: "Teste da bateria e do sistema elétrico no local, sem custo",
   },
   {
     icon: Clock,
