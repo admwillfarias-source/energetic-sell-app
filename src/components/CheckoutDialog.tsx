@@ -165,7 +165,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       ? "Entrega rápida (até 35 min — 8h30 às 18h)"
       : `Agendada para ${form.entregaData} às ${form.entregaHora}`;
 
-  const validar = (): { ok: true } | { ok: false; msg: string } => {
+  const validar = (): { ok: boolean; msg?: string } => {
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
       const first = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
