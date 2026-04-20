@@ -165,7 +165,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       ? "Entrega rápida (até 35 min — 8h30 às 18h)"
       : `Agendada para ${form.entregaData} às ${form.entregaHora}`;
 
-  const validar = (): { ok: true; data: z.infer<typeof schema> } | { ok: false; msg: string } => {
+  const validar = (): { ok: true } | { ok: false; msg: string } => {
     const parsed = schema.safeParse(form);
     if (!parsed.success) {
       const first = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
@@ -177,7 +177,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
         msg: "Entrega rápida disponível das 8h30 às 18h. Selecione 'Agendar entrega' para outro horário.",
       };
     }
-    return { ok: true, data: parsed.data };
+    return { ok: true };
   };
 
   const handleWooCommerce = async () => {
