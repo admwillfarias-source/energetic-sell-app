@@ -4,7 +4,6 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { brands, amperageOptions, Battery } from "@/data/batteries";
 import { fetchBatteries, fetchBatteriesByVehicle, type VehicleBrand } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
-import { getGroupForAnyCode } from "@/lib/equivalents";
 import { BatteryCard } from "./BatteryCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Button } from "@/components/ui/button";

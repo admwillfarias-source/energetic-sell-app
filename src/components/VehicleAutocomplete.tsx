@@ -4,7 +4,6 @@ import { Search, Car, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { searchVehicles, type VehicleSuggestion } from "@/lib/fitments";
-import { expandWithEquivalents } from "@/lib/equivalents";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -65,7 +64,7 @@ export default function VehicleAutocomplete({
   useEffect(() => setHighlight(0), [suggestions.length]);
 
   const choose = (s: VehicleSuggestion) => {
-    const codes = expandWithEquivalents(s.codes);
+    const codes = s.codes;
     if (codes.length === 0) {
       toast({
         title: "Nenhuma bateria encontrada",
