@@ -20,11 +20,11 @@ const Index = () => {
         <main>
           <HeroSection />
           <VehicleSearch />
+          <BatteryGrid />
           <QuickNavigation />
           <ManufacturerLogos />
           <Benefits />
           <Services />
-          <BatteryGrid />
           <HowItWorks />
           <WhyChoose />
         </main>
