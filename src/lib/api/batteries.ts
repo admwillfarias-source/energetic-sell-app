@@ -142,49 +142,29 @@ function ahFromAny(text: string): number | null {
 }
 
 /**
- * Busca até 1 bateria por marca (Moura, Heliar, Excell, Zetta) para um veículo.
- * Usa equivalências por marca quando disponíveis; senão, fallback "<Marca> <Ah>Ah".
+ * Busca baterias APENAS pelos SKUs/códigos exatos do fitment.
+ * Não infere amperagem, não injeta "<Marca> <Ah>Ah", não usa equivalências.
+ * Retorna no máximo 1 produto por marca, ordenado por preço.
  */
 export async function fetchBatteriesByVehicle(
   codes: string[],
-  groups: Partial<Record<VehicleBrand, string[]>> = {},
+  _groups: Partial<Record<VehicleBrand, string[]>> = {},
 ): Promise<Battery[]> {
-  const ah = codes.map((c) => ahFromAny(c)).find((n): n is number => !!n);
+  if (!codes.length) return [];
 
-  const queriesByBrand: Record<VehicleBrand, string[]> = {
-    Moura: [],
-    Heliar: [],
-    Excell: [],
-    Zetta: [],
-  };
+  // Busca única no WooCommerce com TODOS os códigos do fitment.
+  const list = await fetchBatteries({ codes, perPage: 30 });
 
-  for (const b of VEHICLE_BRANDS) {
-    const list = groups[b] ?? [];
-    if (list.length) queriesByBrand[b].push(...list);
-    if (ah) queriesByBrand[b].push(`${b} ${ah}Ah`);
-    if (!queriesByBrand[b].length) queriesByBrand[b].push(b);
+  // Agrupa por marca detectada no nome do produto e mantém 1 por marca.
+  const byBrand = new Map<VehicleBrand, Battery>();
+  for (const p of list) {
+    const brand = brandFromProductName(p.name);
+    if (!brand) continue;
+    const current = byBrand.get(brand);
+    if (!current || p.price > current.price) {
+      byBrand.set(brand, { ...p, brand });
+    }
   }
 
-  const results = await Promise.all(
-    VEHICLE_BRANDS.map(async (brand) => {
-      try {
-        const list = await fetchBatteries({
-          codes: queriesByBrand[brand],
-          perPage: 20,
-        });
-        const onlyBrand = list
-          .filter((p) => brandFromProductName(p.name) === brand)
-          .map((p) => ({ ...p, brand }));
-        if (!onlyBrand.length) return null;
-        onlyBrand.sort((a, b) => b.price - a.price);
-        return onlyBrand[0];
-      } catch {
-        return null;
-      }
-    }),
-  );
-
-  return (results.filter((b) => !!b) as Battery[]).sort(
-    (a, b) => b.price - a.price,
-  );
+  return Array.from(byBrand.values()).sort((a, b) => b.price - a.price);
 }
