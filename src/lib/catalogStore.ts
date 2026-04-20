@@ -7,6 +7,10 @@ export type Fitment = {
   yearStart: number;
   yearEnd: number;
   code: string;
+  skuHeliar?: string | null;
+  skuMoura?: string | null;
+  skuZetta?: string | null;
+  skuExcell?: string | null;
 };
 
 type DBFitment = {
@@ -16,9 +20,12 @@ type DBFitment = {
   year_start: number;
   year_end: number;
   code: string;
+  sku_heliar: string | null;
+  sku_moura: string | null;
+  sku_zetta: string | null;
+  sku_excell: string | null;
 };
 
-// Cache em memória — invalidado via window event "catalog-data-updated"
 let fitmentsCache: Fitment[] | null = null;
 let loadingPromise: Promise<void> | null = null;
 
@@ -43,7 +50,7 @@ export async function ensureCatalogLoaded(): Promise<void> {
         .range(from, from + PAGE - 1);
       if (error) throw error;
       if (!data || data.length === 0) break;
-      fitsAll.push(...(data as DBFitment[]));
+      fitsAll.push(...(data as unknown as DBFitment[]));
       if (data.length < PAGE) break;
     }
     fitmentsCache = fitsAll.map((r) => ({
@@ -53,6 +60,10 @@ export async function ensureCatalogLoaded(): Promise<void> {
       yearStart: r.year_start,
       yearEnd: r.year_end,
       code: r.code,
+      skuHeliar: r.sku_heliar,
+      skuMoura: r.sku_moura,
+      skuZetta: r.sku_zetta,
+      skuExcell: r.sku_excell,
     }));
   })();
   try {

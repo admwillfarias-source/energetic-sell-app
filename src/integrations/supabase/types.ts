@@ -21,6 +21,10 @@ export type Database = {
           created_at: string
           id: string
           model: string
+          sku_excell: string | null
+          sku_heliar: string | null
+          sku_moura: string | null
+          sku_zetta: string | null
           updated_at: string
           year_end: number
           year_start: number
@@ -31,6 +35,10 @@ export type Database = {
           created_at?: string
           id?: string
           model: string
+          sku_excell?: string | null
+          sku_heliar?: string | null
+          sku_moura?: string | null
+          sku_zetta?: string | null
           updated_at?: string
           year_end: number
           year_start: number
@@ -41,6 +49,10 @@ export type Database = {
           created_at?: string
           id?: string
           model?: string
+          sku_excell?: string | null
+          sku_heliar?: string | null
+          sku_moura?: string | null
+          sku_zetta?: string | null
           updated_at?: string
           year_end?: number
           year_start?: number
