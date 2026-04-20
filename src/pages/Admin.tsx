@@ -327,7 +327,7 @@ function EquivalentDialog({ open, onOpenChange, item, onSaved }: {
           <div><Label>Heliar</Label><Input value={heliar} onChange={(e) => setHeliar(e.target.value)} placeholder="H50GD" /></div>
           <div><Label>Zetta</Label><Input value={zetta} onChange={(e) => setZetta(e.target.value)} placeholder="50ED" /></div>
           <div><Label>Excell</Label><Input value={excell} onChange={(e) => setExcell(e.target.value)} placeholder="(opcional)" /></div>
-          <div><Label>Tudor</Label><Input value={tudor} onChange={(e) => setTudor(e.target.value)} placeholder="60HE/60PHE, TFS50TD" /></div>
+          
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancelar</Button>
