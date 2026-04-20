@@ -1,4 +1,4 @@
-import { ShoppingCart, ShieldCheck, Zap, ExternalLink } from "lucide-react";
+import { ShoppingCart, ShieldCheck, Zap, ExternalLink, Clock, CalendarClock } from "lucide-react";
 import { Battery } from "@/data/batteries";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
@@ -68,6 +68,19 @@ export function BatteryCard({ battery, onSelect }: Props) {
             {battery.warranty} meses
           </span>
         </div>
+
+        {(/^(moura|heliar)/i.test(battery.brand)) && (
+          <div className="mt-3 rounded-lg border border-accent/40 bg-accent/10 p-2.5">
+            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wide text-accent-foreground">
+              <Clock className="h-3.5 w-3.5 text-accent" />
+              Receba em até 35 min
+            </div>
+            <div className="mt-1 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <CalendarClock className="h-3 w-3" />
+              ou agende a entrega no horário que preferir
+            </div>
+          </div>
+        )}
 
         <div className="mt-auto pt-4">
           <div className="flex items-baseline gap-2">
