@@ -1,21 +1,15 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { MapPin, Car, TrendingUp, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cityPages } from "@/data/cityContent";
 import { vehiclePages } from "@/data/vehicles";
 
-const allCities = [
-  { name: "Porto Alegre", slug: "porto-alegre", badge: "2 lojas" },
-  { name: "Canoas", slug: "canoas", badge: "Loja própria" },
-  { name: "Gravataí", slug: "gravatai", badge: "Loja própria" },
-  { name: "São Leopoldo", slug: "sao-leopoldo", badge: "Loja própria" },
-  { name: "Novo Hamburgo", slug: "novo-hamburgo", badge: "Loja própria" },
-  { name: "Cachoeirinha", slug: "cachoeirinha", badge: "Entrega expressa" },
-  { name: "Alvorada", slug: "alvorada", badge: "Entrega expressa" },
-  { name: "Viamão", slug: "viamao", badge: "Entrega expressa" },
-  { name: "Sapucaia do Sul", slug: "sapucaia-do-sul", badge: "Entrega expressa" },
-  { name: "Esteio", slug: "esteio", badge: "Entrega expressa" },
-];
+const allCities = cityPages.map((c) => ({
+  name: c.name,
+  slug: c.slug,
+  badge: c.deliveryTime,
+}));
 
 const initialNeighborhoods = [
   { name: "Menino Deus" },
@@ -65,9 +59,9 @@ export default function QuickNavigation() {
             </h3>
             <div className="flex flex-col gap-2">
               {displayedCities.map((c) => (
-                <a
+                <Link
                   key={c.slug}
-                  href="#catalogo"
+                  to={`/baterias/${c.slug}`}
                   className="flex items-center justify-between bg-card border border-border rounded-lg px-4 py-2.5 hover:border-primary/40 hover:shadow-sm transition-all group"
                 >
                   <span className="font-medium text-foreground group-hover:text-primary transition-colors text-sm">
@@ -76,7 +70,7 @@ export default function QuickNavigation() {
                   <span className="text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5 font-medium">
                     {c.badge}
                   </span>
-                </a>
+                </Link>
               ))}
             </div>
             {!showAllCities && allCities.length > 6 && (
