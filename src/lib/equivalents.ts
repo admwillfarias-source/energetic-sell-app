@@ -9,6 +9,24 @@ export function getGroupForMouraCode(code: string): EquivalenceGroup | null {
   );
 }
 
+/**
+ * Procura um grupo de equivalência por QUALQUER marca (Moura, Heliar, Excell, Zetta).
+ * Usado quando os fitments retornam código Heliar (ex.: HAGM60HD) e queremos
+ * achar os equivalentes Moura/Excell/Zetta cadastrados.
+ */
+export function getGroupForAnyCode(code: string): EquivalenceGroup | null {
+  const upper = code.toUpperCase();
+  return (
+    getEquivalents().find(
+      (g) =>
+        g.moura.some((c) => c.toUpperCase() === upper) ||
+        g.heliar.some((c) => c.toUpperCase() === upper) ||
+        g.excell.some((c) => c.toUpperCase() === upper) ||
+        g.zetta.some((c) => c.toUpperCase() === upper),
+    ) ?? null
+  );
+}
+
 export function ahFromCode(code: string): number | null {
   const m = code.match(/(\d{2,3})/);
   return m ? Number(m[1]) : null;
