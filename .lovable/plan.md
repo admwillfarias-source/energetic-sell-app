@@ -1,43 +1,45 @@
 
-O usuário quer que eu busque dados oficiais nos sites Heliar e Moura Fácil para corrigir/expandir as aplicações (fitments) do catálogo de busca por veículo.
 
 ## Objetivo
-Comparar e corrigir os dados de aplicações (marca/modelo/ano → código de bateria) usando como fonte oficial os buscadores da Heliar e Moura Fácil, atualizando a tabela `fitments` no banco.
+Garantir que **toda busca por veículo retorne 4 baterias** (uma de cada marca: Moura, Heliar, Excell, Zetta) sempre que a planilha de equivalências tiver os códigos cadastrados, buscando os produtos reais no WooCommerce.
 
-## Estratégia
+## Diagnóstico atual
 
-### 1. Coleta de dados (via Firecrawl)
-Os sites Heliar e Moura Fácil são SPAs com busca dinâmica. Para extrair dados em escala preciso do **Firecrawl** (connector já documentado no projeto). Vou:
-- Fazer scrape estruturado das páginas de busca por veículo de ambos os sites
-- Extrair: marca, modelo, intervalo de anos, código de bateria recomendado
-- Como Moura é a marca-mãe (e nosso `fitments` é indexado por código Moura), o Moura Fácil será a fonte primária; Heliar entra como referência cruzada de equivalência
+1. **Busca já usa WooCommerce** via edge function `wc-products` → `awrbaterias.com.br/wp-json/wc/store/products`. ✅
+2. **Problema 1 — Equivalentes incompletos**: a planilha `HELIAR_Tabelas_Aplicacoes_2025.xlsx` enviada precisa ser importada na tabela `public.equivalents` para complementar/atualizar os 27 grupos atuais (em especial linhas Heliar que ainda não estão mapeadas).
+3. **Problema 2 — Garantia de 4 marcas no resultado**: hoje em `BatteryGrid.tsx`, quando há veículo selecionado, o código pega "1 melhor de cada marca preferred". Se o WooCommerce não devolveu produto de alguma marca (porque a busca foi feita só pelo SKU técnico que ele não indexa), aquela marca fica faltando, mesmo a planilha tendo o código.
+4. **Problema 3 — Fallback por nome**: já injetamos "Heliar 60Ah", "Excell 60Ah" etc., mas se o WooCommerce devolver um produto que o `detectBrand` classifica errado (ex.: classifica Excell como Moura), o slot da marca correta fica vazio.
 
-### 2. Processamento
-- Script Python em `/tmp` que normaliza os dados coletados (marca/modelo em maiúsculas consistentes, anos como inteiros)
-- Comparar com `fitments` atual (carregar via SQL) e gerar 3 listas:
-  - **Novos**: aplicações que não existem no banco
-  - **Correções**: códigos diferentes para mesmo carro/ano
-  - **Conflitos**: casos ambíguos para revisão manual
+## Mudanças propostas
 
-### 3. Aplicação no banco
-- Migration SQL com INSERTs dos novos e UPDATEs das correções
-- Cache invalidado automaticamente (já implementado em `catalogStore.ts`)
+### 1. Importar a planilha Heliar 2025 na tabela `equivalents`
+- Em modo default, fazer parse do `HELIAR_Tabelas_Aplicacoes_2025.xlsx` (openpyxl/pandas).
+- Para cada linha da planilha, fazer **merge** no grupo Moura correspondente (chave = primeiro código Moura). Se o grupo não existir, inserir novo.
+- Adicionar/completar os arrays `heliar`, `excell`, `zetta` sem apagar dados já existentes.
+- Gerar migration de UPDATE/INSERT controlada (não usar dados.json local — só banco).
 
-### 4. Code change mínimo
-Nenhum, salvo se descobrir gaps na lógica de busca durante o cruzamento.
+### 2. Garantir busca por marca explícita (`src/lib/api/batteries.ts`)
+Adicionar uma nova função `fetchBatteriesByVehicle(codes, brandsWanted)` que:
+- Para **cada marca alvo** (Moura, Heliar, Excell, Zetta), faz uma busca paralela no `wc-products` usando os códigos+nomes daquela marca extraídos do grupo de equivalência.
+- Retorna no máximo **1 produto por marca**, escolhendo o de maior preço (premium primeiro).
+- Se a marca não tiver código cadastrado na planilha, faz fallback para `"<Marca> <Ah>Ah"` (ex.: `Heliar 60Ah`).
+- Garante classificação correta da marca pelo nome do produto (não pela inferência do `detectBrand` atual).
 
-## Pré-requisito
-**Preciso conectar o Firecrawl** (connector_id: `firecrawl`) — é a forma confiável de raspar SPAs como o Moura Fácil. Sem ele, o `fetch_website` retorna apenas a casca HTML sem os dados de busca.
+### 3. Refatorar `BatteryGrid.tsx`
+- Quando `?v=` (veículo) estiver presente: chamar `fetchBatteriesByVehicle` em vez do fluxo genérico `fetchBatteries`.
+- Resultado já vem com 1 por marca, ordenado do mais caro para o mais barato.
+- Mostrar até **4 cards** (Moura, Heliar, Excell, Zetta) quando todos disponíveis.
+- Se uma marca não retornar produto, mostrar 3 (não exibir slot vazio).
 
-## Escopo proposto
-Para não levar horas raspando milhares de combinações, sugiro **focar nos top 30-40 modelos mais vendidos no Brasil** (Onix, HB20, Gol, Strada, Polo, Compass, Corolla, Civic, Renegade, Tracker, Kwid, Mobi, Argo, Cronos, T-Cross, Nivus, Saveiro, Toro, S10, Hilux, Ranger, Frontier, Amarok, Fiesta, Ka, EcoSport, Kicks, Versa, City, Fit, HR-V, CR-V, Tiguan, Jetta, Virtus, etc). Se quiser cobertura total depois, expandimos.
+### 4. Edge function `wc-products` — sem alteração
+Já aceita `?codes=a,b,c` e faz fan-out paralelo. Vamos reutilizar passando os termos por marca (ex.: chamar 4× a função, uma por marca).
 
-## Arquivos
-- Migration SQL (gerada pelo script após coleta)
-- Possivelmente `src/lib/fitments.ts` se aparecer um caso que a busca atual não cobre
+## Arquivos afetados
+- `supabase/migrations/<novo>.sql` — merge da planilha Heliar em `equivalents`.
+- `src/lib/api/batteries.ts` — nova função `fetchBatteriesByVehicle`.
+- `src/components/BatteryGrid.tsx` — usar a nova função quando há veículo.
+- `src/lib/equivalents.ts` — expor helper `getGroupForMouraCode` (retorna o grupo completo por marca).
 
-## Próximo passo
-Aprove o plano para que eu:
-1. Conecte o Firecrawl
-2. Faça o scrape do Moura Fácil + Heliar para a lista top 40
-3. Apresente um diff (novos/correções/conflitos) antes de aplicar no banco
+## Resultado esperado
+Buscar "Onix 2018", "Polo 2020" ou "Hilux 2019" retorna sempre **4 cards** — um Moura, um Heliar, um Excell e um Zetta — com preços reais do WooCommerce, ordenados do mais caro para o mais barato.
+
