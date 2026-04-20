@@ -1,4 +1,18 @@
-import { getEquivalents } from "@/lib/catalogStore";
+import { getEquivalents, type EquivalenceGroup } from "@/lib/catalogStore";
+
+export function getGroupForMouraCode(code: string): EquivalenceGroup | null {
+  const upper = code.toUpperCase();
+  return (
+    getEquivalents().find((g) =>
+      g.moura.some((c) => c.toUpperCase() === upper),
+    ) ?? null
+  );
+}
+
+export function ahFromCode(code: string): number | null {
+  const m = code.match(/(\d{2,3})/);
+  return m ? Number(m[1]) : null;
+}
 
 // Fallback por amperagem — usado quando o código Moura não está cadastrado.
 const BY_AH: Record<number, string[]> = {
