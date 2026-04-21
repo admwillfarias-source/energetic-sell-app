@@ -21,7 +21,7 @@ export function Header() {
           <Button asChild variant="ghost" size="sm" className="text-secondary-foreground hidden sm:inline-flex">
             <a href="tel:+555135165472"><Phone className="h-4 w-4 mr-2" />(51) 3516-5472</a>
           </Button>
-          <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="relative">
+          <Button variant="outline" size="sm" onClick={() => setOpen(true)} className="relative" data-debug-id="open-cart">
             <ShoppingCart className="h-4 w-4" />
             {count > 0 && (
               <span className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">

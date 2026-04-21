@@ -7,6 +7,7 @@ const WHATSAPP_URL =
 export default function MobileActionBar() {
   return (
     <div
+      data-debug-id="mobile-action-bar"
       className="fixed inset-x-0 z-40 lg:hidden border-b border-border bg-background/98 backdrop-blur-md shadow-[0_6px_16px_-2px_hsl(var(--foreground)/0.18)]"
       style={{
         top: "calc(env(safe-area-inset-top, 0px) + 64px)",
