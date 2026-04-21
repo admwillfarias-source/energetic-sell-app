@@ -1,13 +1,74 @@
-import { MessageCircle, Clock, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import VehicleAutocomplete from "@/components/VehicleAutocomplete";
+import { lazy, Suspense, useState, useRef, useEffect } from "react";
+import { Search, Car, Clock, Star } from "lucide-react";
+
+const VehicleAutocomplete = lazy(() => import("@/components/VehicleAutocomplete"));
+const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
+
 import heroBg from "@/assets/hero-bg.webp";
 import heroBgSm from "@/assets/hero-bg-sm.webp";
 
-const WHATSAPP_URL =
-  "https://wa.me/5551993199486?text=Ol%C3%A1!%20Solicito%20a%20minha%20bateria.";
+function SearchPlaceholder({ onActivate }: { onActivate: () => void }) {
+  return (
+    <div className="flex gap-2">
+      <div className="relative flex-1">
+        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+        <input
+          type="text"
+          placeholder="Ex: Fiat Uno 2015, Onix 2018, Corolla 2014..."
+          onFocus={onActivate}
+          onClick={onActivate}
+          onTouchStart={onActivate}
+          className="h-12 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+          aria-label="Buscar veículo"
+        />
+      </div>
+      <button
+        onClick={onActivate}
+        className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-accent px-4 font-semibold text-accent-foreground hover:bg-accent/90"
+      >
+        <Car className="h-4 w-4" />
+        <span className="hidden sm:inline">Buscar</span>
+      </button>
+    </div>
+  );
+}
 
 export default function HeroSection() {
+  const [searchActive, setSearchActive] = useState(false);
+  const [whatsVisible, setWhatsVisible] = useState(false);
+  const whatsRef = useRef<HTMLDivElement>(null);
+
+  // Pré-carrega o autocomplete + catálogo após idle, sem bloquear o LCP
+  useEffect(() => {
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number };
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
+    const id = schedule(() => setSearchActive(true));
+    return () => {
+      const cancel =
+        (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback ??
+        clearTimeout;
+      cancel(id as number);
+    };
+  }, []);
+
+  // Lazy para o botão de WhatsApp quando visível
+  useEffect(() => {
+    if (whatsVisible) return;
+    const el = whatsRef.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setWhatsVisible(true);
+          obs.disconnect();
+        }
+      },
+      { rootMargin: "100px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [whatsVisible]);
+
   return (
     <section id="inicio" className="relative min-h-[90vh] flex items-center pt-16">
       <div className="absolute inset-0 z-0">
@@ -50,20 +111,21 @@ export default function HeroSection() {
           </p>
 
           <div className="mb-6 rounded-2xl bg-card/95 p-4 shadow-lg backdrop-blur md:p-5">
-            <VehicleAutocomplete variant="inline" />
+            {searchActive ? (
+              <Suspense fallback={<SearchPlaceholder onActivate={() => {}} />}>
+                <VehicleAutocomplete variant="inline" />
+              </Suspense>
+            ) : (
+              <SearchPlaceholder onActivate={() => setSearchActive(true)} />
+            )}
           </div>
 
-          <div className="hidden sm:flex flex-col sm:flex-row gap-3 mb-6">
-            <Button
-              asChild
-              size="lg"
-              className="bg-awr-green hover:bg-awr-green/90 text-awr-green-foreground font-bold text-base gap-2 h-14 px-8 animate-pulse-glow"
-            >
-              <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
-                <MessageCircle className="h-5 w-5" />
-                Solicite a sua bateria
-              </a>
-            </Button>
+          <div ref={whatsRef} className="hidden sm:flex flex-col sm:flex-row gap-3 mb-6 min-h-[56px]">
+            {whatsVisible && (
+              <Suspense fallback={null}>
+                <HeroWhatsButton />
+              </Suspense>
+            )}
           </div>
 
           <div className="flex items-center gap-2 text-secondary-foreground/90">
