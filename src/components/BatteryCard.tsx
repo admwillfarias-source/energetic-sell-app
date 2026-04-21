@@ -100,7 +100,7 @@ export function BatteryCard({ battery, onSelect }: Props) {
             className="mt-3 w-full gap-2 bg-primary text-primary-foreground hover:bg-primary-glow"
           >
             <ShoppingCart className="h-4 w-4" />
-            Comprar
+            Solicitar a sua bateria
           </Button>
           {battery.permalink && (
             <a

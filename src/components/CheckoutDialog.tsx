@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import { MessageCircle, ShoppingCart, Loader2, Zap, CalendarClock, Car } from "lucide-react";
+import { MessageCircle, ShoppingCart, Loader2, Zap, CalendarClock, Car, Store } from "lucide-react";
 import { z } from "zod";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,21 +25,30 @@ const RAPIDA_FIM_MIN = 18 * 60; // 18:00
 const baseSchema = {
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
   documento: z.string().trim().min(11, "CPF/CNPJ inválido").max(20),
-  endereco: z.string().trim().min(5, "Informe o endereço").max(200),
-  numero: z.string().trim().min(1, "Informe o número").max(20),
   cep: z.string().trim().max(10).optional().or(z.literal("")),
   telefone: z.string().trim().min(10, "Telefone inválido").max(20),
   pagamento: z.string().trim().min(2, "Informe a forma de pagamento").max(60),
   carroAno: z.string().trim().min(2, "Informe carro e ano").max(100),
 };
 
+const enderecoSchema = {
+  endereco: z.string().trim().min(5, "Informe o endereço").max(200),
+  numero: z.string().trim().min(1, "Informe o número").max(20),
+};
+
 const schema = z.discriminatedUnion("entregaTipo", [
-  z.object({ ...baseSchema, entregaTipo: z.literal("rapida") }),
+  z.object({ ...baseSchema, ...enderecoSchema, entregaTipo: z.literal("rapida") }),
   z.object({
     ...baseSchema,
+    ...enderecoSchema,
     entregaTipo: z.literal("agendada"),
     entregaData: z.string().trim().min(1, "Selecione a data"),
     entregaHora: z.string().trim().min(1, "Selecione o horário"),
+  }),
+  z.object({
+    ...baseSchema,
+    entregaTipo: z.literal("retirada"),
+    lojaRetirada: z.string().trim().min(2, "Selecione a loja"),
   }),
 ]);
 
@@ -74,9 +83,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     telefone: "",
     pagamento: "",
     carroAno: "",
-    entregaTipo: "rapida" as "rapida" | "agendada",
+    entregaTipo: "rapida" as "rapida" | "agendada" | "retirada",
     entregaData: "",
     entregaHora: "",
+    lojaRetirada: "",
   });
 
   // Autocomplete carro/ano
@@ -180,10 +190,11 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     }
   };
 
-  const entregaResumo = () =>
-    form.entregaTipo === "rapida"
-      ? "Entrega rápida (até 35 min — 8h30 às 18h)"
-      : `Agendada para ${form.entregaData} às ${form.entregaHora}`;
+  const entregaResumo = () => {
+    if (form.entregaTipo === "rapida") return "Entrega rápida (até 35 min — 8h30 às 18h)";
+    if (form.entregaTipo === "agendada") return `Agendada para ${form.entregaData} às ${form.entregaHora}`;
+    return `Retirada na loja${form.lojaRetirada ? ` — ${form.lojaRetirada}` : ""}`;
+  };
 
   const validar = (): { ok: boolean; msg?: string } => {
     const parsed = schema.safeParse(form);
@@ -333,42 +344,46 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="cep">
-              CEP <span className="text-xs font-normal text-muted-foreground">(opcional — preenche o endereço)</span>
-            </Label>
-            <div className="relative">
-              <Input
-                id="cep"
-                value={form.cep}
-                onChange={(e) => handleCepChange(e.target.value)}
-                placeholder="00000-000"
-                inputMode="numeric"
-              />
-              {cepLoading && (
-                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-              )}
-            </div>
-          </div>
+          {form.entregaTipo !== "retirada" && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="cep">
+                  CEP <span className="text-xs font-normal text-muted-foreground">(opcional — preenche o endereço)</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="cep"
+                    value={form.cep}
+                    onChange={(e) => handleCepChange(e.target.value)}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                  />
+                  {cepLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+              </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="endereco">Endereço de entrega</Label>
-            <Input id="endereco" value={form.endereco} onChange={update("endereco")} placeholder="Rua, bairro, cidade" />
-          </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="endereco">Endereço de entrega</Label>
+                <Input id="endereco" value={form.endereco} onChange={update("endereco")} placeholder="Rua, bairro, cidade" />
+              </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="numero">Número (Casa/Apto)</Label>
-            <Input id="numero" value={form.numero} onChange={update("numero")} placeholder="123 / Apto 45" />
-          </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="numero">Número (Casa/Apto)</Label>
+                <Input id="numero" value={form.numero} onChange={update("numero")} placeholder="123 / Apto 45" />
+              </div>
+            </>
+          )}
 
           <div className="space-y-2">
             <Label>Modalidade de entrega</Label>
             <RadioGroup
               value={form.entregaTipo}
               onValueChange={(v) =>
-                setForm((p) => ({ ...p, entregaTipo: v as "rapida" | "agendada" }))
+                setForm((p) => ({ ...p, entregaTipo: v as "rapida" | "agendada" | "retirada" }))
               }
-              className="grid gap-2 sm:grid-cols-2"
+              className="grid gap-2 sm:grid-cols-3"
             >
               <label
                 htmlFor="entrega-rapida"
@@ -406,6 +421,23 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   <p className="text-xs text-muted-foreground">Escolha data e horário</p>
                 </div>
               </label>
+              <label
+                htmlFor="entrega-retirada"
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                  form.entregaTipo === "retirada"
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-secondary/40"
+                }`}
+              >
+                <RadioGroupItem id="entrega-retirada" value="retirada" className="mt-0.5" />
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <Store className="h-4 w-4 text-primary" />
+                    Retirar na loja
+                  </div>
+                  <p className="text-xs text-muted-foreground">Sem custo de entrega</p>
+                </div>
+              </label>
             </RadioGroup>
 
             {form.entregaTipo === "rapida" && !rapidaAgora && (
@@ -435,6 +467,27 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     onChange={update("entregaHora")}
                   />
                 </div>
+              </div>
+            )}
+
+            {form.entregaTipo === "retirada" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="lojaRetirada">Loja para retirada</Label>
+                <select
+                  id="lojaRetirada"
+                  value={form.lojaRetirada}
+                  onChange={(e) => setForm((p) => ({ ...p, lojaRetirada: e.target.value }))}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Selecione uma loja...</option>
+                  <option value="Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)">Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)</option>
+                  <option value="Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)">Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)</option>
+                  <option value="Canoas - Fátima (Av. Guilherme Schell, 3266)">Canoas - Fátima (Av. Guilherme Schell, 3266)</option>
+                  <option value="Gravataí">Gravataí</option>
+                  <option value="Cachoeirinha">Cachoeirinha</option>
+                  <option value="Novo Hamburgo">Novo Hamburgo</option>
+                </select>
+                <p className="text-xs text-muted-foreground">Você retira a bateria na loja selecionada — endereço não é necessário.</p>
               </div>
             )}
           </div>
