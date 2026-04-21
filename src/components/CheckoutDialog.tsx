@@ -381,9 +381,9 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
             <RadioGroup
               value={form.entregaTipo}
               onValueChange={(v) =>
-                setForm((p) => ({ ...p, entregaTipo: v as "rapida" | "agendada" }))
+                setForm((p) => ({ ...p, entregaTipo: v as "rapida" | "agendada" | "retirada" }))
               }
-              className="grid gap-2 sm:grid-cols-2"
+              className="grid gap-2 sm:grid-cols-3"
             >
               <label
                 htmlFor="entrega-rapida"
@@ -421,6 +421,23 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   <p className="text-xs text-muted-foreground">Escolha data e horário</p>
                 </div>
               </label>
+              <label
+                htmlFor="entrega-retirada"
+                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
+                  form.entregaTipo === "retirada"
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:bg-secondary/40"
+                }`}
+              >
+                <RadioGroupItem id="entrega-retirada" value="retirada" className="mt-0.5" />
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-1.5 font-medium">
+                    <Store className="h-4 w-4 text-primary" />
+                    Retirar na loja
+                  </div>
+                  <p className="text-xs text-muted-foreground">Sem custo de entrega</p>
+                </div>
+              </label>
             </RadioGroup>
 
             {form.entregaTipo === "rapida" && !rapidaAgora && (
@@ -450,6 +467,27 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     onChange={update("entregaHora")}
                   />
                 </div>
+              </div>
+            )}
+
+            {form.entregaTipo === "retirada" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="lojaRetirada">Loja para retirada</Label>
+                <select
+                  id="lojaRetirada"
+                  value={form.lojaRetirada}
+                  onChange={(e) => setForm((p) => ({ ...p, lojaRetirada: e.target.value }))}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  <option value="">Selecione uma loja...</option>
+                  <option value="Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)">Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)</option>
+                  <option value="Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)">Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)</option>
+                  <option value="Canoas - Fátima (Av. Guilherme Schell, 3266)">Canoas - Fátima (Av. Guilherme Schell, 3266)</option>
+                  <option value="Gravataí">Gravataí</option>
+                  <option value="Cachoeirinha">Cachoeirinha</option>
+                  <option value="Novo Hamburgo">Novo Hamburgo</option>
+                </select>
+                <p className="text-xs text-muted-foreground">Você retira a bateria na loja selecionada — endereço não é necessário.</p>
               </div>
             )}
           </div>
