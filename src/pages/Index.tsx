@@ -1,16 +1,24 @@
+import { lazy, Suspense } from "react";
 import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import { BatteryGrid } from "@/components/BatteryGrid";
 import MobileActionBar from "@/components/MobileActionBar";
-import { Benefits } from "@/components/Benefits";
-import { HowItWorks } from "@/components/HowItWorks";
-import QuickNavigation from "@/components/QuickNavigation";
-import ManufacturerLogos from "@/components/ManufacturerLogos";
-import { Footer } from "@/components/Footer";
-import { CartDrawer } from "@/components/CartDrawer";
+import LazySection from "@/components/LazySection";
 import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
+
+const Benefits = lazy(() => import("@/components/Benefits").then((m) => ({ default: m.Benefits })));
+const HowItWorks = lazy(() =>
+  import("@/components/HowItWorks").then((m) => ({ default: m.HowItWorks })),
+);
+const QuickNavigation = lazy(() => import("@/components/QuickNavigation"));
+const ManufacturerLogos = lazy(() => import("@/components/ManufacturerLogos"));
+const Footer = lazy(() => import("@/components/Footer").then((m) => ({ default: m.Footer })));
+const CartDrawer = lazy(() =>
+  import("@/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
+);
+const EngagementPopup = lazy(() => import("@/components/EngagementPopup"));
 
 const SITE = "https://awrbaterias.com.br";
 
@@ -43,17 +51,42 @@ const Index = () => {
       />
       <div className="min-h-screen bg-background">
         <Header />
-        <main>
+        <main className="pb-24 lg:pb-0">
           <HeroSection />
           <BatteryGrid />
-          <Benefits />
-          <HowItWorks />
-          <QuickNavigation />
-          <ManufacturerLogos />
+          <LazySection minHeight="400px">
+            <Suspense fallback={null}>
+              <Benefits />
+            </Suspense>
+          </LazySection>
+          <LazySection minHeight="400px">
+            <Suspense fallback={null}>
+              <HowItWorks />
+            </Suspense>
+          </LazySection>
+          <LazySection minHeight="300px">
+            <Suspense fallback={null}>
+              <QuickNavigation />
+            </Suspense>
+          </LazySection>
+          <LazySection minHeight="200px">
+            <Suspense fallback={null}>
+              <ManufacturerLogos />
+            </Suspense>
+          </LazySection>
         </main>
-        <Footer />
-        <CartDrawer />
+        <LazySection minHeight="300px">
+          <Suspense fallback={null}>
+            <Footer />
+          </Suspense>
+        </LazySection>
+        <Suspense fallback={null}>
+          <CartDrawer />
+        </Suspense>
         <MobileActionBar />
+        <Suspense fallback={null}>
+          <EngagementPopup />
+        </Suspense>
       </div>
     </CartProvider>
   );
