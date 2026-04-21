@@ -49,6 +49,7 @@ function SearchPlaceholder({
 
 export default function HeroSection() {
   const [searchActive, setSearchActive] = useState(false);
+  const [initialQuery, setInitialQuery] = useState("");
   const [whatsVisible, setWhatsVisible] = useState(false);
   const whatsRef = useRef<HTMLDivElement>(null);
 
@@ -132,11 +133,23 @@ export default function HeroSection() {
 
           <div className="mb-6 rounded-2xl bg-card/95 p-4 shadow-lg backdrop-blur md:p-5">
             {searchActive ? (
-              <Suspense fallback={<SearchPlaceholder onActivate={() => {}} />}>
-                <VehicleAutocomplete variant="inline" />
+              <Suspense
+                fallback={
+                  <SearchPlaceholder
+                    onActivate={() => {}}
+                    initialValue={initialQuery}
+                    onChange={() => {}}
+                  />
+                }
+              >
+                <VehicleAutocomplete variant="inline" initialQuery={initialQuery} />
               </Suspense>
             ) : (
-              <SearchPlaceholder onActivate={() => setSearchActive(true)} />
+              <SearchPlaceholder
+                onActivate={() => setSearchActive(true)}
+                initialValue={initialQuery}
+                onChange={setInitialQuery}
+              />
             )}
           </div>
 
