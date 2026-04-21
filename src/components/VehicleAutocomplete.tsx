@@ -15,6 +15,7 @@ type Props = {
   className?: string;
   placeholder?: string;
   initialQuery?: string;
+  onSelect?: () => void;
 };
 
 export default function VehicleAutocomplete({
@@ -22,6 +23,7 @@ export default function VehicleAutocomplete({
   className,
   placeholder = "Carro e ano (Ex: Onix 2018) ou modelo da bateria (Ex: M60GD)",
   initialQuery = "",
+  onSelect,
 }: Props) {
   const navigate = useNavigate();
   const [query, setQuery] = useState(initialQuery);
@@ -100,12 +102,13 @@ export default function VehicleAutocomplete({
       // ignore
     }
     toast({ title: "Buscando baterias compatíveis", description: s.label });
+    onSelect?.();
     navigate(
       `/?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(s.label)}#catalogo`,
     );
     setTimeout(
       () => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" }),
-      50,
+      80,
     );
   };
 
@@ -116,6 +119,7 @@ export default function VehicleAutocomplete({
       const sku = normalizeSku(query);
       toast({ title: "Buscando bateria", description: sku });
       setOpen(false);
+      onSelect?.();
       navigate(`/bateria/${encodeURIComponent(sku)}`);
     } else if (query.trim().length >= 2) {
       toast({
