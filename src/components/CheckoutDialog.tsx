@@ -819,7 +819,12 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           </div>
 
           {/* RESUMO + NAVEGAÇÃO — sticky no rodapé */}
-          <div className="border-t border-border bg-muted/30 px-6 py-4">
+          <div
+            className="border-t border-border bg-muted/30 px-6 py-4 lg:pb-4"
+            style={{
+              paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)",
+            }}
+          >
             <div className="mb-3 space-y-1.5">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>
