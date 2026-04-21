@@ -1,45 +1,77 @@
 
 
-## Objetivo
-Garantir que **toda busca por veículo retorne 4 baterias** (uma de cada marca: Moura, Heliar, Excell, Zetta) sempre que a planilha de equivalências tiver os códigos cadastrados, buscando os produtos reais no WooCommerce.
+## Análise Moura Fácil → Melhorias para AWR Baterias
 
-## Diagnóstico atual
+Estudei o site mourafacil.moura.com.br (referência do mercado) e comparei com a sua landing atual. Abaixo estão as melhorias recomendadas, separadas por prioridade e por dispositivo.
 
-1. **Busca já usa WooCommerce** via edge function `wc-products` → `awrbaterias.com.br/wp-json/wc/store/products`. ✅
-2. **Problema 1 — Equivalentes incompletos**: a planilha `HELIAR_Tabelas_Aplicacoes_2025.xlsx` enviada precisa ser importada na tabela `public.equivalents` para complementar/atualizar os 27 grupos atuais (em especial linhas Heliar que ainda não estão mapeadas).
-3. **Problema 2 — Garantia de 4 marcas no resultado**: hoje em `BatteryGrid.tsx`, quando há veículo selecionado, o código pega "1 melhor de cada marca preferred". Se o WooCommerce não devolveu produto de alguma marca (porque a busca foi feita só pelo SKU técnico que ele não indexa), aquela marca fica faltando, mesmo a planilha tendo o código.
-4. **Problema 3 — Fallback por nome**: já injetamos "Heliar 60Ah", "Excell 60Ah" etc., mas se o WooCommerce devolver um produto que o `detectBrand` classifica errado (ex.: classifica Excell como Moura), o slot da marca correta fica vazio.
+---
 
-## Mudanças propostas
+### O que a Moura faz bem (e a AWR ainda não usa)
 
-### 1. Importar a planilha Heliar 2025 na tabela `equivalents`
-- Em modo default, fazer parse do `HELIAR_Tabelas_Aplicacoes_2025.xlsx` (openpyxl/pandas).
-- Para cada linha da planilha, fazer **merge** no grupo Moura correspondente (chave = primeiro código Moura). Se o grupo não existir, inserir novo.
-- Adicionar/completar os arrays `heliar`, `excell`, `zetta` sem apagar dados já existentes.
-- Gerar migration de UPDATE/INSERT controlada (não usar dados.json local — só banco).
+1. **Indicador social ao vivo** — badge "27 entregas em andamento" no hero, gera urgência e prova social.
+2. **Selo de parcelamento destacado** — "10x sem juros" em badge circular grande no hero.
+3. **Stepper visual de 3 passos** — "Selecione local → Pagamento na entrega → Entrega e instalação grátis", logo abaixo do hero.
+4. **Depoimentos com avatar/iniciais + cidade + data** (não apenas estrelas).
+5. **Linhas de produto segmentadas** — seções dedicadas a moto e caminhão, com CTA próprio.
+6. **Bloco de formas de pagamento** no rodapé (PIX, Master, Visa, Elo) com ícones.
+7. **Selo de segurança** (Site Blindado) no rodapé.
+8. **Botão flutuante de WhatsApp no desktop** (canto inferior direito).
+9. **FAQ na home** com 3 perguntas-chave + link "ver mais".
 
-### 2. Garantir busca por marca explícita (`src/lib/api/batteries.ts`)
-Adicionar uma nova função `fetchBatteriesByVehicle(codes, brandsWanted)` que:
-- Para **cada marca alvo** (Moura, Heliar, Excell, Zetta), faz uma busca paralela no `wc-products` usando os códigos+nomes daquela marca extraídos do grupo de equivalência.
-- Retorna no máximo **1 produto por marca**, escolhendo o de maior preço (premium primeiro).
-- Se a marca não tiver código cadastrado na planilha, faz fallback para `"<Marca> <Ah>Ah"` (ex.: `Heliar 60Ah`).
-- Garante classificação correta da marca pelo nome do produto (não pela inferência do `detectBrand` atual).
+---
 
-### 3. Refatorar `BatteryGrid.tsx`
-- Quando `?v=` (veículo) estiver presente: chamar `fetchBatteriesByVehicle` em vez do fluxo genérico `fetchBatteries`.
-- Resultado já vem com 1 por marca, ordenado do mais caro para o mais barato.
-- Mostrar até **4 cards** (Moura, Heliar, Excell, Zetta) quando todos disponíveis.
-- Se uma marca não retornar produto, mostrar 3 (não exibir slot vazio).
+### Melhorias prioritárias — MOBILE
 
-### 4. Edge function `wc-products` — sem alteração
-Já aceita `?codes=a,b,c` e faz fan-out paralelo. Vamos reutilizar passando os termos por marca (ex.: chamar 4× a função, uma por marca).
+| # | Melhoria | Onde | Impacto |
+|---|---|---|---|
+| M1 | Adicionar **stepper "1. Busque seu carro → 2. Confirme entrega → 3. Pagamento na entrega"** abaixo do hero | novo componente `HowToOrder` no `Index.tsx` | Reduz fricção de primeira compra |
+| M2 | Mostrar **badge "10x sem juros"** sempre visível dentro do hero (hoje só aparece no texto) | `HeroSection.tsx` | Conversão |
+| M3 | **Depoimentos com avatar + cidade + data** (3 cards, swipe horizontal no mobile) | novo `Testimonials.tsx` | Confiança |
+| M4 | Reduzir altura do `MobileActionBar` em 4px e dar **mais contraste** ao texto (atualmente fundo escuro pode confundir com sistema iOS) | `MobileActionBar.tsx` | Usabilidade |
+| M5 | **FAQ resumida (3 perguntas)** na home antes do footer | `FaqHome.tsx` usando `faqData.ts` | SEO + objeções |
+| M6 | Adicionar **microcópia "Pagamento só na entrega"** nos botões de checkout do `BatteryCard` | `BatteryCard.tsx` | Reduz abandono |
 
-## Arquivos afetados
-- `supabase/migrations/<novo>.sql` — merge da planilha Heliar em `equivalents`.
-- `src/lib/api/batteries.ts` — nova função `fetchBatteriesByVehicle`.
-- `src/components/BatteryGrid.tsx` — usar a nova função quando há veículo.
-- `src/lib/equivalents.ts` — expor helper `getGroupForMouraCode` (retorna o grupo completo por marca).
+### Melhorias prioritárias — DESKTOP
 
-## Resultado esperado
-Buscar "Onix 2018", "Polo 2020" ou "Hilux 2019" retorna sempre **4 cards** — um Moura, um Heliar, um Excell e um Zetta — com preços reais do WooCommerce, ordenados do mais caro para o mais barato.
+| # | Melhoria | Onde | Impacto |
+|---|---|---|---|
+| D1 | **Botão flutuante de WhatsApp** no canto inferior direito (só desktop, mobile já tem barra) | novo `FloatingWhatsApp.tsx` | CTA persistente |
+| D2 | **Contador de entregas "X entregas em andamento hoje"** no hero (pode ser número simulado entre 8-25 com leve variação por hora) | `HeroSection.tsx` | Urgência |
+| D3 | **Seções de linha de produto** (Moto, Caminhão, Estacionária) como cards horizontais clicáveis filtrando o catálogo | novo `ProductLines.tsx` | Descoberta |
+| D4 | **Bloco de formas de pagamento** no footer com ícones PIX/Visa/Master/Elo + parcelamento | `Footer.tsx` | Confiança |
+| D5 | **Selo de segurança** (cadeado SSL + "Site seguro") no footer | `Footer.tsx` | Confiança |
+| D6 | Stepper visual de 3 passos lado-a-lado (mesmo do mobile, layout horizontal) | `HowToOrder.tsx` | Conversão |
+
+### Performance / técnico (ambos)
+
+| # | Melhoria |
+|---|---|
+| P1 | Pré-carregar logo da fonte de hero no `<head>` (`<link rel="preload" as="image">`) — ganha LCP |
+| P2 | `loading="lazy"` nos logos das montadoras |
+| P3 | Remover `animate-pulse-glow` do botão WhatsApp do hero quando `prefers-reduced-motion` |
+| P4 | Adicionar `Schema.org/Review` nos depoimentos para rich snippets |
+
+---
+
+### Escopo proposto para implementar agora (Fase 1)
+
+Sugiro entregar em duas fases. A **Fase 1** captura o maior ganho com baixo esforço:
+
+1. **HowToOrder** (stepper 3 passos) — M1/D6
+2. **Testimonials** com avatar + cidade + data — M3
+3. **Badge "10x sem juros" no hero** — M2
+4. **Botão flutuante WhatsApp desktop** — D1
+5. **Bloco de pagamentos + selo no footer** — D4/D5
+6. **FAQ resumida na home** — M5
+7. **Contador "entregas em andamento"** no hero — D2
+
+Fase 2 (depois): seções de linha de produto (Moto/Caminhão), microcópias de checkout, melhorias de performance P1–P4.
+
+### Detalhes técnicos da Fase 1
+
+- Novos arquivos: `src/components/HowToOrder.tsx`, `src/components/Testimonials.tsx`, `src/components/FaqHome.tsx`, `src/components/FloatingWhatsApp.tsx`, `src/components/PaymentMethods.tsx`.
+- Edições: `HeroSection.tsx` (badge 10x + contador), `Footer.tsx` (pagamentos + selo), `Index.tsx` (incluir as novas seções com `LazySection`/`Suspense`), `MobileActionBar.tsx` (ajuste contraste).
+- Reuso: `faqData.ts` já existe → alimenta o `FaqHome`. Depoimentos ficam em um array constante dentro do componente (3-5 itens iniciais).
+- Ícones de pagamento: SVGs locais em `src/assets/payments/` (PIX, Visa, Master, Elo).
+- Sem alterações de banco. Sem novas dependências.
 
