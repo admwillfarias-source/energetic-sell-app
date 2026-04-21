@@ -24,6 +24,7 @@ const CartDrawer = lazy(() =>
 );
 const EngagementPopup = lazy(() => import("@/components/EngagementPopup"));
 const PerfReport = lazy(() => import("@/components/PerfReport"));
+const MobileDebugOverlay = lazy(() => import("@/components/MobileDebugOverlay"));
 
 const SITE = "https://awrbaterias.com.br";
 
