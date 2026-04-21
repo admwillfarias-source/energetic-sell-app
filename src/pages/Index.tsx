@@ -19,6 +19,7 @@ const CartDrawer = lazy(() =>
   import("@/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
 );
 const EngagementPopup = lazy(() => import("@/components/EngagementPopup"));
+const PerfReport = lazy(() => import("@/components/PerfReport"));
 
 const SITE = "https://awrbaterias.com.br";
 
@@ -86,6 +87,9 @@ const Index = () => {
         <MobileActionBar />
         <Suspense fallback={null}>
           <EngagementPopup />
+        </Suspense>
+        <Suspense fallback={null}>
+          <PerfReport />
         </Suspense>
       </div>
     </CartProvider>

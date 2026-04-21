@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useRef, useEffect } from "react";
 import { Search, Car, Clock, Star } from "lucide-react";
+import { markEvent } from "@/lib/perfMetrics";
 
 const VehicleAutocomplete = lazy(() => import("@/components/VehicleAutocomplete"));
 const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
@@ -37,6 +38,12 @@ export default function HeroSection() {
   const [searchActive, setSearchActive] = useState(false);
   const [whatsVisible, setWhatsVisible] = useState(false);
   const whatsRef = useRef<HTMLDivElement>(null);
+
+  // Marca: hero montado + placeholder de busca já interativo
+  useEffect(() => {
+    markEvent("hero_mounted");
+    markEvent("hero_search_interactive");
+  }, []);
 
   // Pré-carrega o autocomplete + catálogo após idle, sem bloquear o LCP
   useEffect(() => {

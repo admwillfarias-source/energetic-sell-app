@@ -7,6 +7,7 @@ import { searchVehicles, type VehicleSuggestion } from "@/lib/fitments";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { markEvent } from "@/lib/perfMetrics";
 
 type Props = {
   variant?: "card" | "inline";
@@ -33,6 +34,7 @@ export default function VehicleAutocomplete({
       .then(() => {
         setLoading(false);
         setVersion((v) => v + 1);
+        markEvent("hero_search_ready");
       })
       .catch((e) => {
         console.error("Falha ao carregar catálogo", e);
