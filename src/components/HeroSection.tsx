@@ -1,17 +1,11 @@
-import { Phone, MessageCircle, Clock, CreditCard, Wrench, Gauge, Star, ChevronDown } from "lucide-react";
-import { handleCallClick } from "@/lib/tracking";
+import { MessageCircle, Clock, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import VehicleAutocomplete from "@/components/VehicleAutocomplete";
 import heroBg from "@/assets/hero-bg.webp";
 import heroBgSm from "@/assets/hero-bg-sm.webp";
 
 const WHATSAPP_URL =
-  "https://wa.me/5551993199486?text=Ol%C3%A1!%20Preciso%20de%20uma%20bateria.";
-
-const badges = [
-  { icon: CreditCard, text: "Pagamento na Entrega" },
-  { icon: Wrench, text: "Instalação Gratuita" },
-  { icon: Gauge, text: "Garantia de Fábrica" },
-];
+  "https://wa.me/5551993199486?text=Ol%C3%A1!%20Solicito%20a%20minha%20bateria.";
 
 export default function HeroSection() {
   return (
@@ -32,7 +26,7 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/80 to-secondary/40" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10 py-16 md:py-24">
+      <div className="container mx-auto px-4 relative z-10 py-12 md:py-20">
         <div className="max-w-2xl">
           <div
             className="inline-flex items-center gap-2 bg-accent/20 border border-accent/40 rounded-full px-4 py-1.5 mb-6"
@@ -52,22 +46,14 @@ export default function HeroSection() {
           <p className="text-lg md:text-xl text-secondary-foreground/80 mb-6">
             Marcas{" "}
             <strong className="text-accent">Moura, Heliar, Freedom, Excell, Zetta e Eletran</strong>.
-            Automotiva, estacionária e ciclo profundo. Até 10x sem juros. Instalação gratuita.
+            Automotiva, estacionária e ciclo profundo. Até 10x sem juros.
           </p>
 
-          <div className="flex flex-wrap gap-3 mb-8">
-            {badges.map((b) => (
-              <div
-                key={b.text}
-                className="flex items-center gap-2 bg-secondary/60 backdrop-blur-sm border border-border rounded-lg px-3 py-2"
-              >
-                <b.icon className="h-4 w-4 text-primary" />
-                <span className="text-secondary-foreground text-sm font-medium">{b.text}</span>
-              </div>
-            ))}
+          <div className="mb-6 rounded-2xl bg-card/95 p-4 shadow-lg backdrop-blur md:p-5">
+            <VehicleAutocomplete variant="inline" />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 mb-8">
+          <div className="hidden sm:flex flex-col sm:flex-row gap-3 mb-6">
             <Button
               asChild
               size="lg"
@@ -75,21 +61,7 @@ export default function HeroSection() {
             >
               <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
                 <MessageCircle className="h-5 w-5" />
-                Peça no WhatsApp
-              </a>
-            </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-primary text-primary hover:bg-primary hover:text-primary-foreground font-bold text-base gap-2 h-14 px-8 bg-background/10 backdrop-blur"
-            >
-              <a
-                href="tel:+555135165472"
-                onClick={(event) => handleCallClick(event, "home", "hero")}
-              >
-                <Phone className="h-5 w-5" />
-                Ligue Agora
+                Solicite a sua bateria
               </a>
             </Button>
           </div>
@@ -102,38 +74,8 @@ export default function HeroSection() {
             </div>
             <span className="text-sm font-medium">1500+ clientes satisfeitos no Google</span>
           </div>
-
-          <div className="flex flex-wrap gap-2 mt-6">
-            <a
-              href="#catalogo"
-              className="text-sm bg-secondary-foreground/10 hover:bg-primary/20 text-secondary-foreground border border-secondary-foreground/20 rounded-full px-4 py-2.5 transition-colors"
-            >
-              🔍 Encontrar minha bateria
-            </a>
-            <a
-              href="#servicos"
-              className="text-sm bg-secondary-foreground/10 hover:bg-primary/20 text-secondary-foreground border border-secondary-foreground/20 rounded-full px-4 py-2.5 transition-colors"
-            >
-              🔧 Ver serviços
-            </a>
-            <a
-              href="#contato"
-              className="text-sm bg-secondary-foreground/10 hover:bg-primary/20 text-secondary-foreground border border-secondary-foreground/20 rounded-full px-4 py-2.5 transition-colors"
-            >
-              📋 Falar conosco
-            </a>
-          </div>
         </div>
       </div>
-
-      <a
-        href="#servicos"
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 z-10 flex flex-col items-center justify-center gap-1 text-secondary-foreground/80 hover:text-primary transition-colors animate-bounce min-h-[44px] min-w-[44px]"
-        aria-label="Rolar para baixo"
-      >
-        <span className="text-xs font-medium">Saiba mais</span>
-        <ChevronDown className="h-5 w-5" />
-      </a>
     </section>
   );
 }

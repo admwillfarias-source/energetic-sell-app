@@ -1,8 +1,8 @@
 import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import VehicleSearch from "@/components/VehicleSearch";
 import { BatteryGrid } from "@/components/BatteryGrid";
+import MobileActionBar from "@/components/MobileActionBar";
 import { Benefits } from "@/components/Benefits";
 import { HowItWorks } from "@/components/HowItWorks";
 import QuickNavigation from "@/components/QuickNavigation";
@@ -45,7 +45,6 @@ const Index = () => {
         <Header />
         <main>
           <HeroSection />
-          <VehicleSearch />
           <BatteryGrid />
           <Benefits />
           <HowItWorks />
@@ -54,6 +53,7 @@ const Index = () => {
         </main>
         <Footer />
         <CartDrawer />
+        <MobileActionBar />
       </div>
     </CartProvider>
   );
