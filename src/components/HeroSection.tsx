@@ -8,19 +8,32 @@ const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
 import heroBg from "@/assets/hero-bg.webp";
 import heroBgSm from "@/assets/hero-bg-sm.webp";
 
-function SearchPlaceholder({ onActivate }: { onActivate: () => void }) {
+function SearchPlaceholder({
+  onActivate,
+  initialValue,
+  onChange,
+}: {
+  onActivate: () => void;
+  initialValue: string;
+  onChange: (v: string) => void;
+}) {
   return (
     <div className="flex gap-2">
       <div className="relative flex-1">
         <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
         <input
           type="text"
-          placeholder="Ex: Fiat Uno 2015, Onix 2018, Corolla 2014..."
+          defaultValue={initialValue}
+          placeholder="Carro e ano (Ex: Onix 2018) ou modelo da bateria (Ex: M60GD)"
           onFocus={onActivate}
           onClick={onActivate}
           onTouchStart={onActivate}
+          onChange={(e) => {
+            onChange(e.target.value);
+            onActivate();
+          }}
           className="h-12 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Buscar veículo"
+          aria-label="Buscar veículo ou modelo da bateria"
         />
       </div>
       <button
