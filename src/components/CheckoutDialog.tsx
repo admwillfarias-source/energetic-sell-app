@@ -3,11 +3,22 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import { MessageCircle, ShoppingCart, Loader2, Zap, CalendarClock, Car, Store } from "lucide-react";
+import {
+  MessageCircle,
+  ShoppingCart,
+  Loader2,
+  Zap,
+  CalendarClock,
+  Car,
+  Store,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  CreditCard,
+  ShieldCheck,
+} from "lucide-react";
 import { z } from "zod";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,9 +29,9 @@ import { cn } from "@/lib/utils";
 // Número da loja (formato internacional, só dígitos). Edite aqui.
 const WHATSAPP_NUMBER = "5551993199486";
 
-// Janela de entrega rápida (horário local — America/Sao_Paulo do navegador do cliente)
-const RAPIDA_INICIO_MIN = 8 * 60 + 30; // 08:30
-const RAPIDA_FIM_MIN = 18 * 60; // 18:00
+// Janela de entrega rápida (horário local)
+const RAPIDA_INICIO_MIN = 8 * 60 + 30;
+const RAPIDA_FIM_MIN = 18 * 60;
 
 const baseSchema = {
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
@@ -69,9 +80,16 @@ function maskCep(value: string): string {
   return `${d.slice(0, 5)}-${d.slice(5)}`;
 }
 
+const STEPS = [
+  { id: 1, label: "Entrega" },
+  { id: 2, label: "Veículo" },
+  { id: 3, label: "Pagamento" },
+] as const;
+
 export function CheckoutDialog({ open, onOpenChange }: Props) {
   const { items, subtotal, clear, setOpen: setCartOpen } = useCart();
   const isMobile = useIsMobile();
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submittingWC, setSubmittingWC] = useState(false);
   const [cepLoading, setCepLoading] = useState(false);
   const [form, setForm] = useState({
@@ -100,7 +118,14 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
   }, []);
 
-  // Pré-preenche carro/ano com a busca feita pelo cliente (?v= na URL ou sessionStorage)
+  // Reset ao fechar
+  useEffect(() => {
+    if (!open) {
+      setStep(1);
+    }
+  }, [open]);
+
+  // Pré-preenche carro/ano
   useEffect(() => {
     if (!open) return;
     try {
@@ -141,7 +166,6 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
   const today = new Date().toISOString().split("T")[0];
 
-  // ViaCEP — busca endereço quando CEP completo
   const handleCepChange = async (raw: string) => {
     const masked = maskCep(raw);
     setForm((p) => ({ ...p, cep: masked }));
@@ -209,6 +233,49 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       };
     }
     return { ok: true };
+  };
+
+  // Validações por passo
+  const validarPasso1 = (): { ok: boolean; msg?: string } => {
+    if (form.entregaTipo === "rapida") {
+      if (!rapidaDisponivelAgora()) {
+        return { ok: false, msg: "Fora do horário. Selecione 'Agendar entrega'." };
+      }
+      if (form.endereco.trim().length < 5) return { ok: false, msg: "Informe o endereço." };
+      if (form.numero.trim().length < 1) return { ok: false, msg: "Informe o número." };
+    } else if (form.entregaTipo === "agendada") {
+      if (form.endereco.trim().length < 5) return { ok: false, msg: "Informe o endereço." };
+      if (form.numero.trim().length < 1) return { ok: false, msg: "Informe o número." };
+      if (!form.entregaData) return { ok: false, msg: "Selecione a data." };
+      if (!form.entregaHora) return { ok: false, msg: "Selecione o horário." };
+    } else if (form.entregaTipo === "retirada") {
+      if (form.lojaRetirada.trim().length < 2) return { ok: false, msg: "Selecione a loja." };
+    }
+    return { ok: true };
+  };
+
+  const validarPasso2 = (): { ok: boolean; msg?: string } => {
+    if (form.carroAno.trim().length < 2) return { ok: false, msg: "Informe carro e ano." };
+    return { ok: true };
+  };
+
+  const avancar = () => {
+    if (items.length === 0) {
+      toast({ title: "Carrinho vazio", description: "Adicione uma bateria antes de continuar." });
+      return;
+    }
+    const v = step === 1 ? validarPasso1() : step === 2 ? validarPasso2() : { ok: true };
+    if (!v.ok) {
+      toast({ title: "Dados incompletos", description: v.msg });
+      return;
+    }
+    setStep((s) => (Math.min(s + 1, 3) as 1 | 2 | 3));
+  };
+
+  const voltar = () => setStep((s) => (Math.max(s - 1, 1) as 1 | 2 | 3));
+
+  const irParaPasso = (s: 1 | 2 | 3) => {
+    if (s < step) setStep(s);
   };
 
   const handleWooCommerce = async () => {
@@ -286,7 +353,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     }
 
     const bateriaLinhas = items
-      .map((i) => `• ${i.quantity}x ${i.battery.name} (${i.battery.brand} ${i.battery.amperage}Ah) — ${formatBRL(i.battery.price * i.quantity)}`)
+      .map(
+        (i) =>
+          `• ${i.quantity}x ${i.battery.name} (${i.battery.brand} ${i.battery.amperage}Ah) — ${formatBRL(i.battery.price * i.quantity)}`,
+      )
       .join("\n");
 
     const msg =
@@ -314,307 +384,534 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     setCartOpen(false);
   };
 
-  const bateriaResumo = items.map((i) => `${i.quantity}x ${i.battery.name}`).join(", ") || "—";
   const rapidaAgora = rapidaDisponivelAgora();
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="font-display text-2xl">Finalizar pedido</DialogTitle>
-          <DialogDescription>
-            Preencha os dados e enviamos seu pedido direto para o WhatsApp da loja.
+      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
+        <DialogHeader className="border-b border-border px-6 pb-4 pt-6">
+          <DialogTitle className="font-display text-xl sm:text-2xl">Finalizar pedido</DialogTitle>
+          <DialogDescription className="sr-only">
+            Wizard de 3 passos para finalizar o pedido
           </DialogDescription>
+
+          {/* Stepper */}
+          <div className="mt-4 flex items-center gap-2 sm:gap-3">
+            {STEPS.map((s, idx) => {
+              const done = step > s.id;
+              const active = step === s.id;
+              return (
+                <div key={s.id} className="flex flex-1 items-center gap-2 sm:gap-3">
+                  <button
+                    type="button"
+                    onClick={() => irParaPasso(s.id as 1 | 2 | 3)}
+                    disabled={s.id >= step}
+                    aria-current={active ? "step" : undefined}
+                    aria-label={`Passo ${s.id}: ${s.label}`}
+                    className={cn(
+                      "flex shrink-0 items-center gap-2 rounded-full transition-colors",
+                      s.id < step ? "cursor-pointer" : "cursor-default",
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold sm:h-8 sm:w-8 sm:text-sm",
+                        done && "bg-success text-success-foreground",
+                        active && "bg-primary text-primary-foreground ring-4 ring-primary/15",
+                        !done && !active && "bg-muted text-muted-foreground",
+                      )}
+                    >
+                      {done ? <Check className="h-4 w-4" /> : s.id}
+                    </span>
+                    <span
+                      className={cn(
+                        "hidden text-xs font-medium sm:inline xs:text-sm",
+                        active ? "text-foreground" : "text-muted-foreground",
+                      )}
+                    >
+                      {s.label}
+                    </span>
+                  </button>
+                  {idx < STEPS.length - 1 && (
+                    <div
+                      className={cn(
+                        "h-0.5 flex-1 rounded-full transition-colors",
+                        step > s.id ? "bg-success" : "bg-border",
+                      )}
+                    />
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="nome">Nome completo</Label>
-            <Input id="nome" value={form.nome} onChange={update("nome")} placeholder="João da Silva" />
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-1.5">
-              <Label htmlFor="documento">CPF / CNPJ</Label>
-              <Input id="documento" value={form.documento} onChange={update("documento")} placeholder="000.000.000-00" />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="telefone">Telefone para contato</Label>
-              <Input id="telefone" value={form.telefone} onChange={update("telefone")} placeholder="(11) 99999-9999" />
-            </div>
-          </div>
-
-          {form.entregaTipo !== "retirada" && (
-            <>
-              <div className="space-y-1.5">
-                <Label htmlFor="cep">
-                  CEP <span className="text-xs font-normal text-muted-foreground">(opcional — preenche o endereço)</span>
-                </Label>
-                <div className="relative">
-                  <Input
-                    id="cep"
-                    value={form.cep}
-                    onChange={(e) => handleCepChange(e.target.value)}
-                    placeholder="00000-000"
-                    inputMode="numeric"
-                  />
-                  {cepLoading && (
-                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-                  )}
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="endereco">Endereço de entrega</Label>
-                <Input id="endereco" value={form.endereco} onChange={update("endereco")} placeholder="Rua, bairro, cidade" />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="numero">Número (Casa/Apto)</Label>
-                <Input id="numero" value={form.numero} onChange={update("numero")} placeholder="123 / Apto 45" />
-              </div>
-            </>
-          )}
-
-          <div className="space-y-2">
-            <Label>Modalidade de entrega</Label>
-            <RadioGroup
-              value={form.entregaTipo}
-              onValueChange={(v) =>
-                setForm((p) => ({ ...p, entregaTipo: v as "rapida" | "agendada" | "retirada" }))
-              }
-              className="grid gap-2 sm:grid-cols-3"
-            >
-              <label
-                htmlFor="entrega-rapida"
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                  form.entregaTipo === "rapida"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-secondary/40"
-                }`}
-              >
-                <RadioGroupItem id="entrega-rapida" value="rapida" className="mt-0.5" />
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5 font-medium">
-                    <Zap className="h-4 w-4 text-primary" />
-                    Entrega rápida
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Em até 35 min · 8h30 às 18h
+        <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto px-6 py-5">
+            {/* PASSO 1 — ENTREGA */}
+            {step === 1 && (
+              <div className="space-y-5">
+                <div>
+                  <h3 className="font-display text-base font-bold">Como você prefere receber?</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Escolha a modalidade e informe onde entregamos sua bateria.
                   </p>
                 </div>
-              </label>
-              <label
-                htmlFor="entrega-agendada"
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                  form.entregaTipo === "agendada"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-secondary/40"
-                }`}
-              >
-                <RadioGroupItem id="entrega-agendada" value="agendada" className="mt-0.5" />
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5 font-medium">
-                    <CalendarClock className="h-4 w-4 text-primary" />
-                    Agendar entrega
-                  </div>
-                  <p className="text-xs text-muted-foreground">Escolha data e horário</p>
-                </div>
-              </label>
-              <label
-                htmlFor="entrega-retirada"
-                className={`flex cursor-pointer items-start gap-3 rounded-lg border p-3 transition-colors ${
-                  form.entregaTipo === "retirada"
-                    ? "border-primary bg-primary/5"
-                    : "border-border hover:bg-secondary/40"
-                }`}
-              >
-                <RadioGroupItem id="entrega-retirada" value="retirada" className="mt-0.5" />
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-1.5 font-medium">
-                    <Store className="h-4 w-4 text-primary" />
-                    Retirar na loja
-                  </div>
-                  <p className="text-xs text-muted-foreground">Sem custo de entrega</p>
-                </div>
-              </label>
-            </RadioGroup>
 
-            {form.entregaTipo === "rapida" && !rapidaAgora && (
-              <p className="text-xs text-destructive">
-                Fora do horário de entrega rápida (8h30 às 18h). Selecione "Agendar entrega".
-              </p>
-            )}
-
-            {form.entregaTipo === "agendada" && (
-              <div className="grid gap-4 sm:grid-cols-2">
-                <div className="space-y-1.5">
-                  <Label htmlFor="entregaData">Data</Label>
-                  <Input
-                    id="entregaData"
-                    type="date"
-                    min={today}
-                    value={form.entregaData}
-                    onChange={update("entregaData")}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="entregaHora">Horário</Label>
-                  <Input
-                    id="entregaHora"
-                    type="time"
-                    value={form.entregaHora}
-                    onChange={update("entregaHora")}
-                  />
-                </div>
-              </div>
-            )}
-
-            {form.entregaTipo === "retirada" && (
-              <div className="space-y-1.5">
-                <Label htmlFor="lojaRetirada">Loja para retirada</Label>
-                <select
-                  id="lojaRetirada"
-                  value={form.lojaRetirada}
-                  onChange={(e) => setForm((p) => ({ ...p, lojaRetirada: e.target.value }))}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="">Selecione uma loja...</option>
-                  <option value="Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)">Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)</option>
-                  <option value="Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)">Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)</option>
-                  <option value="Canoas - Fátima (Av. Guilherme Schell, 3266)">Canoas - Fátima (Av. Guilherme Schell, 3266)</option>
-                  <option value="Gravataí (Av. Dorival Cândido Luz de Oliveira, 6625 - Bom Princípio)">Gravataí (Av. Dorival Cândido Luz de Oliveira, 6625 - Bom Princípio)</option>
-                  <option value="São Leopoldo (Av. Feitoria, 917 - São José)">São Leopoldo (Av. Feitoria, 917 - São José)</option>
-                  <option value="Novo Hamburgo (Av. Victor Hugo Kunz, 961 - Hamburgo Velho)">Novo Hamburgo (Av. Victor Hugo Kunz, 961 - Hamburgo Velho)</option>
-                </select>
-                <p className="text-xs text-muted-foreground">Você retira a bateria na loja selecionada — endereço não é necessário.</p>
-              </div>
-            )}
-          </div>
-
-          <div className="space-y-1.5">
-            <Label htmlFor="pagamento">Forma de pagamento / bandeira</Label>
-            <Input
-              id="pagamento"
-              value={form.pagamento}
-              onChange={update("pagamento")}
-              placeholder="Pix, dinheiro, cartão (Visa, Master...)"
-            />
-          </div>
-
-          {carroFromSearch && form.carroAno ? (
-            <div className="space-y-1.5">
-              <Label>Carro e ano</Label>
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm">
-                <Car className="h-4 w-4 text-muted-foreground" />
-                <span className="flex-1 font-medium">{form.carroAno}</span>
-                <button
-                  type="button"
-                  onClick={() => setCarroFromSearch(false)}
-                  className="text-xs text-primary hover:underline"
-                >
-                  alterar
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-1.5" ref={carroRef}>
-              <Label htmlFor="carroAno">Carro e ano</Label>
-              <div className="relative">
-                <Input
-                  id="carroAno"
-                  value={form.carroAno}
-                  onChange={(e) => {
-                    setForm((p) => ({ ...p, carroAno: e.target.value }));
-                    setCarroOpen(true);
-                  }}
-                  onFocus={() => setCarroOpen(true)}
-                  onKeyDown={onCarroKeyDown}
-                  placeholder="Ex: Fiat Uno 2015, Onix 2018..."
-                  autoComplete="off"
-                />
-                {carroOpen && carroSuggestions.length > 0 && (
-                  <ul
-                    role="listbox"
-                    className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg"
-                  >
-                    {carroSuggestions.map((s, i) => (
-                      <li
-                        key={`${s.brand}-${s.model}-${s.year}-${i}`}
-                        role="option"
-                        aria-selected={i === carroHighlight}
-                        onMouseEnter={() => setCarroHighlight(i)}
-                        onMouseDown={(e) => {
-                          e.preventDefault();
-                          escolherCarro(s);
-                        }}
+                {/* Modalidade — cards grandes */}
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {(
+                    [
+                      {
+                        v: "rapida" as const,
+                        icon: Zap,
+                        title: "Entrega rápida",
+                        desc: "Em até 35 min",
+                      },
+                      {
+                        v: "agendada" as const,
+                        icon: CalendarClock,
+                        title: "Agendar",
+                        desc: "Data e horário",
+                      },
+                      {
+                        v: "retirada" as const,
+                        icon: Store,
+                        title: "Retirar na loja",
+                        desc: "Sem custo",
+                      },
+                    ] as const
+                  ).map((opt) => {
+                    const Icon = opt.icon;
+                    const selected = form.entregaTipo === opt.v;
+                    return (
+                      <button
+                        key={opt.v}
+                        type="button"
+                        onClick={() => setForm((p) => ({ ...p, entregaTipo: opt.v }))}
                         className={cn(
-                          "flex cursor-pointer items-center gap-3 px-3 py-2 text-sm",
-                          i === carroHighlight ? "bg-accent/15" : "hover:bg-muted",
+                          "flex flex-col items-start gap-2 rounded-xl border p-3 text-left transition-all",
+                          selected
+                            ? "border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20"
+                            : "border-border hover:border-primary/40 hover:bg-secondary/40",
                         )}
                       >
-                        <Car className="h-4 w-4 shrink-0 text-muted-foreground" />
-                        <div className="flex-1">
-                          <div className="font-medium">{s.label}</div>
-                          <div className="text-xs text-muted-foreground">
-                            {s.codes.length} código{s.codes.length > 1 ? "s" : ""} compatível
-                            {s.codes.length > 1 ? "is" : ""}
-                          </div>
+                        <Icon
+                          className={cn(
+                            "h-5 w-5",
+                            selected ? "text-primary" : "text-muted-foreground",
+                          )}
+                        />
+                        <div>
+                          <div className="text-sm font-semibold">{opt.title}</div>
+                          <div className="text-xs text-muted-foreground">{opt.desc}</div>
                         </div>
-                      </li>
-                    ))}
-                  </ul>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {form.entregaTipo === "rapida" && !rapidaAgora && (
+                  <p className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                    Fora do horário de entrega rápida (8h30 às 18h). Selecione "Agendar".
+                  </p>
+                )}
+
+                {/* Endereço */}
+                {form.entregaTipo !== "retirada" && (
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="cep">
+                        CEP{" "}
+                        <span className="text-xs font-normal text-muted-foreground">
+                          (preenche o endereço)
+                        </span>
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          id="cep"
+                          value={form.cep}
+                          onChange={(e) => handleCepChange(e.target.value)}
+                          placeholder="00000-000"
+                          inputMode="numeric"
+                          autoFocus
+                        />
+                        {cepLoading && (
+                          <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="endereco">Endereço de entrega</Label>
+                      <Input
+                        id="endereco"
+                        value={form.endereco}
+                        onChange={update("endereco")}
+                        placeholder="Rua, bairro, cidade"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label htmlFor="numero">Número (Casa/Apto)</Label>
+                      <Input
+                        id="numero"
+                        value={form.numero}
+                        onChange={update("numero")}
+                        placeholder="123 / Apto 45"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {form.entregaTipo === "agendada" && (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="entregaData">Data</Label>
+                      <Input
+                        id="entregaData"
+                        type="date"
+                        min={today}
+                        value={form.entregaData}
+                        onChange={update("entregaData")}
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="entregaHora">Horário</Label>
+                      <Input
+                        id="entregaHora"
+                        type="time"
+                        value={form.entregaHora}
+                        onChange={update("entregaHora")}
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {form.entregaTipo === "retirada" && (
+                  <div className="space-y-1.5">
+                    <Label htmlFor="lojaRetirada">Loja para retirada</Label>
+                    <select
+                      id="lojaRetirada"
+                      value={form.lojaRetirada}
+                      onChange={(e) =>
+                        setForm((p) => ({ ...p, lojaRetirada: e.target.value }))
+                      }
+                      className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      autoFocus
+                    >
+                      <option value="">Selecione uma loja...</option>
+                      <option value="Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)">
+                        Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)
+                      </option>
+                      <option value="Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)">
+                        Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)
+                      </option>
+                      <option value="Canoas - Fátima (Av. Guilherme Schell, 3266)">
+                        Canoas - Fátima (Av. Guilherme Schell, 3266)
+                      </option>
+                      <option value="Gravataí (Av. Dorival Cândido Luz de Oliveira, 6625 - Bom Princípio)">
+                        Gravataí (Av. Dorival Cândido Luz de Oliveira, 6625 - Bom Princípio)
+                      </option>
+                      <option value="São Leopoldo (Av. Feitoria, 917 - São José)">
+                        São Leopoldo (Av. Feitoria, 917 - São José)
+                      </option>
+                      <option value="Novo Hamburgo (Av. Victor Hugo Kunz, 961 - Hamburgo Velho)">
+                        Novo Hamburgo (Av. Victor Hugo Kunz, 961 - Hamburgo Velho)
+                      </option>
+                    </select>
+                    <p className="text-xs text-muted-foreground">
+                      Você retira na loja selecionada — endereço não é necessário.
+                    </p>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
+            )}
 
-          <div className="space-y-1.5">
-            <Label>Bateria solicitada</Label>
-            <Textarea readOnly value={bateriaResumo} className="resize-none bg-secondary/40" rows={2} />
-          </div>
-
-          <div className="flex items-center justify-between rounded-lg border border-border bg-secondary/30 p-3">
-            <span className="font-display font-bold">Total</span>
-            <span className="font-display text-xl font-bold">{formatBRL(subtotal)}</span>
-          </div>
-
-          <div className="space-y-2">
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full bg-[#25D366] text-white hover:bg-[#20bd5a]"
-            >
-              <MessageCircle className="h-4 w-4" />
-              Enviar pedido pelo WhatsApp
-            </Button>
-
-            {!isMobile && (
-              <>
-                <div className="flex items-center gap-3 py-1">
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="text-xs text-muted-foreground">ou</span>
-                  <div className="h-px flex-1 bg-border" />
+            {/* PASSO 2 — VEÍCULO */}
+            {step === 2 && (
+              <div className="space-y-5">
+                <div>
+                  <h3 className="font-display text-base font-bold">Confirme o veículo</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Confirme que esta bateria atende seu veículo. Se tiver dúvida, escolhemos pelo
+                    modelo na entrega.
+                  </p>
                 </div>
+
+                {/* Bateria(s) — somente leitura */}
+                <div className="space-y-2">
+                  <Label className="text-xs uppercase tracking-wide text-muted-foreground">
+                    Sua bateria
+                  </Label>
+                  <div className="space-y-2">
+                    {items.map((i) => (
+                      <div
+                        key={i.battery.id}
+                        className="flex items-center gap-3 rounded-lg border border-border bg-secondary/30 p-3"
+                      >
+                        {i.battery.image && (
+                          <img
+                            src={i.battery.image}
+                            alt=""
+                            className="h-14 w-14 shrink-0 rounded-md bg-background object-contain"
+                            loading="lazy"
+                          />
+                        )}
+                        <div className="min-w-0 flex-1">
+                          <div className="truncate text-sm font-semibold">{i.battery.name}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {i.battery.brand} · {i.battery.amperage}Ah · Qtd {i.quantity}
+                          </div>
+                        </div>
+                        <div className="text-sm font-bold">
+                          {formatBRL(i.battery.price * i.quantity)}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Carro/ano */}
+                {carroFromSearch && form.carroAno ? (
+                  <div className="space-y-1.5">
+                    <Label>Carro e ano</Label>
+                    <div className="flex items-center gap-2 rounded-lg border border-border bg-secondary/40 px-3 py-2 text-sm">
+                      <Car className="h-4 w-4 text-muted-foreground" />
+                      <span className="flex-1 font-medium">{form.carroAno}</span>
+                      <button
+                        type="button"
+                        onClick={() => setCarroFromSearch(false)}
+                        className="text-xs text-primary hover:underline"
+                      >
+                        alterar
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5" ref={carroRef}>
+                    <Label htmlFor="carroAno">Carro e ano</Label>
+                    <div className="relative">
+                      <Input
+                        id="carroAno"
+                        value={form.carroAno}
+                        onChange={(e) => {
+                          setForm((p) => ({ ...p, carroAno: e.target.value }));
+                          setCarroOpen(true);
+                        }}
+                        onFocus={() => setCarroOpen(true)}
+                        onKeyDown={onCarroKeyDown}
+                        placeholder="Ex: Fiat Uno 2015, Onix 2018..."
+                        autoComplete="off"
+                        autoFocus
+                      />
+                      {carroOpen && carroSuggestions.length > 0 && (
+                        <ul
+                          role="listbox"
+                          className="absolute z-50 mt-1 max-h-64 w-full overflow-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg"
+                        >
+                          {carroSuggestions.map((s, i) => (
+                            <li
+                              key={`${s.brand}-${s.model}-${s.year}-${i}`}
+                              role="option"
+                              aria-selected={i === carroHighlight}
+                              onMouseEnter={() => setCarroHighlight(i)}
+                              onMouseDown={(e) => {
+                                e.preventDefault();
+                                escolherCarro(s);
+                              }}
+                              className={cn(
+                                "flex cursor-pointer items-center gap-3 px-3 py-2 text-sm",
+                                i === carroHighlight ? "bg-accent/15" : "hover:bg-muted",
+                              )}
+                            >
+                              <Car className="h-4 w-4 shrink-0 text-muted-foreground" />
+                              <div className="flex-1">
+                                <div className="font-medium">{s.label}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  {s.codes.length} código{s.codes.length > 1 ? "s" : ""}{" "}
+                                  compatível{s.codes.length > 1 ? "is" : ""}
+                                </div>
+                              </div>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* PASSO 3 — CONTATO E PAGAMENTO */}
+            {step === 3 && (
+              <div className="space-y-5">
+                <div>
+                  <h3 className="font-display text-base font-bold">Seus dados e pagamento</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Para entrarmos em contato e organizar a entrega.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="nome">Nome completo</Label>
+                    <Input
+                      id="nome"
+                      value={form.nome}
+                      onChange={update("nome")}
+                      placeholder="João da Silva"
+                      autoFocus
+                    />
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="documento">CPF / CNPJ</Label>
+                      <Input
+                        id="documento"
+                        value={form.documento}
+                        onChange={update("documento")}
+                        placeholder="000.000.000-00"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="telefone">Telefone</Label>
+                      <Input
+                        id="telefone"
+                        value={form.telefone}
+                        onChange={update("telefone")}
+                        placeholder="(11) 99999-9999"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label htmlFor="pagamento">Forma de pagamento</Label>
+                    <Input
+                      id="pagamento"
+                      value={form.pagamento}
+                      onChange={update("pagamento")}
+                      placeholder="Pix, dinheiro, cartão (Visa, Master...)"
+                    />
+                  </div>
+                </div>
+
+                <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                  <div className="flex items-start gap-2">
+                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <div className="space-y-1 text-xs">
+                      <div className="font-semibold text-foreground">
+                        Pagamento somente na entrega
+                      </div>
+                      <div className="text-muted-foreground">
+                        Você não paga nada agora. Pagamento direto ao entregador.
+                      </div>
+                    </div>
+                  </div>
+                  <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-semibold text-success">
+                    <CreditCard className="h-3 w-3" />
+                    10x sem juros no cartão
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* RESUMO + NAVEGAÇÃO — sticky no rodapé */}
+          <div className="border-t border-border bg-muted/30 px-6 py-4">
+            <div className="mb-3 space-y-1.5">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>
+                  {items.reduce((s, i) => s + i.quantity, 0)} item
+                  {items.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
+                </span>
+                <span className="text-success font-medium">Instalação grátis</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <span className="font-display text-sm font-bold">Total</span>
+                <span className="font-display text-xl font-bold text-primary">
+                  {formatBRL(subtotal)}
+                </span>
+              </div>
+            </div>
+
+            {step < 3 ? (
+              <div className="flex gap-2">
+                {step > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    onClick={voltar}
+                    aria-label="Voltar para o passo anterior"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Voltar
+                  </Button>
+                )}
                 <Button
                   type="button"
-                  variant="outline"
                   size="lg"
-                  className="w-full"
-                  onClick={handleWooCommerce}
-                  disabled={submittingWC}
+                  onClick={avancar}
+                  className="flex-1"
+                  aria-label="Avançar para o próximo passo"
                 >
-                  {submittingWC ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    <ShoppingCart className="h-4 w-4" />
-                  )}
-                  {submittingWC ? "Criando pedido..." : "Finalizar na loja online"}
+                  Continuar
+                  <ChevronRight className="h-4 w-4" />
                 </Button>
-                <p className="text-center text-xs text-muted-foreground">
-                  Cria o pedido em awrbaterias.com.br e abre a página de pagamento
-                </p>
-              </>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    onClick={voltar}
+                    aria-label="Voltar para o passo anterior"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Voltar
+                  </Button>
+                  <Button
+                    type="submit"
+                    size="lg"
+                    className="flex-1 bg-[#25D366] text-white hover:bg-[#20bd5a]"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Enviar pelo WhatsApp
+                  </Button>
+                </div>
+
+                {!isMobile && (
+                  <>
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs text-muted-foreground">ou</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
+                      onClick={handleWooCommerce}
+                      disabled={submittingWC}
+                    >
+                      {submittingWC ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ShoppingCart className="h-4 w-4" />
+                      )}
+                      {submittingWC ? "Criando pedido..." : "Finalizar na loja online"}
+                    </Button>
+                    <p className="text-center text-xs text-muted-foreground">
+                      Cria o pedido em awrbaterias.com.br e abre a página de pagamento
+                    </p>
+                  </>
+                )}
+              </div>
             )}
           </div>
         </form>
