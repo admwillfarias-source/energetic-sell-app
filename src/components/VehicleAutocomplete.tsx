@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { searchVehicles, type VehicleSuggestion } from "@/lib/fitments";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { looksLikeBatterySku, normalizeSku } from "@/lib/batterySku";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { markEvent } from "@/lib/perfMetrics";
@@ -74,14 +75,6 @@ export default function VehicleAutocomplete({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  /** Detecta se a query parece um SKU/modelo de bateria (ex: M60GD, MF60LD, HEFB72PD). */
-  const looksLikeBatterySku = (q: string) => {
-    const s = q.trim().toUpperCase().replace(/\s+/g, "");
-    if (s.length < 3 || s.length > 16) return false;
-    if (!/[A-Z]/.test(s) || !/\d/.test(s)) return false;
-    return /^[A-Z0-9-]+$/.test(s);
-  };
-
   const suggestions = useMemo<VehicleSuggestion[]>(() => {
     if (loading) return [];
     return searchVehicles(query, 10);
@@ -120,7 +113,7 @@ export default function VehicleAutocomplete({
     if (suggestions.length > 0) {
       choose(suggestions[highlight] ?? suggestions[0]);
     } else if (looksLikeBatterySku(query)) {
-      const sku = query.trim().toUpperCase().replace(/\s+/g, "");
+      const sku = normalizeSku(query);
       toast({ title: "Buscando bateria", description: sku });
       setOpen(false);
       navigate(`/?codes=${encodeURIComponent(sku)}#catalogo`);
