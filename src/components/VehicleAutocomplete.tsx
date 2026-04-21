@@ -119,15 +119,24 @@ export default function VehicleAutocomplete({
   const onSubmit = () => {
     if (suggestions.length > 0) {
       choose(suggestions[highlight] ?? suggestions[0]);
+    } else if (looksLikeBatterySku(query)) {
+      const sku = query.trim().toUpperCase().replace(/\s+/g, "");
+      toast({ title: "Buscando bateria", description: sku });
+      setOpen(false);
+      navigate(`/?codes=${encodeURIComponent(sku)}#catalogo`);
+      setTimeout(
+        () => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" }),
+        50,
+      );
     } else if (query.trim().length >= 2) {
       toast({
-        title: "Veículo não encontrado",
-        description: "Tente outra grafia ou inclua o ano (ex: Onix 2016).",
+        title: "Nada encontrado",
+        description: "Digite carro+ano (ex: Onix 2016) ou o modelo da bateria (ex: M60GD).",
       });
     } else {
       toast({
-        title: "Digite o veículo",
-        description: "Ex: Fiat Uno 2015, Onix 2018, Toro 2020.",
+        title: "Digite o veículo ou modelo",
+        description: "Ex: Fiat Uno 2015 ou MF72LD.",
       });
     }
   };
