@@ -344,33 +344,37 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="cep">
-              CEP <span className="text-xs font-normal text-muted-foreground">(opcional — preenche o endereço)</span>
-            </Label>
-            <div className="relative">
-              <Input
-                id="cep"
-                value={form.cep}
-                onChange={(e) => handleCepChange(e.target.value)}
-                placeholder="00000-000"
-                inputMode="numeric"
-              />
-              {cepLoading && (
-                <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
-              )}
-            </div>
-          </div>
+          {form.entregaTipo !== "retirada" && (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="cep">
+                  CEP <span className="text-xs font-normal text-muted-foreground">(opcional — preenche o endereço)</span>
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="cep"
+                    value={form.cep}
+                    onChange={(e) => handleCepChange(e.target.value)}
+                    placeholder="00000-000"
+                    inputMode="numeric"
+                  />
+                  {cepLoading && (
+                    <Loader2 className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-spin text-muted-foreground" />
+                  )}
+                </div>
+              </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="endereco">Endereço de entrega</Label>
-            <Input id="endereco" value={form.endereco} onChange={update("endereco")} placeholder="Rua, bairro, cidade" />
-          </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="endereco">Endereço de entrega</Label>
+                <Input id="endereco" value={form.endereco} onChange={update("endereco")} placeholder="Rua, bairro, cidade" />
+              </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="numero">Número (Casa/Apto)</Label>
-            <Input id="numero" value={form.numero} onChange={update("numero")} placeholder="123 / Apto 45" />
-          </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="numero">Número (Casa/Apto)</Label>
+                <Input id="numero" value={form.numero} onChange={update("numero")} placeholder="123 / Apto 45" />
+              </div>
+            </>
+          )}
 
           <div className="space-y-2">
             <Label>Modalidade de entrega</Label>
