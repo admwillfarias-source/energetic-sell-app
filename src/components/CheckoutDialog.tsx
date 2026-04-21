@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import { MessageCircle, ShoppingCart, Loader2, Zap, CalendarClock, Car } from "lucide-react";
+import { MessageCircle, ShoppingCart, Loader2, Zap, CalendarClock, Car, Store } from "lucide-react";
 import { z } from "zod";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,21 +25,30 @@ const RAPIDA_FIM_MIN = 18 * 60; // 18:00
 const baseSchema = {
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
   documento: z.string().trim().min(11, "CPF/CNPJ inválido").max(20),
-  endereco: z.string().trim().min(5, "Informe o endereço").max(200),
-  numero: z.string().trim().min(1, "Informe o número").max(20),
   cep: z.string().trim().max(10).optional().or(z.literal("")),
   telefone: z.string().trim().min(10, "Telefone inválido").max(20),
   pagamento: z.string().trim().min(2, "Informe a forma de pagamento").max(60),
   carroAno: z.string().trim().min(2, "Informe carro e ano").max(100),
 };
 
+const enderecoSchema = {
+  endereco: z.string().trim().min(5, "Informe o endereço").max(200),
+  numero: z.string().trim().min(1, "Informe o número").max(20),
+};
+
 const schema = z.discriminatedUnion("entregaTipo", [
-  z.object({ ...baseSchema, entregaTipo: z.literal("rapida") }),
+  z.object({ ...baseSchema, ...enderecoSchema, entregaTipo: z.literal("rapida") }),
   z.object({
     ...baseSchema,
+    ...enderecoSchema,
     entregaTipo: z.literal("agendada"),
     entregaData: z.string().trim().min(1, "Selecione a data"),
     entregaHora: z.string().trim().min(1, "Selecione o horário"),
+  }),
+  z.object({
+    ...baseSchema,
+    entregaTipo: z.literal("retirada"),
+    lojaRetirada: z.string().trim().min(2, "Selecione a loja"),
   }),
 ]);
 
@@ -74,9 +83,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     telefone: "",
     pagamento: "",
     carroAno: "",
-    entregaTipo: "rapida" as "rapida" | "agendada",
+    entregaTipo: "rapida" as "rapida" | "agendada" | "retirada",
     entregaData: "",
     entregaHora: "",
+    lojaRetirada: "",
   });
 
   // Autocomplete carro/ano
@@ -180,10 +190,11 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     }
   };
 
-  const entregaResumo = () =>
-    form.entregaTipo === "rapida"
-      ? "Entrega rápida (até 35 min — 8h30 às 18h)"
-      : `Agendada para ${form.entregaData} às ${form.entregaHora}`;
+  const entregaResumo = () => {
+    if (form.entregaTipo === "rapida") return "Entrega rápida (até 35 min — 8h30 às 18h)";
+    if (form.entregaTipo === "agendada") return `Agendada para ${form.entregaData} às ${form.entregaHora}`;
+    return `Retirada na loja${form.lojaRetirada ? ` — ${form.lojaRetirada}` : ""}`;
+  };
 
   const validar = (): { ok: boolean; msg?: string } => {
     const parsed = schema.safeParse(form);
