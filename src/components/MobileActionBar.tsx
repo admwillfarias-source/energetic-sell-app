@@ -7,9 +7,9 @@ const WHATSAPP_URL =
 export default function MobileActionBar() {
   return (
     <div
-      className="fixed inset-x-0 z-[9999] lg:hidden border-t border-border bg-background/98 backdrop-blur-md shadow-[0_-6px_16px_-2px_hsl(var(--foreground)/0.18)]"
+      className="fixed inset-x-0 z-40 lg:hidden border-b border-border bg-background/98 backdrop-blur-md shadow-[0_6px_16px_-2px_hsl(var(--foreground)/0.18)]"
       style={{
-        bottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)",
+        top: "calc(env(safe-area-inset-top, 0px) + 64px)",
         paddingTop: "8px",
         paddingBottom: "8px",
       }}
