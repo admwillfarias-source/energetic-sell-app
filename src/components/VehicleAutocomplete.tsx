@@ -13,16 +13,18 @@ type Props = {
   variant?: "card" | "inline";
   className?: string;
   placeholder?: string;
+  initialQuery?: string;
 };
 
 export default function VehicleAutocomplete({
   variant = "card",
   className,
-  placeholder = "Ex: Fiat Uno 2015, Onix 2018, Corolla 2014...",
+  placeholder = "Carro e ano (Ex: Onix 2018) ou modelo da bateria (Ex: M60GD)",
+  initialQuery = "",
 }: Props) {
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(initialQuery);
+  const [open, setOpen] = useState(initialQuery.length >= 2);
   const [highlight, setHighlight] = useState(0);
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState(0);
