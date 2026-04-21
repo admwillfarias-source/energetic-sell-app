@@ -55,7 +55,7 @@ export default function EngagementPopup() {
         </div>
 
         <div className="mb-3">
-          <VehicleAutocomplete variant="inline" />
+          <VehicleAutocomplete variant="inline" onSelect={dismiss} />
         </div>
 
         <Button
