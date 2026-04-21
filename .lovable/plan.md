@@ -1,77 +1,62 @@
 
 
-## Análise Moura Fácil → Melhorias para AWR Baterias
+## Novo Checkout no estilo Moura Fácil — Wizard 3 passos
 
-Estudei o site mourafacil.moura.com.br (referência do mercado) e comparei com a sua landing atual. Abaixo estão as melhorias recomendadas, separadas por prioridade e por dispositivo.
+Vou refatorar o `CheckoutDialog` para um fluxo guiado em 3 passos com barra de progresso e card de resumo do pedido sempre visível, mantendo as duas finalizações (WhatsApp principal + Loja online no desktop).
 
----
+### Layout do diálogo
 
-### O que a Moura faz bem (e a AWR ainda não usa)
+```text
+┌──────────────────────────────────────────┐
+│  Finalizar pedido                    [X] │
+│  ●━━━━━━○━━━━━━○                         │  ← Stepper (1/3, 2/3, 3/3)
+│  Endereço   Veículo   Pagamento          │
+├──────────────────────────────────────────┤
+│                                          │
+│   [conteúdo do passo atual]              │
+│                                          │
+│   ┌─ Resumo do pedido ────────────────┐  │
+│   │ 1x Moura M60GD ........ R$ 549,00 │  │  ← Card sticky no rodapé
+│   │ Instalação ............... Grátis │  │     (visível em todos os passos)
+│   │ Total ................. R$ 549,00 │  │
+│   └───────────────────────────────────┘  │
+│                                          │
+│  [ Voltar ]            [ Continuar → ]   │
+└──────────────────────────────────────────┘
+```
 
-1. **Indicador social ao vivo** — badge "27 entregas em andamento" no hero, gera urgência e prova social.
-2. **Selo de parcelamento destacado** — "10x sem juros" em badge circular grande no hero.
-3. **Stepper visual de 3 passos** — "Selecione local → Pagamento na entrega → Entrega e instalação grátis", logo abaixo do hero.
-4. **Depoimentos com avatar/iniciais + cidade + data** (não apenas estrelas).
-5. **Linhas de produto segmentadas** — seções dedicadas a moto e caminhão, com CTA próprio.
-6. **Bloco de formas de pagamento** no rodapé (PIX, Master, Visa, Elo) com ícones.
-7. **Selo de segurança** (Site Blindado) no rodapé.
-8. **Botão flutuante de WhatsApp no desktop** (canto inferior direito).
-9. **FAQ na home** com 3 perguntas-chave + link "ver mais".
+### Passo 1 — Entrega
+- Cards grandes selecionáveis: **Entrega rápida** / **Agendar** / **Retirar na loja** (mesmo componente atual, só promovido para o topo).
+- Se rápida/agendada: campos **CEP** (com ViaCEP), **Endereço**, **Número**.
+- Se agendada: data + hora.
+- Se retirada: select de loja (sem endereço).
+- Botão **Continuar** valida só os campos deste passo.
 
----
+### Passo 2 — Veículo e bateria
+- Bloco somente-leitura mostrando a(s) bateria(s) do carrinho com imagem, nome, qtd, preço (estilo Moura).
+- Campo **Carro e ano** com autocomplete (já existe), pré-preenchido pela busca anterior.
+- Microcópia: "Confirme que esta bateria atende seu veículo. Se tiver dúvida, escolhemos pelo modelo na entrega."
+- Botões **Voltar** / **Continuar**.
 
-### Melhorias prioritárias — MOBILE
+### Passo 3 — Contato e pagamento
+- Campos **Nome**, **CPF/CNPJ**, **Telefone**.
+- Campo **Forma de pagamento** (Pix/cartão/dinheiro).
+- Aviso destacado: **"Pagamento somente na entrega"** + badge "10x sem juros no cartão".
+- Botões finais (mantidos): **Enviar pelo WhatsApp** (verde, principal) e, no desktop, **Finalizar na loja online** (outline secundário) com o divisor "ou".
 
-| # | Melhoria | Onde | Impacto |
-|---|---|---|---|
-| M1 | Adicionar **stepper "1. Busque seu carro → 2. Confirme entrega → 3. Pagamento na entrega"** abaixo do hero | novo componente `HowToOrder` no `Index.tsx` | Reduz fricção de primeira compra |
-| M2 | Mostrar **badge "10x sem juros"** sempre visível dentro do hero (hoje só aparece no texto) | `HeroSection.tsx` | Conversão |
-| M3 | **Depoimentos com avatar + cidade + data** (3 cards, swipe horizontal no mobile) | novo `Testimonials.tsx` | Confiança |
-| M4 | Reduzir altura do `MobileActionBar` em 4px e dar **mais contraste** ao texto (atualmente fundo escuro pode confundir com sistema iOS) | `MobileActionBar.tsx` | Usabilidade |
-| M5 | **FAQ resumida (3 perguntas)** na home antes do footer | `FaqHome.tsx` usando `faqData.ts` | SEO + objeções |
-| M6 | Adicionar **microcópia "Pagamento só na entrega"** nos botões de checkout do `BatteryCard` | `BatteryCard.tsx` | Reduz abandono |
+### Detalhes técnicos
 
-### Melhorias prioritárias — DESKTOP
+- Arquivo único editado: `src/components/CheckoutDialog.tsx`. Sem novas dependências.
+- Estado `step: 1 | 2 | 3` controla o conteúdo. Validação por passo usa subsets do schema Zod já existente (`baseSchema`, `enderecoSchema`); o `schema` final continua valendo no submit.
+- Stepper visual: 3 bolinhas + label + linha conectora, usando Tailwind. Verde (`success`) para passos concluídos, primary para atual, muted para futuros. Clicável para voltar a passo anterior.
+- Card de resumo: extraído para componente interno `OrderSummary` reutilizado no rodapé do dialog. Usa `items` e `subtotal` do `useCart`.
+- Navegação: botões "Voltar"/"Continuar"; Enter no input do último passo dispara WhatsApp (comportamento atual preservado).
+- Reset: ao fechar o dialog, volta para `step: 1`.
+- Mantém: ViaCEP, autocomplete de carro, integração `wc-create-order`, mensagem WhatsApp formatada, toasts e `clear()` do carrinho.
+- Mobile: cada passo ocupa a tela inteira; stepper compacto (só números, sem labels) abaixo de 380px.
+- Acessibilidade: `aria-current="step"` no passo ativo, `aria-label` nos botões de navegação, foco automático no primeiro campo de cada passo.
 
-| # | Melhoria | Onde | Impacto |
-|---|---|---|---|
-| D1 | **Botão flutuante de WhatsApp** no canto inferior direito (só desktop, mobile já tem barra) | novo `FloatingWhatsApp.tsx` | CTA persistente |
-| D2 | **Contador de entregas "X entregas em andamento hoje"** no hero (pode ser número simulado entre 8-25 com leve variação por hora) | `HeroSection.tsx` | Urgência |
-| D3 | **Seções de linha de produto** (Moto, Caminhão, Estacionária) como cards horizontais clicáveis filtrando o catálogo | novo `ProductLines.tsx` | Descoberta |
-| D4 | **Bloco de formas de pagamento** no footer com ícones PIX/Visa/Master/Elo + parcelamento | `Footer.tsx` | Confiança |
-| D5 | **Selo de segurança** (cadeado SSL + "Site seguro") no footer | `Footer.tsx` | Confiança |
-| D6 | Stepper visual de 3 passos lado-a-lado (mesmo do mobile, layout horizontal) | `HowToOrder.tsx` | Conversão |
+### O que NÃO muda
 
-### Performance / técnico (ambos)
-
-| # | Melhoria |
-|---|---|
-| P1 | Pré-carregar logo da fonte de hero no `<head>` (`<link rel="preload" as="image">`) — ganha LCP |
-| P2 | `loading="lazy"` nos logos das montadoras |
-| P3 | Remover `animate-pulse-glow` do botão WhatsApp do hero quando `prefers-reduced-motion` |
-| P4 | Adicionar `Schema.org/Review` nos depoimentos para rich snippets |
-
----
-
-### Escopo proposto para implementar agora (Fase 1)
-
-Sugiro entregar em duas fases. A **Fase 1** captura o maior ganho com baixo esforço:
-
-1. **HowToOrder** (stepper 3 passos) — M1/D6
-2. **Testimonials** com avatar + cidade + data — M3
-3. **Badge "10x sem juros" no hero** — M2
-4. **Botão flutuante WhatsApp desktop** — D1
-5. **Bloco de pagamentos + selo no footer** — D4/D5
-6. **FAQ resumida na home** — M5
-7. **Contador "entregas em andamento"** no hero — D2
-
-Fase 2 (depois): seções de linha de produto (Moto/Caminhão), microcópias de checkout, melhorias de performance P1–P4.
-
-### Detalhes técnicos da Fase 1
-
-- Novos arquivos: `src/components/HowToOrder.tsx`, `src/components/Testimonials.tsx`, `src/components/FaqHome.tsx`, `src/components/FloatingWhatsApp.tsx`, `src/components/PaymentMethods.tsx`.
-- Edições: `HeroSection.tsx` (badge 10x + contador), `Footer.tsx` (pagamentos + selo), `Index.tsx` (incluir as novas seções com `LazySection`/`Suspense`), `MobileActionBar.tsx` (ajuste contraste).
-- Reuso: `faqData.ts` já existe → alimenta o `FaqHome`. Depoimentos ficam em um array constante dentro do componente (3-5 itens iniciais).
-- Ícones de pagamento: SVGs locais em `src/assets/payments/` (PIX, Visa, Master, Elo).
-- Sem alterações de banco. Sem novas dependências.
+- `CartDrawer`, `CartContext`, edge function `wc-create-order`, schema Zod, número do WhatsApp, lojas de retirada, lista de modalidades de entrega.
 
