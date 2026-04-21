@@ -114,6 +114,9 @@ const Index = () => {
         <Suspense fallback={null}>
           <PerfReport />
         </Suspense>
+        <Suspense fallback={null}>
+          <MobileDebugOverlay />
+        </Suspense>
       </div>
     </CartProvider>
   );
