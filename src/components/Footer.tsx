@@ -2,6 +2,7 @@ import { Phone, MessageCircle, Clock } from "lucide-react";
 import { cityPages } from "@/data/cityContent";
 import { brandPages } from "@/data/brandContent";
 import { handleCallClick } from "@/lib/tracking";
+import PaymentMethods from "@/components/PaymentMethods";
 
 const links = [
   { label: "Início", href: "#inicio" },
@@ -107,6 +108,10 @@ export function Footer() {
               </p>
             </div>
           </div>
+        </div>
+
+        <div className="border-t border-border pt-6 mb-6">
+          <PaymentMethods />
         </div>
 
         <div className="border-t border-border pt-6 text-center text-secondary-foreground/40 text-sm pb-20 lg:pb-0">

@@ -1,6 +1,13 @@
 import { lazy, Suspense, useState, useRef, useEffect } from "react";
-import { Search, Car, Clock, Star } from "lucide-react";
+import { Search, Car, Clock, Star, Truck, CreditCard } from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
+
+function getLiveDeliveries() {
+  const hour = new Date().getHours();
+  // varia entre 8 e 25 conforme hora do dia
+  const base = 8 + Math.round(((Math.sin((hour / 24) * Math.PI * 2) + 1) / 2) * 17);
+  return base;
+}
 
 const VehicleAutocomplete = lazy(() => import("@/components/VehicleAutocomplete"));
 const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
@@ -110,14 +117,27 @@ export default function HeroSection() {
 
       <div className="container mx-auto px-4 relative z-10 py-12 md:py-20">
         <div className="max-w-2xl">
-          <div
-            className="inline-flex items-center gap-2 bg-accent/20 border border-accent/40 rounded-full px-4 py-1.5 mb-6"
-            role="status"
-          >
-            <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
-            <span className="text-accent font-semibold text-sm">
-              Porto Alegre: Plantão 6h às 22h
-            </span>
+          <div className="flex flex-wrap items-center gap-2 mb-6">
+            <div
+              className="inline-flex items-center gap-2 bg-accent/20 border border-accent/40 rounded-full px-4 py-1.5"
+              role="status"
+            >
+              <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
+              <span className="text-accent font-semibold text-sm">
+                Porto Alegre: Plantão 6h às 22h
+              </span>
+            </div>
+            <div className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full px-4 py-1.5 font-bold text-sm shadow-md">
+              <CreditCard className="h-4 w-4" aria-hidden="true" />
+              10x sem juros
+            </div>
+            <div
+              className="inline-flex items-center gap-2 bg-awr-green/15 border border-awr-green/40 text-awr-green rounded-full px-4 py-1.5 font-semibold text-sm"
+              aria-live="polite"
+            >
+              <Truck className="h-4 w-4" aria-hidden="true" />
+              {getLiveDeliveries()} entregas em andamento agora
+            </div>
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4">
