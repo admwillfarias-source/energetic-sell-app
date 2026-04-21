@@ -483,9 +483,9 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   <option value="Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)">Porto Alegre - Medianeira (Av. Carlos Barbosa, 1452)</option>
                   <option value="Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)">Porto Alegre - Petrópolis (Av. Protásio Alves, 4189)</option>
                   <option value="Canoas - Fátima (Av. Guilherme Schell, 3266)">Canoas - Fátima (Av. Guilherme Schell, 3266)</option>
-                  <option value="Gravataí">Gravataí</option>
-                  <option value="Cachoeirinha">Cachoeirinha</option>
-                  <option value="Novo Hamburgo">Novo Hamburgo</option>
+                  <option value="Gravataí (Av. Dorival Cândido Luz de Oliveira, 6625 - Bom Princípio)">Gravataí (Av. Dorival Cândido Luz de Oliveira, 6625 - Bom Princípio)</option>
+                  <option value="São Leopoldo (Av. Feitoria, 917 - São José)">São Leopoldo (Av. Feitoria, 917 - São José)</option>
+                  <option value="Novo Hamburgo (Av. Victor Hugo Kunz, 961 - Hamburgo Velho)">Novo Hamburgo (Av. Victor Hugo Kunz, 961 - Hamburgo Velho)</option>
                 </select>
                 <p className="text-xs text-muted-foreground">Você retira a bateria na loja selecionada — endereço não é necessário.</p>
               </div>
