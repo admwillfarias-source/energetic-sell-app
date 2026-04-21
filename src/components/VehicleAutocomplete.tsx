@@ -59,6 +59,29 @@ export default function VehicleAutocomplete({
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
 
+  // Quando aberto via "primeira tecla" no Hero, focar input e posicionar cursor no fim.
+  useEffect(() => {
+    if (initialQuery && inputRef.current) {
+      const el = inputRef.current;
+      el.focus();
+      const len = el.value.length;
+      try {
+        el.setSelectionRange(len, len);
+      } catch {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Detecta se a query parece um SKU/modelo de bateria (ex: M60GD, MF60LD, HEFB72PD). */
+  const looksLikeBatterySku = (q: string) => {
+    const s = q.trim().toUpperCase().replace(/\s+/g, "");
+    if (s.length < 3 || s.length > 16) return false;
+    if (!/[A-Z]/.test(s) || !/\d/.test(s)) return false;
+    return /^[A-Z0-9-]+$/.test(s);
+  };
+
   const suggestions = useMemo<VehicleSuggestion[]>(() => {
     if (loading) return [];
     return searchVehicles(query, 10);
