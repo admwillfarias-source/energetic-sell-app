@@ -13,16 +13,18 @@ type Props = {
   variant?: "card" | "inline";
   className?: string;
   placeholder?: string;
+  initialQuery?: string;
 };
 
 export default function VehicleAutocomplete({
   variant = "card",
   className,
-  placeholder = "Ex: Fiat Uno 2015, Onix 2018, Corolla 2014...",
+  placeholder = "Carro e ano (Ex: Onix 2018) ou modelo da bateria (Ex: M60GD)",
+  initialQuery = "",
 }: Props) {
   const navigate = useNavigate();
-  const [query, setQuery] = useState("");
-  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(initialQuery);
+  const [open, setOpen] = useState(initialQuery.length >= 2);
   const [highlight, setHighlight] = useState(0);
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState(0);
@@ -56,6 +58,29 @@ export default function VehicleAutocomplete({
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
   }, []);
+
+  // Quando aberto via "primeira tecla" no Hero, focar input e posicionar cursor no fim.
+  useEffect(() => {
+    if (initialQuery && inputRef.current) {
+      const el = inputRef.current;
+      el.focus();
+      const len = el.value.length;
+      try {
+        el.setSelectionRange(len, len);
+      } catch {
+        // ignore
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** Detecta se a query parece um SKU/modelo de bateria (ex: M60GD, MF60LD, HEFB72PD). */
+  const looksLikeBatterySku = (q: string) => {
+    const s = q.trim().toUpperCase().replace(/\s+/g, "");
+    if (s.length < 3 || s.length > 16) return false;
+    if (!/[A-Z]/.test(s) || !/\d/.test(s)) return false;
+    return /^[A-Z0-9-]+$/.test(s);
+  };
 
   const suggestions = useMemo<VehicleSuggestion[]>(() => {
     if (loading) return [];
@@ -94,15 +119,24 @@ export default function VehicleAutocomplete({
   const onSubmit = () => {
     if (suggestions.length > 0) {
       choose(suggestions[highlight] ?? suggestions[0]);
+    } else if (looksLikeBatterySku(query)) {
+      const sku = query.trim().toUpperCase().replace(/\s+/g, "");
+      toast({ title: "Buscando bateria", description: sku });
+      setOpen(false);
+      navigate(`/?codes=${encodeURIComponent(sku)}#catalogo`);
+      setTimeout(
+        () => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" }),
+        50,
+      );
     } else if (query.trim().length >= 2) {
       toast({
-        title: "Veículo não encontrado",
-        description: "Tente outra grafia ou inclua o ano (ex: Onix 2016).",
+        title: "Nada encontrado",
+        description: "Digite carro+ano (ex: Onix 2016) ou o modelo da bateria (ex: M60GD).",
       });
     } else {
       toast({
-        title: "Digite o veículo",
-        description: "Ex: Fiat Uno 2015, Onix 2018, Toro 2020.",
+        title: "Digite o veículo ou modelo",
+        description: "Ex: Fiat Uno 2015 ou MF72LD.",
       });
     }
   };

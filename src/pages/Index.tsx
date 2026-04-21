@@ -52,7 +52,7 @@ const Index = () => {
       />
       <div className="min-h-screen bg-background">
         <Header />
-        <main className="pb-24 lg:pb-0">
+        <main className="pb-32 lg:pb-0">
           <HeroSection />
           <BatteryGrid />
           <LazySection minHeight="400px">

@@ -9,9 +9,9 @@ export default function MobileActionBar() {
     <div
       className="fixed inset-x-0 z-[9999] lg:hidden border-t border-border bg-secondary/95 backdrop-blur shadow-[0_-4px_12px_-2px_hsl(var(--secondary)/0.4)]"
       style={{
-        bottom: 0,
-        paddingBottom: "max(env(safe-area-inset-bottom, 0px), 12px)",
+        bottom: "max(env(safe-area-inset-bottom, 0px), 16px)",
         paddingTop: "10px",
+        paddingBottom: "10px",
       }}
     >
       <div className="grid grid-cols-2 gap-2 px-3 max-w-md mx-auto">
