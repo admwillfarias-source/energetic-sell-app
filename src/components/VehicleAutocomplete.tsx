@@ -116,11 +116,7 @@ export default function VehicleAutocomplete({
       const sku = normalizeSku(query);
       toast({ title: "Buscando bateria", description: sku });
       setOpen(false);
-      navigate(`/?codes=${encodeURIComponent(sku)}#catalogo`);
-      setTimeout(
-        () => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" }),
-        50,
-      );
+      navigate(`/bateria/${encodeURIComponent(sku)}`);
     } else if (query.trim().length >= 2) {
       toast({
         title: "Nada encontrado",
