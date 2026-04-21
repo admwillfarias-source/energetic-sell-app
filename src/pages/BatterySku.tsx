@@ -156,7 +156,6 @@ export default function BatterySku() {
       <Footer />
       <BatteryDetailDialog
         battery={selected}
-        open={!!selected}
         onOpenChange={(o) => !o && setSelected(null)}
       />
     </>
