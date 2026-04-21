@@ -12,6 +12,14 @@ export default function EngagementPopup() {
     const ua = navigator.userAgent || "";
     if (/Lighthouse|Chrome-Lighthouse|HeadlessChrome|PageSpeed/i.test(ua)) return;
 
+    // Não exibir se o cliente está vendo resultado de busca por veículo
+    try {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("v")?.trim()) return;
+    } catch {
+      // ignore
+    }
+
     const timer = setTimeout(() => setShow(true), 20000);
     return () => clearTimeout(timer);
   }, []);
