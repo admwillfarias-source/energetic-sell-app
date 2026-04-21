@@ -87,45 +87,37 @@ export function BatteryGrid() {
   }
 
   return (
-    <section id="catalogo" className="bg-background py-16 md:py-24">
+    <section id="catalogo" className="bg-background py-8 md:py-12">
       <div className="container">
-        <div className="mb-10 flex flex-wrap items-end justify-between gap-4">
+        <div className="mb-5 flex flex-wrap items-end justify-between gap-2">
           <div>
-            <span className="text-xs font-semibold uppercase tracking-wider text-accent-foreground/70">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-accent-foreground/70">
               Resultado
             </span>
-            <h2 className="mt-2 font-display text-3xl font-bold md:text-4xl">
+            <h2 className="mt-1 font-display text-xl font-bold md:text-2xl">
               Baterias compatíveis
             </h2>
-            <p className="mt-2 text-muted-foreground">
-              Marcas líderes com garantia de fábrica e entrega rápida.
-            </p>
           </div>
-          <span className="text-sm text-muted-foreground">
+          <span className="text-xs text-muted-foreground">
             {filtered.length} {filtered.length === 1 ? "produto" : "produtos"}
           </span>
         </div>
 
         {vehicle && (
-          <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/30 bg-accent/10 p-4">
-            <div className="flex items-center gap-3">
-              <div className="rounded-full bg-accent/20 p-2">
-                <CarFront className="h-5 w-5 text-accent" />
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-accent/30 bg-accent/10 px-3 py-2">
+            <div className="flex items-center gap-2">
+              <div className="rounded-full bg-accent/20 p-1.5">
+                <CarFront className="h-4 w-4 text-accent" />
               </div>
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                  Compatível com o seu veículo
+                <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Compatível com seu veículo
                 </p>
-                <p className="font-display text-base font-bold">{vehicle}</p>
-                {codes.length > 0 && (
-                  <p className="text-xs text-muted-foreground">
-                    Códigos: {codes.join(", ")}
-                  </p>
-                )}
+                <p className="font-display text-sm font-bold leading-tight">{vehicle}</p>
               </div>
             </div>
-            <Button variant="ghost" size="sm" onClick={clearVehicle} className="gap-1.5">
-              <X className="h-4 w-4" />
+            <Button variant="ghost" size="sm" onClick={clearVehicle} className="h-8 gap-1 text-xs">
+              <X className="h-3.5 w-3.5" />
               Limpar
             </Button>
           </div>
