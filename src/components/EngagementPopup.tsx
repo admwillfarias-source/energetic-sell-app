@@ -20,8 +20,15 @@ export default function EngagementPopup() {
       // ignore
     }
 
-    const timer = setTimeout(() => setShow(true), 20000);
-    return () => clearTimeout(timer);
+    const timer = window.setTimeout(() => {
+      // Não abrir se houver qualquer dialog/drawer aberto (checkout, carrinho, etc.)
+      const hasOpenDialog = document.querySelector(
+        '[role="dialog"][data-state="open"], [role="alertdialog"][data-state="open"]',
+      );
+      if (hasOpenDialog) return;
+      setShow(true);
+    }, 20000);
+    return () => window.clearTimeout(timer);
   }, []);
 
   const dismiss = () => {
