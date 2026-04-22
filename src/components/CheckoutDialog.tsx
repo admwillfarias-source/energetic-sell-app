@@ -29,14 +29,17 @@ import { cn } from "@/lib/utils";
 // Número da loja (formato internacional, só dígitos). Edite aqui.
 const WHATSAPP_NUMBER = "5551993199486";
 
-// Janela de atendimento (horário local) — 08:35 às 21:30
-const ATEND_INICIO_MIN = 8 * 60 + 35; // 08:35
+// Janela de atendimento (horário local) — 06:30 às 21:30
+const ATEND_INICIO_MIN = 6 * 60 + 30; // 06:30
 const ATEND_FIM_MIN = 21 * 60 + 30; // 21:30
 
 // Faixas de tarifa de entrega
+const FAIXA_MANHA_INICIO = 6 * 60 + 30; // 06:30
+const FAIXA_MANHA_FIM = 8 * 60; // 08:00 → +R$ 40
 const FAIXA_GRATIS_INICIO = 8 * 60 + 35; // 08:35
 const FAIXA_GRATIS_FIM = 18 * 60; // 18:00 → grátis
 const FAIXA_NOITE_INICIO = 18 * 60 + 1; // 18:01
+const TAXA_MANHA = 40;
 const TAXA_NOITE = 50;
 
 function minutesFromHHMM(hhmm: string): number | null {
@@ -49,17 +52,20 @@ function minutesFromHHMM(hhmm: string): number | null {
 }
 
 function taxaEntregaPorMinutos(min: number): number {
+  if (min >= FAIXA_MANHA_INICIO && min <= FAIXA_MANHA_FIM) return TAXA_MANHA;
   if (min >= FAIXA_GRATIS_INICIO && min <= FAIXA_GRATIS_FIM) return 0;
   if (min >= FAIXA_NOITE_INICIO && min <= ATEND_FIM_MIN) return TAXA_NOITE;
   return 0;
 }
 
 function descricaoFaixa(min: number): string {
+  if (min >= FAIXA_MANHA_INICIO && min <= FAIXA_MANHA_FIM)
+    return "Manhã cedo (06:30–08:00) — taxa R$ 40,00";
   if (min >= FAIXA_GRATIS_INICIO && min <= FAIXA_GRATIS_FIM)
     return "Horário comercial (08:35–18:00) — entrega grátis";
   if (min >= FAIXA_NOITE_INICIO && min <= ATEND_FIM_MIN)
     return "Noturno (18:01–21:30) — taxa R$ 50,00";
-  return "Fora do horário de atendimento (08:35–21:30)";
+  return "Fora do horário de atendimento (06:30–21:30)";
 }
 
 const baseSchema = {
@@ -264,7 +270,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
   const entregaResumo = () => {
     if (form.entregaTipo === "rapida") {
       const taxaTxt = taxaEntrega > 0 ? ` — taxa ${formatBRL(taxaEntrega)}` : " — sem taxa";
-      return `Entrega rápida (até 35 min, 08h35 às 21h30)${taxaTxt}`;
+      return `Entrega rápida (até 35 min, 06h30 às 21h30)${taxaTxt}`;
     }
     if (form.entregaTipo === "agendada") {
       const taxaTxt = taxaEntrega > 0 ? ` — taxa ${formatBRL(taxaEntrega)}` : " — gratuita";
@@ -282,13 +288,13 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     if (form.entregaTipo === "rapida" && !rapidaDisponivelAgora()) {
       return {
         ok: false,
-        msg: "Entrega rápida disponível das 08h35 às 21h30. Selecione 'Agendar entrega' para outro horário.",
+        msg: "Entrega rápida disponível das 06h30 às 21h30. Selecione 'Agendar entrega' para outro horário.",
       };
     }
     if (form.entregaTipo === "agendada") {
       const m = minutesFromHHMM(form.entregaHora);
       if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
-        return { ok: false, msg: "Horário de agendamento entre 08:35 e 21:30." };
+        return { ok: false, msg: "Horário de agendamento entre 06:30 e 21:30." };
       }
     }
     return { ok: true };
@@ -309,7 +315,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       if (!form.entregaHora) return { ok: false, msg: "Selecione o horário." };
       const m = minutesFromHHMM(form.entregaHora);
       if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
-        return { ok: false, msg: "Horário de agendamento entre 08:35 e 21:30." };
+        return { ok: false, msg: "Horário de agendamento entre 06:30 e 21:30." };
       }
     } else if (form.entregaTipo === "retirada") {
       if (form.lojaRetirada.trim().length < 2) return { ok: false, msg: "Selecione a loja." };
@@ -535,13 +541,13 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                         v: "rapida" as const,
                         icon: Zap,
                         title: "Entrega rápida",
-                        desc: "Em até 35 min · 08h35–21h30",
+                        desc: "Em até 35 min · 06h30–21h30",
                       },
                       {
                         v: "agendada" as const,
                         icon: CalendarClock,
                         title: "Agendar",
-                        desc: "08h35–21h30",
+                        desc: "06h30–21h30",
                       },
                       {
                         v: "retirada" as const,
@@ -582,14 +588,14 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
                 {form.entregaTipo === "rapida" && !rapidaAgora && (
                   <p className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    Fora do horário de atendimento (08h35 às 21h30). Selecione "Agendar".
+                    Fora do horário de atendimento (06h30 às 21h30). Selecione "Agendar".
                   </p>
                 )}
 
                 {form.entregaTipo === "rapida" && rapidaAgora && (
                   <div className="rounded-md bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-                    <strong className="text-foreground">Tarifas de entrega:</strong> 08:35–18:00
-                    grátis · 18:01–21:30 + R$ 50,00.
+                    <strong className="text-foreground">Tarifas de entrega:</strong> 06:30–08:00 +
+                    R$ 40,00 · 08:35–18:00 grátis · 18:01–21:30 + R$ 50,00.
                     {taxaEntrega > 0 ? (
                       <span className="mt-1 block font-semibold text-foreground">
                         Faixa atual: {descricaoFaixa(entregaMin ?? 0)}
@@ -663,11 +669,11 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                         />
                       </div>
                       <div className="space-y-1.5">
-                        <Label htmlFor="entregaHora">Horário (08:35–21:30)</Label>
+                        <Label htmlFor="entregaHora">Horário (06:30–21:30)</Label>
                         <Input
                           id="entregaHora"
                           type="time"
-                          min="08:35"
+                          min="06:30"
                           max="21:30"
                           value={form.entregaHora}
                           onChange={update("entregaHora")}
