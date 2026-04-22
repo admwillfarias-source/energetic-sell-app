@@ -655,26 +655,48 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                 )}
 
                 {form.entregaTipo === "agendada" && (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="entregaData">Data</Label>
-                      <Input
-                        id="entregaData"
-                        type="date"
-                        min={today}
-                        value={form.entregaData}
-                        onChange={update("entregaData")}
-                      />
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="entregaData">Data</Label>
+                        <Input
+                          id="entregaData"
+                          type="date"
+                          min={today}
+                          value={form.entregaData}
+                          onChange={update("entregaData")}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="entregaHora">Horário (06:00–21:30)</Label>
+                        <Input
+                          id="entregaHora"
+                          type="time"
+                          min="06:00"
+                          max="21:30"
+                          value={form.entregaHora}
+                          onChange={update("entregaHora")}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="entregaHora">Horário</Label>
-                      <Input
-                        id="entregaHora"
-                        type="time"
-                        value={form.entregaHora}
-                        onChange={update("entregaHora")}
-                      />
-                    </div>
+                    {form.entregaHora && entregaMin != null && (
+                      <div
+                        className={cn(
+                          "rounded-md px-3 py-2 text-xs",
+                          entregaMin < ATEND_INICIO_MIN || entregaMin > ATEND_FIM_MIN
+                            ? "bg-destructive/10 text-destructive"
+                            : taxaEntrega > 0
+                              ? "bg-secondary/40 text-foreground"
+                              : "bg-success/10 text-success",
+                        )}
+                      >
+                        {descricaoFaixa(entregaMin)}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Agendamento <strong className="text-foreground">gratuito</strong> para
+                      entregas das 08:35 às 18:00.
+                    </p>
                   </div>
                 )}
 
