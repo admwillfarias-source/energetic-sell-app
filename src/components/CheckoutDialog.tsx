@@ -29,9 +29,43 @@ import { cn } from "@/lib/utils";
 // Número da loja (formato internacional, só dígitos). Edite aqui.
 const WHATSAPP_NUMBER = "5551993199486";
 
-// Janela de entrega rápida (horário local)
-const RAPIDA_INICIO_MIN = 8 * 60 + 30;
-const RAPIDA_FIM_MIN = 18 * 60;
+// Janela de atendimento (horário local) — 06:00 às 21:30
+const ATEND_INICIO_MIN = 6 * 60; // 06:00
+const ATEND_FIM_MIN = 21 * 60 + 30; // 21:30
+
+// Faixas de tarifa de entrega
+const FAIXA_MANHA_FIM = 8 * 60 + 30; // 06:00–08:30 → +R$40
+const FAIXA_GRATIS_INICIO = 8 * 60 + 35; // 08:35
+const FAIXA_GRATIS_FIM = 18 * 60; // 18:00 → grátis
+const FAIXA_NOITE_INICIO = 18 * 60 + 1; // 18:01
+const TAXA_MANHA = 40;
+const TAXA_NOITE = 50;
+
+function minutesFromHHMM(hhmm: string): number | null {
+  const m = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const mm = Number(m[2]);
+  if (h < 0 || h > 23 || mm < 0 || mm > 59) return null;
+  return h * 60 + mm;
+}
+
+function taxaEntregaPorMinutos(min: number): number {
+  if (min >= ATEND_INICIO_MIN && min <= FAIXA_MANHA_FIM) return TAXA_MANHA;
+  if (min >= FAIXA_GRATIS_INICIO && min <= FAIXA_GRATIS_FIM) return 0;
+  if (min >= FAIXA_NOITE_INICIO && min <= ATEND_FIM_MIN) return TAXA_NOITE;
+  return 0;
+}
+
+function descricaoFaixa(min: number): string {
+  if (min >= ATEND_INICIO_MIN && min <= FAIXA_MANHA_FIM)
+    return "Madrugada (06:00–08:30) — taxa R$ 40,00";
+  if (min >= FAIXA_GRATIS_INICIO && min <= FAIXA_GRATIS_FIM)
+    return "Horário comercial (08:35–18:00) — entrega grátis";
+  if (min >= FAIXA_NOITE_INICIO && min <= ATEND_FIM_MIN)
+    return "Noturno (18:01–21:30) — taxa R$ 50,00";
+  return "Fora do horário de atendimento (06:00–21:30)";
+}
 
 const baseSchema = {
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
