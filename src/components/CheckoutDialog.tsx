@@ -252,9 +252,29 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     }
   };
 
+  const entregaMin = useMemo<number | null>(() => {
+    if (form.entregaTipo === "rapida") return minutosAgora();
+    if (form.entregaTipo === "agendada") return minutesFromHHMM(form.entregaHora);
+    return null; // retirada não tem taxa
+  }, [form.entregaTipo, form.entregaHora]);
+
+  const taxaEntrega = useMemo(() => {
+    if (form.entregaTipo === "retirada") return 0;
+    if (entregaMin == null) return 0;
+    return taxaEntregaPorMinutos(entregaMin);
+  }, [form.entregaTipo, entregaMin]);
+
+  const totalComEntrega = subtotal + taxaEntrega;
+
   const entregaResumo = () => {
-    if (form.entregaTipo === "rapida") return "Entrega rápida (até 35 min — 8h30 às 18h)";
-    if (form.entregaTipo === "agendada") return `Agendada para ${form.entregaData} às ${form.entregaHora}`;
+    if (form.entregaTipo === "rapida") {
+      const taxaTxt = taxaEntrega > 0 ? ` — taxa ${formatBRL(taxaEntrega)}` : " — sem taxa";
+      return `Entrega rápida (até 35 min, 06h às 21h30)${taxaTxt}`;
+    }
+    if (form.entregaTipo === "agendada") {
+      const taxaTxt = taxaEntrega > 0 ? ` — taxa ${formatBRL(taxaEntrega)}` : " — gratuita";
+      return `Agendada para ${form.entregaData} às ${form.entregaHora}${taxaTxt}`;
+    }
     return `Retirada na loja${form.lojaRetirada ? ` — ${form.lojaRetirada}` : ""}`;
   };
 
@@ -267,8 +287,14 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     if (form.entregaTipo === "rapida" && !rapidaDisponivelAgora()) {
       return {
         ok: false,
-        msg: "Entrega rápida disponível das 8h30 às 18h. Selecione 'Agendar entrega' para outro horário.",
+        msg: "Entrega rápida disponível das 06h às 21h30. Selecione 'Agendar entrega' para outro horário.",
       };
+    }
+    if (form.entregaTipo === "agendada") {
+      const m = minutesFromHHMM(form.entregaHora);
+      if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
+        return { ok: false, msg: "Horário de agendamento entre 06:00 e 21:30." };
+      }
     }
     return { ok: true };
   };
