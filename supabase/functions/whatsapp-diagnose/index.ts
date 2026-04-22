@@ -116,12 +116,19 @@ Deno.serve(async (req) => {
     const tokenScopes = dbgData.scopes ?? [];
     const tokenExpiresAt = dbgData.expires_at ?? null;
 
+    let templates: unknown = null;
     if (wabaId) {
       const list = await graph(
         `${wabaId}/phone_numbers?fields=id,display_phone_number,verified_name,quality_rating`,
         token,
       );
       phoneNumbers = list;
+
+      const tpl = await graph(
+        `${wabaId}/message_templates?fields=name,language,status,category,rejected_reason&limit=200`,
+        token,
+      );
+      templates = tpl;
     }
 
     return new Response(
