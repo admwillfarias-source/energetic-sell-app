@@ -154,6 +154,8 @@ Deno.serve(async (req) => {
         phoneInfo,
         wabaId,
         phoneNumbersForWaba: phoneNumbers,
+        templates,
+        expectedTemplates: ["novo_pedido_loja", "confirmacao_pedido_cliente"],
         graphVersion: GRAPH_VERSION,
       }),
       {
