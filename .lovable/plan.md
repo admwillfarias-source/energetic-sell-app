@@ -1,70 +1,96 @@
 
 
-## WhatsApp via Meta Cloud API (oficial, gratuito até 1.000 conversas/mês)
+## Criar templates pt_BR no Meta WhatsApp Manager
 
-Implementação do envio direto do pedido pelo WhatsApp sem o cliente sair do site, usando a API oficial da Meta.
+O erro #132001 confirma: a edge function está 100% funcional, faltam apenas os 2 templates aprovados. Esta é uma tarefa **manual sua no painel da Meta** — eu não consigo criar templates via API (a API de Management exige permissões `whatsapp_business_management` que normalmente não estão no token do app).
 
-### O que você precisa fazer antes (uma vez, ~30 min)
+### Passo a passo no painel da Meta
 
-1. Criar conta no [Meta Business Manager](https://business.facebook.com)
-2. Em [Meta for Developers](https://developers.facebook.com): criar app → adicionar produto **WhatsApp**
-3. Cadastrar um **número dedicado** (não pode ser um WhatsApp já em uso). Pode usar chip novo ou número virtual.
-4. Aprovar **2 templates de mensagem** em português (categoria UTILITY, aprovação leva ~1h):
+1. Acesse [business.facebook.com/wa/manage/message-templates](https://business.facebook.com/wa/manage/message-templates)
+2. Selecione a WABA do app `3503109783187532`
+3. Clique em **Criar modelo** → categoria **UTILITY** → idioma **Português (BR)**
 
-   **Template `novo_pedido_loja`** (vai para a loja):
-   ```
-   🔔 Novo pedido AWR
-   Cliente: {{1}}
-   Telefone: {{2}}
-   Veículo: {{3}}
-   Bateria: {{4}}
-   Total: R$ {{5}}
-   Entrega: {{6}}
-   ```
+### Template 1 — `novo_pedido_loja`
 
-   **Template `confirmacao_pedido_cliente`** (vai para o cliente):
-   ```
-   Olá {{1}}! Recebemos seu pedido na AWR Baterias 🔋
-   Bateria: {{2}}
-   Total: R$ {{3}}
-   Em instantes nossa equipe confirma a entrega. Dúvidas? Responda esta mensagem.
-   ```
+- **Nome (exato, sem acento):** `novo_pedido_loja`
+- **Categoria:** UTILITY
+- **Idioma:** Português (BR) — `pt_BR`
+- **Cabeçalho:** nenhum
+- **Corpo (cole exatamente, com as variáveis na ordem):**
 
-5. Coletar 2 dados no painel da Meta:
-   - **Phone Number ID** (em WhatsApp → API Setup)
-   - **Permanent Access Token** (System User token, não o temporário de 24h)
+```
+🔔 Novo pedido AWR
+Cliente: {{1}}
+Telefone: {{2}}
+Veículo: {{3}}
+Bateria: {{4}}
+Total: R$ {{5}}
+Entrega: {{6}}
+```
 
-### O que vou implementar
+- **Exemplos para aprovação** (a Meta exige exemplo de cada variável):
+  - `{{1}}` = João Silva
+  - `{{2}}` = 5551999998888
+  - `{{3}}` = Fiat Palio Weekend 2010
+  - `{{4}}` = 1x Heliar 60Ah
+  - `{{5}}` = 450,00
+  - `{{6}}` = Rua Exemplo 123, Porto Alegre
 
-**1. Edge function `send-whatsapp-order`** (`supabase/functions/send-whatsapp-order/index.ts`)
-- Valida payload com Zod (cliente, items, total, telefone)
-- Faz 2 chamadas paralelas para `https://graph.facebook.com/v21.0/{PHONE_NUMBER_ID}/messages`:
-  - Para `5551993199486` usando template `novo_pedido_loja`
-  - Para o telefone do cliente usando template `confirmacao_pedido_cliente`
-- CORS liberado, retorna `{ ok, lojaId, clienteId, errors }`
-- Não falha se uma das mensagens der erro (loga e continua) — pedido nunca é bloqueado por falha de WhatsApp
-- Secrets necessários: `WHATSAPP_PHONE_NUMBER_ID`, `WHATSAPP_ACCESS_TOKEN`
+- **Rodapé / botões:** nenhum
 
-**2. Integração no `CheckoutDialog.tsx`**
-- No clique do botão WhatsApp do passo 3, em paralelo com `wc-create-order`:
-  - `supabase.functions.invoke("send-whatsapp-order", { body })`
-  - Toast de sucesso: "Pedido enviado! Você receberá a confirmação no WhatsApp em instantes."
-  - Limpa carrinho e fecha diálogo — **cliente permanece no site**
-- Se a API falhar, mostra toast com botão fallback "Abrir WhatsApp" que usa o `wa.me` atual
-- Adiciona pequeno texto abaixo do botão: "Confirmação automática no seu WhatsApp"
+### Template 2 — `confirmacao_pedido_cliente`
 
-**3. config.toml**
-- Adiciona bloco `[functions.send-whatsapp-order]` com `verify_jwt = false` (chamada pública do checkout)
+- **Nome (exato):** `confirmacao_pedido_cliente`
+- **Categoria:** UTILITY
+- **Idioma:** Português (BR) — `pt_BR`
+- **Corpo:**
 
-### O que NÃO muda
+```
+Olá {{1}}! Recebemos seu pedido na AWR Baterias 🔋
+Bateria: {{2}}
+Total: R$ {{3}}
+Em instantes nossa equipe confirma a entrega. Dúvidas? Responda esta mensagem.
+```
 
-- `wc-create-order` continua disparando em paralelo (pedido vai pro WooCommerce)
-- Botão "Finalizar na loja online" no desktop, layout do checkout, fluxo do carrinho, número da loja
+- **Exemplos:**
+  - `{{1}}` = João
+  - `{{2}}` = 1x Heliar 60Ah
+  - `{{3}}` = 450,00
 
-### Próximos passos depois de aprovar este plano
+### Cuidados que evitam rejeição
 
-1. Você cria o app na Meta e aprova os 2 templates (eu te ajudo se travar em algum ponto)
-2. Você me confirma quando tiver os 2 dados → eu peço pelo formulário seguro de secrets
-3. Implemento a edge function + integração no checkout
-4. Testamos juntos com um pedido real
+- Categoria **deve ser UTILITY** (não MARKETING) — pedidos transacionais cabem aqui e aprovam mais rápido (~30 min a 2h)
+- Nome do template **idêntico** ao código (`novo_pedido_loja`, `confirmacao_pedido_cliente`) — a função busca exatamente esses nomes
+- Idioma **deve ser** Português (BR) / `pt_BR`
+- Não inclua links, emojis em excesso ou texto promocional ("aproveite", "desconto") — isso joga pra MARKETING
+- Preencha os exemplos de cada variável — sem isso a Meta rejeita
+
+### O que eu faço depois (parte de código, modo padrão)
+
+Quando os templates estiverem com status **Aprovado** no painel:
+
+1. **Adicionar uma checagem no `whatsapp-diagnose`** que liste os templates da WABA e mostre o status de cada um (`APPROVED`, `PENDING`, `REJECTED`) — assim você confirma na página `/admin/whatsapp-diagnostico` antes de testar
+2. **Melhorar mensagens de erro no `send-whatsapp-order`**: detectar erro 132001 e devolver um texto claro tipo *"Template ainda não aprovado ou idioma errado — confira em /admin/whatsapp-diagnostico"* em vez do JSON cru da Meta
+3. **Testar de ponta a ponta em `/admin/whatsapp-test`** com seu telefone e validar:
+   - Mensagem chega na loja (`5551993199486`)
+   - Mensagem chega no cliente
+   - Logs aparecem em `/admin/whatsapp-logs` com `ok = true`
+
+### Fluxo completo
+
+```text
+Você → cria 2 templates no painel Meta (manual, ~30 min + 1h aprovação)
+   ↓
+Você → me avisa "templates aprovados"
+   ↓
+Eu → adiciono listagem de templates no /admin/whatsapp-diagnostico
+Eu → melhoro mensagens de erro da edge function
+Eu → testo via /admin/whatsapp-test com seu número
+   ↓
+Pronto: pedido sai do checkout direto pro WhatsApp da loja + cliente
+```
+
+### Próxima ação sua
+
+Crie os 2 templates agora seguindo os textos acima. Quando aparecerem como **Aprovado** no painel da Meta, me responde **"templates aprovados"** que eu sigo com os passos 1–3.
 
