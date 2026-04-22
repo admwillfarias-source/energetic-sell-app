@@ -102,10 +102,14 @@ type Props = {
   onOpenChange: (o: boolean) => void;
 };
 
-function rapidaDisponivelAgora(): boolean {
+function minutosAgora(): number {
   const d = new Date();
-  const min = d.getHours() * 60 + d.getMinutes();
-  return min >= RAPIDA_INICIO_MIN && min <= RAPIDA_FIM_MIN;
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+function rapidaDisponivelAgora(): boolean {
+  const min = minutosAgora();
+  return min >= ATEND_INICIO_MIN && min <= ATEND_FIM_MIN;
 }
 
 function maskCep(value: string): string {
