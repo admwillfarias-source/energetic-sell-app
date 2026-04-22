@@ -540,13 +540,13 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                         v: "rapida" as const,
                         icon: Zap,
                         title: "Entrega rápida",
-                        desc: "Em até 35 min",
+                        desc: "Em até 35 min · 06h–21h30",
                       },
                       {
                         v: "agendada" as const,
                         icon: CalendarClock,
                         title: "Agendar",
-                        desc: "Data e horário",
+                        desc: "06h–21h30",
                       },
                       {
                         v: "retirada" as const,
