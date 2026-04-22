@@ -340,9 +340,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     }
   };
 
-  const [sendingWa, setSendingWa] = useState(false);
-
-  const buildWhatsAppFallbackUrl = () => {
+  const buildWhatsAppOrderUrl = () => {
     const bateriaLinhas = items
       .map(
         (i) =>
@@ -367,7 +365,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (items.length === 0) {
       toast({ title: "Carrinho vazio", description: "Adicione uma bateria antes de finalizar." });
@@ -379,54 +377,15 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       return;
     }
 
-    setSendingWa(true);
-    try {
-      const payload = {
-        customer: {
-          nome: form.nome,
-          telefone: form.telefone,
-          carroAno: form.carroAno,
-          entrega: entregaResumo(),
-        },
-        items: items.map((i) => ({
-          name: `${i.battery.name} (${i.battery.brand} ${i.battery.amperage}Ah)`,
-          quantity: i.quantity,
-          price: i.battery.price,
-        })),
-        total: subtotal,
-      };
-
-      const { data, error } = await supabase.functions.invoke("send-whatsapp-order", {
-        body: payload,
-      });
-
-      if (error || !data?.ok) {
-        throw new Error(
-          (error as { message?: string } | null)?.message ?? "Falha no envio",
-        );
-      }
-
-      toast({
-        title: "Pedido enviado! ✅",
-        description: "Você receberá a confirmação no WhatsApp em instantes.",
-      });
-      clear();
-      onOpenChange(false);
-      setCartOpen(false);
-    } catch {
-      // Fallback: abre wa.me como antes
-      const url = buildWhatsAppFallbackUrl();
-      window.open(url, "_blank", "noopener,noreferrer");
-      toast({
-        title: "Abrindo WhatsApp",
-        description: "Não conseguimos enviar automaticamente. Conclua a conversa pelo WhatsApp.",
-      });
-      clear();
-      onOpenChange(false);
-      setCartOpen(false);
-    } finally {
-      setSendingWa(false);
-    }
+    const url = buildWhatsAppOrderUrl();
+    window.open(url, "_blank", "noopener,noreferrer");
+    toast({
+      title: "Abrindo WhatsApp",
+      description: "Conclua o envio da mensagem para finalizar seu pedido.",
+    });
+    clear();
+    onOpenChange(false);
+    setCartOpen(false);
   };
 
   const rapidaAgora = rapidaDisponivelAgora();
@@ -925,19 +884,14 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   <Button
                     type="submit"
                     size="lg"
-                    disabled={sendingWa}
                     className="flex-1 bg-[#25D366] text-white hover:bg-[#20bd5a]"
                   >
-                    {sendingWa ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <MessageCircle className="h-4 w-4" />
-                    )}
-                    {sendingWa ? "Enviando..." : "Enviar pelo WhatsApp"}
+                    <MessageCircle className="h-4 w-4" />
+                    Enviar pelo WhatsApp
                   </Button>
                 </div>
                 <p className="text-center text-xs text-muted-foreground">
-                  Confirmação automática no seu WhatsApp — você não sai do site
+                  Seu pedido será aberto no WhatsApp com a mensagem pronta — basta enviar
                 </p>
 
                 {!isMobile && (
