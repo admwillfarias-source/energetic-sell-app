@@ -137,13 +137,15 @@ export default function HeroSection() {
               <CreditCard className="h-4 w-4" aria-hidden="true" />
               10x sem juros
             </div>
-            <div
-              className="inline-flex items-center gap-2 bg-awr-green/15 border border-awr-green/40 text-awr-green rounded-full px-4 py-1.5 font-semibold text-sm"
-              aria-live="polite"
-            >
-              <Truck className="h-4 w-4" aria-hidden="true" />
-              {getLiveDeliveries()} entregas em andamento agora
-            </div>
+            {getLiveDeliveries() > 0 && (
+              <div
+                className="inline-flex items-center gap-2 bg-awr-green/15 border border-awr-green/40 text-awr-green rounded-full px-4 py-1.5 font-semibold text-sm"
+                aria-live="polite"
+              >
+                <Truck className="h-4 w-4" aria-hidden="true" />
+                {getLiveDeliveries()} entregas em andamento agora
+              </div>
+            )}
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4">
