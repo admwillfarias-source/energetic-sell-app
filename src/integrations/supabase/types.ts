@@ -80,6 +80,75 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          message_id: string | null
+          ok: boolean
+          request_payload: Json | null
+          response_payload: Json | null
+          status_code: number | null
+          template: string
+          to_phone: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          ok?: boolean
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status_code?: number | null
+          template: string
+          to_phone: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          message_id?: string | null
+          ok?: boolean
+          request_payload?: Json | null
+          response_payload?: Json | null
+          status_code?: number | null
+          template?: string
+          to_phone?: string
+        }
+        Relationships: []
+      }
+      whatsapp_webhooks: {
+        Row: {
+          created_at: string
+          event_type: string | null
+          from_phone: string | null
+          id: string
+          message_id: string | null
+          payload: Json
+          status: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type?: string | null
+          from_phone?: string | null
+          id?: string
+          message_id?: string | null
+          payload: Json
+          status?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string | null
+          from_phone?: string | null
+          id?: string
+          message_id?: string | null
+          payload?: Json
+          status?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
