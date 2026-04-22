@@ -7,6 +7,7 @@ import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Auth from "./pages/Auth.tsx";
 import Admin from "./pages/Admin.tsx";
+import WhatsappLogs from "./pages/WhatsappLogs.tsx";
 import City from "./pages/City.tsx";
 import BatterySku from "./pages/BatterySku.tsx";
 
@@ -24,6 +25,7 @@ const App = () => (
           <Route path="/bateria/:sku" element={<BatterySku />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/whatsapp-logs" element={<WhatsappLogs />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

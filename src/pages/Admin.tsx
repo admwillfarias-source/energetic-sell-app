@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, LogOut, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Search, MessageSquare } from "lucide-react";
 import { invalidateCatalogCache } from "@/lib/catalogStore";
 
 type DBFit = { id: string; brand: string; model: string; year_start: number; year_end: number; code: string };
@@ -44,6 +44,9 @@ export default function Admin() {
         <div className="container flex items-center justify-between py-4">
           <h1 className="font-display text-xl font-bold">Administração do Catálogo</h1>
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/whatsapp-logs")} className="gap-1.5">
+              <MessageSquare className="h-4 w-4" /> Logs WhatsApp
+            </Button>
             <span className="text-sm text-muted-foreground">{user.email}</span>
             <Button variant="outline" size="sm" onClick={async () => { await supabase.auth.signOut(); navigate("/"); }} className="gap-1.5">
               <LogOut className="h-4 w-4" /> Sair
