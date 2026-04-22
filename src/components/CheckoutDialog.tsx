@@ -592,19 +592,9 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   </p>
                 )}
 
-                {form.entregaTipo === "rapida" && rapidaAgora && (
-                  <div className="rounded-md bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
-                    <strong className="text-foreground">Tarifas de entrega:</strong> 06:30–08:00 +
-                    R$ 40,00 · 08:35–18:00 grátis · 18:01–21:30 + R$ 50,00.
-                    {taxaEntrega > 0 ? (
-                      <span className="mt-1 block font-semibold text-foreground">
-                        Faixa atual: {descricaoFaixa(entregaMin ?? 0)}
-                      </span>
-                    ) : (
-                      <span className="mt-1 block font-semibold text-success">
-                        Faixa atual: entrega gratuita.
-                      </span>
-                    )}
+                {form.entregaTipo === "rapida" && rapidaAgora && taxaEntrega > 0 && (
+                  <div className="rounded-md bg-secondary/40 px-3 py-2 text-xs font-semibold text-foreground">
+                    {descricaoFaixa(entregaMin ?? 0)}
                   </div>
                 )}
 
