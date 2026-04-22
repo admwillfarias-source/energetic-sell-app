@@ -1,4 +1,10 @@
 import { z } from "https://esm.sh/zod@3.23.8";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+
+const supabaseAdmin = createClient(
+  Deno.env.get("SUPABASE_URL")!,
+  Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -65,6 +71,12 @@ async function sendTemplate(
     },
   };
 
+  let statusCode: number | null = null;
+  let responseData: unknown = null;
+  let okFlag = false;
+  let messageId: string | undefined;
+  let errorMessage: string | null = null;
+
   try {
     const res = await fetch(url, {
       method: "POST",
@@ -74,17 +86,39 @@ async function sendTemplate(
       },
       body: JSON.stringify(body),
     });
-    const data = await res.json();
+    statusCode = res.status;
+    responseData = await res.json();
     if (!res.ok) {
-      console.error("WhatsApp API error", res.status, msg.template, data);
-      return { ok: false, error: data };
+      console.error("WhatsApp API error", res.status, msg.template, responseData);
+      errorMessage = JSON.stringify((responseData as any)?.error ?? responseData);
+    } else {
+      okFlag = true;
+      messageId = (responseData as any)?.messages?.[0]?.id;
     }
-    const id = data?.messages?.[0]?.id;
-    return { ok: true, id };
   } catch (e) {
     console.error("WhatsApp fetch error", e);
-    return { ok: false, error: e instanceof Error ? e.message : "unknown" };
+    errorMessage = e instanceof Error ? e.message : "unknown";
   }
+
+  // Persistir log (não bloqueia se falhar)
+  try {
+    await supabaseAdmin.from("whatsapp_logs").insert({
+      template: msg.template,
+      to_phone: msg.to,
+      status_code: statusCode,
+      ok: okFlag,
+      message_id: messageId ?? null,
+      request_payload: body,
+      response_payload: responseData,
+      error_message: errorMessage,
+    });
+  } catch (e) {
+    console.error("log insert failed", e);
+  }
+
+  return okFlag
+    ? { ok: true, id: messageId }
+    : { ok: false, error: errorMessage ?? "unknown" };
 }
 
 Deno.serve(async (req) => {
