@@ -22,6 +22,8 @@ type DiagnoseResult = {
   phoneInfo?: { ok: boolean; status: number; data?: unknown } | null;
   wabaId?: string | null;
   phoneNumbersForWaba?: { ok: boolean; status: number; data?: unknown } | null;
+  templates?: { ok: boolean; status: number; data?: unknown } | null;
+  expectedTemplates?: string[];
   graphVersion?: string;
   error?: string;
 };
