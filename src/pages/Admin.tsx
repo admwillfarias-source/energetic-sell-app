@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import { Plus, Pencil, Trash2, LogOut, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, LogOut, Search, MessageSquare } from "lucide-react";
 import { invalidateCatalogCache } from "@/lib/catalogStore";
 
 type DBFit = { id: string; brand: string; model: string; year_start: number; year_end: number; code: string };
