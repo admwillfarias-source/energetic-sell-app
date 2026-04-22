@@ -312,6 +312,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       if (form.numero.trim().length < 1) return { ok: false, msg: "Informe o número." };
       if (!form.entregaData) return { ok: false, msg: "Selecione a data." };
       if (!form.entregaHora) return { ok: false, msg: "Selecione o horário." };
+      const m = minutesFromHHMM(form.entregaHora);
+      if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
+        return { ok: false, msg: "Horário de agendamento entre 06:00 e 21:30." };
+      }
     } else if (form.entregaTipo === "retirada") {
       if (form.lojaRetirada.trim().length < 2) return { ok: false, msg: "Selecione a loja." };
     }
