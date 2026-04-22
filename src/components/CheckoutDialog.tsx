@@ -429,7 +429,9 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `*Veículo*\n${form.carroAno}\n\n` +
       `*Bateria(s) solicitada(s)*\n${bateriaLinhas}\n\n` +
       `*Pagamento*\n${form.pagamento}\n\n` +
-      `*Total: ${formatBRL(subtotal)}*`;
+      `Subtotal: ${formatBRL(subtotal)}\n` +
+      `Taxa de entrega: ${taxaEntrega > 0 ? formatBRL(taxaEntrega) : "Grátis"}\n` +
+      `*Total: ${formatBRL(totalComEntrega)}*`;
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   };
 
