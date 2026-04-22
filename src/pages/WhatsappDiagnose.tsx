@@ -300,6 +300,108 @@ export default function WhatsappDiagnose() {
               )}
             </section>
 
+            {/* Templates aprovados */}
+            <section className="rounded-lg border border-border bg-card p-4">
+              <h2 className="font-semibold mb-3">Templates de mensagem</h2>
+              {(() => {
+                const tplData = result.templates?.data as
+                  | { data?: Array<{ name: string; language: string; status: string; category?: string; rejected_reason?: string }> }
+                  | undefined;
+                const list = tplData?.data ?? [];
+                const expected = result.expectedTemplates ?? [];
+
+                if (!result.templates) {
+                  return (
+                    <div className="text-sm text-muted-foreground">
+                      WABA não identificada — não foi possível listar templates.
+                    </div>
+                  );
+                }
+                if (!result.templates.ok) {
+                  return (
+                    <pre className="rounded bg-muted p-2 text-xs overflow-auto whitespace-pre-wrap break-all max-h-40">
+                      {JSON.stringify(result.templates.data, null, 2)}
+                    </pre>
+                  );
+                }
+
+                return (
+                  <>
+                    <div className="mb-3 space-y-1 text-sm">
+                      {expected.map((name) => {
+                        const matches = list.filter(
+                          (t) => t.name === name && t.language === "pt_BR",
+                        );
+                        const approved = matches.find((t) => t.status === "APPROVED");
+                        const pending = matches.find((t) => t.status === "PENDING");
+                        const rejected = matches.find((t) => t.status === "REJECTED");
+                        return (
+                          <div key={name} className="flex items-center gap-2">
+                            <span className="font-mono">{name}</span>
+                            <span>·</span>
+                            {approved ? (
+                              <span className="text-green-600">✓ APPROVED (pt_BR)</span>
+                            ) : pending ? (
+                              <span className="text-yellow-600">⏳ PENDING (pt_BR)</span>
+                            ) : rejected ? (
+                              <span className="text-destructive">
+                                ✗ REJECTED — {rejected.rejected_reason ?? "sem motivo"}
+                              </span>
+                            ) : matches.length > 0 ? (
+                              <span className="text-muted-foreground">
+                                {matches[0].status}
+                              </span>
+                            ) : (
+                              <span className="text-destructive">
+                                ✗ ausente em pt_BR
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="text-left text-muted-foreground">
+                          <tr>
+                            <th className="py-2 pr-3">Nome</th>
+                            <th className="py-2 pr-3">Idioma</th>
+                            <th className="py-2 pr-3">Status</th>
+                            <th className="py-2">Categoria</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {list.map((t, i) => {
+                            const isExpected = expected.includes(t.name);
+                            return (
+                              <tr
+                                key={i}
+                                className={`border-t border-border ${
+                                  isExpected ? "bg-primary/5" : ""
+                                }`}
+                              >
+                                <td className="py-2 pr-3 font-mono">{t.name}</td>
+                                <td className="py-2 pr-3 font-mono">{t.language}</td>
+                                <td className="py-2 pr-3">{t.status}</td>
+                                <td className="py-2">{t.category ?? "—"}</td>
+                              </tr>
+                            );
+                          })}
+                          {list.length === 0 && (
+                            <tr>
+                              <td colSpan={4} className="py-3 text-muted-foreground">
+                                Nenhum template encontrado.
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </>
+                );
+              })()}
+            </section>
+
             {/* Raw */}
             <details className="rounded-lg border border-border bg-card p-4">
               <summary className="cursor-pointer text-sm font-semibold">
