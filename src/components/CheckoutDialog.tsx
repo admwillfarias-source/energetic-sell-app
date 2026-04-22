@@ -943,10 +943,27 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                 </span>
                 <span className="text-success font-medium">Instalação grátis</span>
               </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium">{formatBRL(subtotal)}</span>
+              </div>
+              {form.entregaTipo !== "retirada" && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Taxa de entrega</span>
+                  <span
+                    className={cn(
+                      "font-medium",
+                      taxaEntrega > 0 ? "text-foreground" : "text-success",
+                    )}
+                  >
+                    {taxaEntrega > 0 ? formatBRL(taxaEntrega) : "Grátis"}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="font-display text-sm font-bold">Total</span>
                 <span className="font-display text-xl font-bold text-primary">
-                  {formatBRL(subtotal)}
+                  {formatBRL(totalComEntrega)}
                 </span>
               </div>
             </div>
