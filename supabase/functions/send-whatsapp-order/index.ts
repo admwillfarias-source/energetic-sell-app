@@ -90,7 +90,18 @@ async function sendTemplate(
     responseData = await res.json();
     if (!res.ok) {
       console.error("WhatsApp API error", res.status, msg.template, responseData);
-      errorMessage = JSON.stringify((responseData as any)?.error ?? responseData);
+      const errObj = (responseData as any)?.error ?? {};
+      const code = errObj?.code;
+      const subcode = errObj?.error_subcode;
+      if (code === 132001 || subcode === 132001) {
+        errorMessage = `Template "${msg.template}" não existe ou não está aprovado em pt_BR para esta WABA. Confira em /admin/whatsapp-diagnostico se ele aparece com status APPROVED.`;
+      } else if (code === 132000) {
+        errorMessage = `Template "${msg.template}": número de variáveis enviadas não bate com o template aprovado. Detalhe Meta: ${errObj?.message ?? ""}`;
+      } else if (code === 131026) {
+        errorMessage = `Número ${msg.to} não está no WhatsApp ou não pode receber mensagens.`;
+      } else {
+        errorMessage = JSON.stringify(errObj);
+      }
     } else {
       okFlag = true;
       messageId = (responseData as any)?.messages?.[0]?.id;
