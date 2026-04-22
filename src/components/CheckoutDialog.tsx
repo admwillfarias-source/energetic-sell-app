@@ -884,19 +884,14 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   <Button
                     type="submit"
                     size="lg"
-                    disabled={sendingWa}
                     className="flex-1 bg-[#25D366] text-white hover:bg-[#20bd5a]"
                   >
-                    {sendingWa ? (
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                    ) : (
-                      <MessageCircle className="h-4 w-4" />
-                    )}
-                    {sendingWa ? "Enviando..." : "Enviar pelo WhatsApp"}
+                    <MessageCircle className="h-4 w-4" />
+                    Enviar pelo WhatsApp
                   </Button>
                 </div>
                 <p className="text-center text-xs text-muted-foreground">
-                  Confirmação automática no seu WhatsApp — você não sai do site
+                  Seu pedido será aberto no WhatsApp com a mensagem pronta — basta enviar
                 </p>
 
                 {!isMobile && (
