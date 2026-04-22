@@ -587,8 +587,24 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
                 {form.entregaTipo === "rapida" && !rapidaAgora && (
                   <p className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    Fora do horário de entrega rápida (8h30 às 18h). Selecione "Agendar".
+                    Fora do horário de atendimento (06h às 21h30). Selecione "Agendar".
                   </p>
+                )}
+
+                {form.entregaTipo === "rapida" && rapidaAgora && (
+                  <div className="rounded-md bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+                    <strong className="text-foreground">Tarifas de entrega:</strong> 06:00–08:30 +
+                    R$ 40,00 · 08:35–18:00 grátis · 18:01–21:30 + R$ 50,00.
+                    {taxaEntrega > 0 ? (
+                      <span className="mt-1 block font-semibold text-foreground">
+                        Faixa atual: {descricaoFaixa(entregaMin ?? 0)}
+                      </span>
+                    ) : (
+                      <span className="mt-1 block font-semibold text-success">
+                        Faixa atual: entrega gratuita.
+                      </span>
+                    )}
+                  </div>
                 )}
 
                 {/* Endereço */}
