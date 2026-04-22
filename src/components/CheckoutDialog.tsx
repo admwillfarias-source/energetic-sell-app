@@ -29,9 +29,43 @@ import { cn } from "@/lib/utils";
 // Número da loja (formato internacional, só dígitos). Edite aqui.
 const WHATSAPP_NUMBER = "5551993199486";
 
-// Janela de entrega rápida (horário local)
-const RAPIDA_INICIO_MIN = 8 * 60 + 30;
-const RAPIDA_FIM_MIN = 18 * 60;
+// Janela de atendimento (horário local) — 06:00 às 21:30
+const ATEND_INICIO_MIN = 6 * 60; // 06:00
+const ATEND_FIM_MIN = 21 * 60 + 30; // 21:30
+
+// Faixas de tarifa de entrega
+const FAIXA_MANHA_FIM = 8 * 60 + 30; // 06:00–08:30 → +R$40
+const FAIXA_GRATIS_INICIO = 8 * 60 + 35; // 08:35
+const FAIXA_GRATIS_FIM = 18 * 60; // 18:00 → grátis
+const FAIXA_NOITE_INICIO = 18 * 60 + 1; // 18:01
+const TAXA_MANHA = 40;
+const TAXA_NOITE = 50;
+
+function minutesFromHHMM(hhmm: string): number | null {
+  const m = hhmm.match(/^(\d{1,2}):(\d{2})$/);
+  if (!m) return null;
+  const h = Number(m[1]);
+  const mm = Number(m[2]);
+  if (h < 0 || h > 23 || mm < 0 || mm > 59) return null;
+  return h * 60 + mm;
+}
+
+function taxaEntregaPorMinutos(min: number): number {
+  if (min >= ATEND_INICIO_MIN && min <= FAIXA_MANHA_FIM) return TAXA_MANHA;
+  if (min >= FAIXA_GRATIS_INICIO && min <= FAIXA_GRATIS_FIM) return 0;
+  if (min >= FAIXA_NOITE_INICIO && min <= ATEND_FIM_MIN) return TAXA_NOITE;
+  return 0;
+}
+
+function descricaoFaixa(min: number): string {
+  if (min >= ATEND_INICIO_MIN && min <= FAIXA_MANHA_FIM)
+    return "Madrugada (06:00–08:30) — taxa R$ 40,00";
+  if (min >= FAIXA_GRATIS_INICIO && min <= FAIXA_GRATIS_FIM)
+    return "Horário comercial (08:35–18:00) — entrega grátis";
+  if (min >= FAIXA_NOITE_INICIO && min <= ATEND_FIM_MIN)
+    return "Noturno (18:01–21:30) — taxa R$ 50,00";
+  return "Fora do horário de atendimento (06:00–21:30)";
+}
 
 const baseSchema = {
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
@@ -68,10 +102,14 @@ type Props = {
   onOpenChange: (o: boolean) => void;
 };
 
-function rapidaDisponivelAgora(): boolean {
+function minutosAgora(): number {
   const d = new Date();
-  const min = d.getHours() * 60 + d.getMinutes();
-  return min >= RAPIDA_INICIO_MIN && min <= RAPIDA_FIM_MIN;
+  return d.getHours() * 60 + d.getMinutes();
+}
+
+function rapidaDisponivelAgora(): boolean {
+  const min = minutosAgora();
+  return min >= ATEND_INICIO_MIN && min <= ATEND_FIM_MIN;
 }
 
 function maskCep(value: string): string {
@@ -214,9 +252,29 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     }
   };
 
+  const entregaMin = useMemo<number | null>(() => {
+    if (form.entregaTipo === "rapida") return minutosAgora();
+    if (form.entregaTipo === "agendada") return minutesFromHHMM(form.entregaHora);
+    return null; // retirada não tem taxa
+  }, [form.entregaTipo, form.entregaHora]);
+
+  const taxaEntrega = useMemo(() => {
+    if (form.entregaTipo === "retirada") return 0;
+    if (entregaMin == null) return 0;
+    return taxaEntregaPorMinutos(entregaMin);
+  }, [form.entregaTipo, entregaMin]);
+
+  const totalComEntrega = subtotal + taxaEntrega;
+
   const entregaResumo = () => {
-    if (form.entregaTipo === "rapida") return "Entrega rápida (até 35 min — 8h30 às 18h)";
-    if (form.entregaTipo === "agendada") return `Agendada para ${form.entregaData} às ${form.entregaHora}`;
+    if (form.entregaTipo === "rapida") {
+      const taxaTxt = taxaEntrega > 0 ? ` — taxa ${formatBRL(taxaEntrega)}` : " — sem taxa";
+      return `Entrega rápida (até 35 min, 06h às 21h30)${taxaTxt}`;
+    }
+    if (form.entregaTipo === "agendada") {
+      const taxaTxt = taxaEntrega > 0 ? ` — taxa ${formatBRL(taxaEntrega)}` : " — gratuita";
+      return `Agendada para ${form.entregaData} às ${form.entregaHora}${taxaTxt}`;
+    }
     return `Retirada na loja${form.lojaRetirada ? ` — ${form.lojaRetirada}` : ""}`;
   };
 
@@ -229,8 +287,14 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     if (form.entregaTipo === "rapida" && !rapidaDisponivelAgora()) {
       return {
         ok: false,
-        msg: "Entrega rápida disponível das 8h30 às 18h. Selecione 'Agendar entrega' para outro horário.",
+        msg: "Entrega rápida disponível das 06h às 21h30. Selecione 'Agendar entrega' para outro horário.",
       };
+    }
+    if (form.entregaTipo === "agendada") {
+      const m = minutesFromHHMM(form.entregaHora);
+      if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
+        return { ok: false, msg: "Horário de agendamento entre 06:00 e 21:30." };
+      }
     }
     return { ok: true };
   };
@@ -248,6 +312,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       if (form.numero.trim().length < 1) return { ok: false, msg: "Informe o número." };
       if (!form.entregaData) return { ok: false, msg: "Selecione a data." };
       if (!form.entregaHora) return { ok: false, msg: "Selecione o horário." };
+      const m = minutesFromHHMM(form.entregaHora);
+      if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
+        return { ok: false, msg: "Horário de agendamento entre 06:00 e 21:30." };
+      }
     } else if (form.entregaTipo === "retirada") {
       if (form.lojaRetirada.trim().length < 2) return { ok: false, msg: "Selecione a loja." };
     }
@@ -361,7 +429,9 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `*Veículo*\n${form.carroAno}\n\n` +
       `*Bateria(s) solicitada(s)*\n${bateriaLinhas}\n\n` +
       `*Pagamento*\n${form.pagamento}\n\n` +
-      `*Total: ${formatBRL(subtotal)}*`;
+      `Subtotal: ${formatBRL(subtotal)}\n` +
+      `Taxa de entrega: ${taxaEntrega > 0 ? formatBRL(taxaEntrega) : "Grátis"}\n` +
+      `*Total: ${formatBRL(totalComEntrega)}*`;
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   };
 
@@ -470,13 +540,13 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                         v: "rapida" as const,
                         icon: Zap,
                         title: "Entrega rápida",
-                        desc: "Em até 35 min",
+                        desc: "Em até 35 min · 06h–21h30",
                       },
                       {
                         v: "agendada" as const,
                         icon: CalendarClock,
                         title: "Agendar",
-                        desc: "Data e horário",
+                        desc: "06h–21h30",
                       },
                       {
                         v: "retirada" as const,
@@ -517,8 +587,24 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
                 {form.entregaTipo === "rapida" && !rapidaAgora && (
                   <p className="rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                    Fora do horário de entrega rápida (8h30 às 18h). Selecione "Agendar".
+                    Fora do horário de atendimento (06h às 21h30). Selecione "Agendar".
                   </p>
+                )}
+
+                {form.entregaTipo === "rapida" && rapidaAgora && (
+                  <div className="rounded-md bg-secondary/40 px-3 py-2 text-xs text-muted-foreground">
+                    <strong className="text-foreground">Tarifas de entrega:</strong> 06:00–08:30 +
+                    R$ 40,00 · 08:35–18:00 grátis · 18:01–21:30 + R$ 50,00.
+                    {taxaEntrega > 0 ? (
+                      <span className="mt-1 block font-semibold text-foreground">
+                        Faixa atual: {descricaoFaixa(entregaMin ?? 0)}
+                      </span>
+                    ) : (
+                      <span className="mt-1 block font-semibold text-success">
+                        Faixa atual: entrega gratuita.
+                      </span>
+                    )}
+                  </div>
                 )}
 
                 {/* Endereço */}
@@ -569,26 +655,48 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                 )}
 
                 {form.entregaTipo === "agendada" && (
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="space-y-1.5">
-                      <Label htmlFor="entregaData">Data</Label>
-                      <Input
-                        id="entregaData"
-                        type="date"
-                        min={today}
-                        value={form.entregaData}
-                        onChange={update("entregaData")}
-                      />
+                  <div className="space-y-3">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="entregaData">Data</Label>
+                        <Input
+                          id="entregaData"
+                          type="date"
+                          min={today}
+                          value={form.entregaData}
+                          onChange={update("entregaData")}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="entregaHora">Horário (06:00–21:30)</Label>
+                        <Input
+                          id="entregaHora"
+                          type="time"
+                          min="06:00"
+                          max="21:30"
+                          value={form.entregaHora}
+                          onChange={update("entregaHora")}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label htmlFor="entregaHora">Horário</Label>
-                      <Input
-                        id="entregaHora"
-                        type="time"
-                        value={form.entregaHora}
-                        onChange={update("entregaHora")}
-                      />
-                    </div>
+                    {form.entregaHora && entregaMin != null && (
+                      <div
+                        className={cn(
+                          "rounded-md px-3 py-2 text-xs",
+                          entregaMin < ATEND_INICIO_MIN || entregaMin > ATEND_FIM_MIN
+                            ? "bg-destructive/10 text-destructive"
+                            : taxaEntrega > 0
+                              ? "bg-secondary/40 text-foreground"
+                              : "bg-success/10 text-success",
+                        )}
+                      >
+                        {descricaoFaixa(entregaMin)}
+                      </div>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Agendamento <strong className="text-foreground">gratuito</strong> para
+                      entregas das 08:35 às 18:00.
+                    </p>
                   </div>
                 )}
 
@@ -835,10 +943,27 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                 </span>
                 <span className="text-success font-medium">Instalação grátis</span>
               </div>
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Subtotal</span>
+                <span className="font-medium">{formatBRL(subtotal)}</span>
+              </div>
+              {form.entregaTipo !== "retirada" && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Taxa de entrega</span>
+                  <span
+                    className={cn(
+                      "font-medium",
+                      taxaEntrega > 0 ? "text-foreground" : "text-success",
+                    )}
+                  >
+                    {taxaEntrega > 0 ? formatBRL(taxaEntrega) : "Grátis"}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="font-display text-sm font-bold">Total</span>
                 <span className="font-display text-xl font-bold text-primary">
-                  {formatBRL(subtotal)}
+                  {formatBRL(totalComEntrega)}
                 </span>
               </div>
             </div>
