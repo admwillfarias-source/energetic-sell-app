@@ -3,10 +3,16 @@ import { Search, Car, Clock, Star, Truck, CreditCard } from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
 
 function getLiveDeliveries() {
-  const hour = new Date().getHours();
-  // varia entre 8 e 25 conforme hora do dia
-  const base = 8 + Math.round(((Math.sin((hour / 24) * Math.PI * 2) + 1) / 2) * 17);
-  return base;
+  const now = new Date();
+  const hour = now.getHours();
+  const minutes = now.getMinutes();
+  const totalMinutes = hour * 60 + minutes;
+  // Janela ativa: 8h00 (480) até 19h30 (1170)
+  if (totalMinutes < 480 || totalMinutes > 1170) return 0;
+  // Curva senoidal dentro da janela: média ~9, mín 3, máx 16
+  const progress = (totalMinutes - 480) / (1170 - 480); // 0..1
+  const wave = (Math.sin(progress * Math.PI * 2) + 1) / 2; // 0..1
+  return 3 + Math.round(wave * 13); // 3..16
 }
 
 const VehicleAutocomplete = lazy(() => import("@/components/VehicleAutocomplete"));
@@ -131,13 +137,15 @@ export default function HeroSection() {
               <CreditCard className="h-4 w-4" aria-hidden="true" />
               10x sem juros
             </div>
-            <div
-              className="inline-flex items-center gap-2 bg-awr-green/15 border border-awr-green/40 text-awr-green rounded-full px-4 py-1.5 font-semibold text-sm"
-              aria-live="polite"
-            >
-              <Truck className="h-4 w-4" aria-hidden="true" />
-              {getLiveDeliveries()} entregas em andamento agora
-            </div>
+            {getLiveDeliveries() > 0 && (
+              <div
+                className="inline-flex items-center gap-2 bg-awr-green/15 border border-awr-green/40 text-awr-green rounded-full px-4 py-1.5 font-semibold text-sm"
+                aria-live="polite"
+              >
+                <Truck className="h-4 w-4" aria-hidden="true" />
+                {getLiveDeliveries()} entregas em andamento agora
+              </div>
+            )}
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4">
@@ -146,9 +154,9 @@ export default function HeroSection() {
           </h1>
 
           <p className="text-lg md:text-xl text-secondary-foreground/80 mb-6">
-            Marcas{" "}
-            <strong className="text-accent">Moura, Heliar, Freedom, Excell, Zetta e Eletran</strong>.
-            Automotiva, estacionária e ciclo profundo. Até 10x sem juros.
+            Faça a sua encomenda <strong className="text-accent">on-line</strong>, por{" "}
+            <strong className="text-accent">Telefone</strong> ou{" "}
+            <strong className="text-accent">WhatsApp</strong>.
           </p>
 
           <div className="mb-6 rounded-2xl bg-card/95 p-4 shadow-lg backdrop-blur md:p-5">
