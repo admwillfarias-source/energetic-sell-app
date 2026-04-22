@@ -9,6 +9,7 @@ import Auth from "./pages/Auth.tsx";
 import Admin from "./pages/Admin.tsx";
 import WhatsappLogs from "./pages/WhatsappLogs.tsx";
 import WhatsappTest from "./pages/WhatsappTest.tsx";
+import WhatsappDiagnose from "./pages/WhatsappDiagnose.tsx";
 import City from "./pages/City.tsx";
 import BatterySku from "./pages/BatterySku.tsx";
 
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/whatsapp-logs" element={<WhatsappLogs />} />
           <Route path="/admin/whatsapp-test" element={<WhatsappTest />} />
+          <Route path="/admin/whatsapp-diagnostico" element={<WhatsappDiagnose />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
