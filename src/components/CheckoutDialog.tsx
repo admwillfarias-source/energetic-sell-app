@@ -340,25 +340,15 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (items.length === 0) {
-      toast({ title: "Carrinho vazio", description: "Adicione uma bateria antes de finalizar." });
-      return;
-    }
-    const v = validar();
-    if (!v.ok) {
-      toast({ title: "Dados incompletos", description: v.msg });
-      return;
-    }
+  const [sendingWa, setSendingWa] = useState(false);
 
+  const buildWhatsAppFallbackUrl = () => {
     const bateriaLinhas = items
       .map(
         (i) =>
           `• ${i.quantity}x ${i.battery.name} (${i.battery.brand} ${i.battery.amperage}Ah) — ${formatBRL(i.battery.price * i.quantity)}`,
       )
       .join("\n");
-
     const msg =
       `*Novo pedido — BateriaJá*\n\n` +
       `*Cliente*\n` +
@@ -374,14 +364,69 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `*Bateria(s) solicitada(s)*\n${bateriaLinhas}\n\n` +
       `*Pagamento*\n${form.pagamento}\n\n` +
       `*Total: ${formatBRL(subtotal)}*`;
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  };
 
-    const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (items.length === 0) {
+      toast({ title: "Carrinho vazio", description: "Adicione uma bateria antes de finalizar." });
+      return;
+    }
+    const v = validar();
+    if (!v.ok) {
+      toast({ title: "Dados incompletos", description: v.msg });
+      return;
+    }
 
-    toast({ title: "Pedido enviado!", description: "Continue a conversa pelo WhatsApp." });
-    clear();
-    onOpenChange(false);
-    setCartOpen(false);
+    setSendingWa(true);
+    try {
+      const payload = {
+        customer: {
+          nome: form.nome,
+          telefone: form.telefone,
+          carroAno: form.carroAno,
+          entrega: entregaResumo(),
+        },
+        items: items.map((i) => ({
+          name: `${i.battery.name} (${i.battery.brand} ${i.battery.amperage}Ah)`,
+          quantity: i.quantity,
+          price: i.battery.price,
+        })),
+        total: subtotal,
+      };
+
+      const { data, error } = await supabase.functions.invoke("send-whatsapp-order", {
+        body: payload,
+      });
+
+      if (error || !data?.ok) {
+        throw new Error(
+          (error as { message?: string } | null)?.message ?? "Falha no envio",
+        );
+      }
+
+      toast({
+        title: "Pedido enviado! ✅",
+        description: "Você receberá a confirmação no WhatsApp em instantes.",
+      });
+      clear();
+      onOpenChange(false);
+      setCartOpen(false);
+    } catch {
+      // Fallback: abre wa.me como antes
+      const url = buildWhatsAppFallbackUrl();
+      window.open(url, "_blank", "noopener,noreferrer");
+      toast({
+        title: "Abrindo WhatsApp",
+        description: "Não conseguimos enviar automaticamente. Conclua a conversa pelo WhatsApp.",
+      });
+      clear();
+      onOpenChange(false);
+      setCartOpen(false);
+    } finally {
+      setSendingWa(false);
+    }
   };
 
   const rapidaAgora = rapidaDisponivelAgora();
@@ -880,12 +925,20 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   <Button
                     type="submit"
                     size="lg"
+                    disabled={sendingWa}
                     className="flex-1 bg-[#25D366] text-white hover:bg-[#20bd5a]"
                   >
-                    <MessageCircle className="h-4 w-4" />
-                    Enviar pelo WhatsApp
+                    {sendingWa ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <MessageCircle className="h-4 w-4" />
+                    )}
+                    {sendingWa ? "Enviando..." : "Enviar pelo WhatsApp"}
                   </Button>
                 </div>
+                <p className="text-center text-xs text-muted-foreground">
+                  Confirmação automática no seu WhatsApp — você não sai do site
+                </p>
 
                 {!isMobile && (
                   <>
