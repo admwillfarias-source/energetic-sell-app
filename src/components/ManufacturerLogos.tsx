@@ -16,11 +16,36 @@ const brands = [
   { name: "Global", img: brandGlobal },
 ];
 
-export default function ManufacturerLogos() {
+type Props = { variant?: "full" | "compact" };
+
+export default function ManufacturerLogos({ variant = "full" }: Props) {
+  if (variant === "compact") {
+    return (
+      <div
+        className="flex flex-wrap items-center justify-start gap-x-5 gap-y-2"
+        aria-label="Marcas oficiais distribuídas pela AWR Baterias"
+      >
+        {brands.map((b) => (
+          <img
+            key={b.name}
+            src={b.img}
+            alt={`Logo ${b.name} — distribuidor autorizado AWR Baterias`}
+            className="h-7 md:h-8 w-auto object-contain grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"
+            loading="lazy"
+            decoding="async"
+          />
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <section className="py-10 md:py-14 bg-background">
+    <section className="py-10 md:py-14 bg-background" aria-labelledby="brands-title">
       <div className="container mx-auto px-4">
-        <h2 className="font-display text-xl md:text-2xl font-extrabold text-foreground text-center mb-2">
+        <h2
+          id="brands-title"
+          className="font-display text-xl md:text-2xl font-extrabold text-foreground text-center mb-2"
+        >
           Marcas que Trabalhamos
         </h2>
         <p className="text-muted-foreground text-center text-sm mb-8">
@@ -35,7 +60,7 @@ export default function ManufacturerLogos() {
             >
               <img
                 src={b.img}
-                alt={`Logo ${b.name}`}
+                alt={`Logo ${b.name} — distribuidor autorizado AWR Baterias`}
                 className="h-12 md:h-14 w-auto object-contain"
                 loading="lazy"
                 decoding="async"
