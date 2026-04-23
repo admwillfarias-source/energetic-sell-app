@@ -11,6 +11,8 @@ import { fetchBatteriesByVehicle, fetchBatteries, type VehicleBrand } from "@/li
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { BatteryCompactCard } from "@/components/BatteryCompactCard";
 import { Battery } from "@/data/batteries";
+import { CartProvider } from "@/context/CartContext";
+import { CartDrawer } from "@/components/CartDrawer";
 
 export default function Resultado() {
   const [searchParams] = useSearchParams();
@@ -46,6 +48,7 @@ export default function Resultado() {
   );
 
   return (
+    <CartProvider>
     <div className="flex min-h-screen flex-col">
       <SEO
         title={vehicle ? `Baterias para ${vehicle} | AWR Baterias` : "Resultado da busca | AWR Baterias"}
@@ -148,6 +151,8 @@ export default function Resultado() {
       </main>
 
       <Footer />
+      <CartDrawer />
     </div>
+    </CartProvider>
   );
 }
