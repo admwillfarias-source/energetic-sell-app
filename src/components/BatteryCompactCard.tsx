@@ -1,5 +1,4 @@
-import { ShoppingCart, ShieldCheck, Zap, Clock, Award } from "lucide-react";
-import { FaWhatsapp } from "react-icons/fa";
+import { ShoppingCart, ShieldCheck, Zap, Clock, Award, MessageCircle } from "lucide-react";
 import { Battery } from "@/data/batteries";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
