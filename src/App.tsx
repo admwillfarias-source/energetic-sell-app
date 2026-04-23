@@ -12,6 +12,7 @@ import WhatsappTest from "./pages/WhatsappTest.tsx";
 import WhatsappDiagnose from "./pages/WhatsappDiagnose.tsx";
 import City from "./pages/City.tsx";
 import BatterySku from "./pages/BatterySku.tsx";
+import Resultado from "./pages/Resultado.tsx";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +24,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/resultado" element={<Resultado />} />
           <Route path="/baterias/:slug" element={<City />} />
           <Route path="/bateria/:sku" element={<BatterySku />} />
           <Route path="/auth" element={<Auth />} />

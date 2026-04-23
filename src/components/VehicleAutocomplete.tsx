@@ -104,11 +104,7 @@ export default function VehicleAutocomplete({
     toast({ title: "Buscando baterias compatíveis", description: s.label });
     onSelect?.();
     navigate(
-      `/?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(s.label)}#catalogo`,
-    );
-    setTimeout(
-      () => document.getElementById("catalogo")?.scrollIntoView({ behavior: "smooth" }),
-      80,
+      `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(s.label)}`,
     );
   };
 
