@@ -218,11 +218,6 @@ export default function HeroSection() {
             <span className="text-sm font-medium">1500+ clientes satisfeitos no Google</span>
           </div>
 
-          <div className="rounded-lg bg-card/80 backdrop-blur px-4 py-3">
-            <Suspense fallback={null}>
-              <ManufacturerLogos variant="compact" />
-            </Suspense>
-          </div>
         </div>
       </div>
     </section>
