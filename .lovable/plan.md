@@ -1,96 +1,72 @@
 
 
-## Criar templates pt_BR no Meta WhatsApp Manager
+## Melhorias: Gatilhos mentais + SEO + Prova social
 
-O erro #132001 confirma: a edge function está 100% funcional, faltam apenas os 2 templates aprovados. Esta é uma tarefa **manual sua no painel da Meta** — eu não consigo criar templates via API (a API de Management exige permissões `whatsapp_business_management` que normalmente não estão no token do app).
+Tom equilibrado: autoridade ("Desde 2009", marcas oficiais, garantia) combinado com urgência sutil ("plantão agora", "35 min").
 
-### Passo a passo no painel da Meta
+### 1. Hero + Header (gatilhos mentais)
 
-1. Acesse [business.facebook.com/wa/manage/message-templates](https://business.facebook.com/wa/manage/message-templates)
-2. Selecione a WABA do app `3503109783187532`
-3. Clique em **Criar modelo** → categoria **UTILITY** → idioma **Português (BR)**
+**`src/components/Header.tsx`**
+- Adicionar microbadge "Desde 2009 · +1500 clientes" ao lado da logo (visível em md+).
+- Manter telefone e carrinho; melhorar contraste do CTA telefone (bg accent leve em hover).
 
-### Template 1 — `novo_pedido_loja`
+**`src/components/HeroSection.tsx`**
+- Trocar h1 para incluir palavra-chave forte: "Bateria automotiva entregue e instalada em **Porto Alegre** em até 35 minutos".
+- Adicionar **3ª badge de autoridade**: "Desde 2009 · Distribuidor oficial" (ícone Award).
+- Adicionar **bloco de aversão à perda** abaixo do parágrafo: caixa pequena com ícone AlertTriangle e texto "Carro não pega? Evite reboque (R$ 150+) e atrasos. Resolva em 35 min."
+- Substituir o card de busca por um CTA primário maior + busca; o botão "Buscar" passa a ser cor primary (vermelho), mais proeminente.
+- Logo abaixo das estrelas: faixa horizontal com **logos das marcas oficiais** (Moura, Heliar, Freedom, Excell, Zetta, Eletran) em escala de cinza com hover colorido — reforço de autoridade. Reaproveita `ManufacturerLogos` em versão compacta.
 
-- **Nome (exato, sem acento):** `novo_pedido_loja`
-- **Categoria:** UTILITY
-- **Idioma:** Português (BR) — `pt_BR`
-- **Cabeçalho:** nenhum
-- **Corpo (cole exatamente, com as variáveis na ordem):**
+### 2. Depoimentos aprofundados (`src/components/Testimonials.tsx`)
 
-```
-🔔 Novo pedido AWR
-Cliente: {{1}}
-Telefone: {{2}}
-Veículo: {{3}}
-Bateria: {{4}}
-Total: R$ {{5}}
-Entrega: {{6}}
-```
+- Expandir de 3 para **6 depoimentos** com cidades variadas, modelos de carro mencionados, e cenários distintos (emergência noturna, agendado, frota, etc.).
+- Adicionar header da seção com **selo Google grande**: "★ 5.0 · 1500+ avaliações no Google" + link.
+- Cada card ganha: badge "Compra verificada", chip do modelo de bateria comprada, resposta da AWR (1 linha) em 2 dos cards (mostra atendimento ativo).
+- Manter JSON-LD `aggregateRating` com novos números.
+- Adicionar **faixa de selos** abaixo dos depoimentos: Garantia 24m, Instalação grátis, Pague na entrega, Distribuidor oficial — com ícones ShieldCheck/Wrench/Wallet/Award.
 
-- **Exemplos para aprovação** (a Meta exige exemplo de cada variável):
-  - `{{1}}` = João Silva
-  - `{{2}}` = 5551999998888
-  - `{{3}}` = Fiat Palio Weekend 2010
-  - `{{4}}` = 1x Heliar 60Ah
-  - `{{5}}` = 450,00
-  - `{{6}}` = Rua Exemplo 123, Porto Alegre
+### 3. SEO on-page
 
-- **Rodapé / botões:** nenhum
+**Hierarquia de cabeçalhos** — auditoria e correção:
+- Garantir um único `<h1>` por página (Hero usa h1; demais seções usam h2 com `id` para âncoras; sub-blocos usam h3).
+- `Benefits`, `HowItWorks`, `HowToOrder`, `FaqHome`, `QuickNavigation`, `ManufacturerLogos` recebem `<h2>` de seção quando faltar.
 
-### Template 2 — `confirmacao_pedido_cliente`
+**Atributos `alt` em imagens**:
+- `BatteryCard`: alt descritivo "Bateria {marca} {modelo} {amperagem}Ah" (verificar se já está — corrigir se genérico).
+- `ManufacturerLogos`: alt "Logo {marca} — distribuidor autorizado AWR Baterias".
+- Hero já tem alt bom; manter.
 
-- **Nome (exato):** `confirmacao_pedido_cliente`
-- **Categoria:** UTILITY
-- **Idioma:** Português (BR) — `pt_BR`
-- **Corpo:**
+**Meta tags / SEO component**:
+- Em `src/pages/Index.tsx`: enriquecer `description` com palavras-chave de cauda longa ("bateria automotiva 24h", "instalação grátis Porto Alegre", marcas).
+- Adicionar `image` (og) usando hero-bg.
+- Em `City.tsx` e `BatterySku.tsx`: revisar para ter title único + h1 único e meta description com cidade/sku.
 
-```
-Olá {{1}}! Recebemos seu pedido na AWR Baterias 🔋
-Bateria: {{2}}
-Total: R$ {{3}}
-Em instantes nossa equipe confirma a entrega. Dúvidas? Responda esta mensagem.
-```
+**`index.html`**:
+- Atualizar `<title>` para incluir "Porto Alegre" e marca.
+- Adicionar `<meta name="theme-color">`, `<link rel="preconnect">` para fontes.
 
-- **Exemplos:**
-  - `{{1}}` = João
-  - `{{2}}` = 1x Heliar 60Ah
-  - `{{3}}` = 450,00
+**JSON-LD adicional**:
+- Em `Index.tsx`, somar `LocalBusiness` com `openingHoursSpecification` (06h–22h), `foundingDate: 2009`, `sameAs` (Google, Instagram se disponível).
 
-### Cuidados que evitam rejeição
+### 4. Acessibilidade rápida
 
-- Categoria **deve ser UTILITY** (não MARKETING) — pedidos transacionais cabem aqui e aprovam mais rápido (~30 min a 2h)
-- Nome do template **idêntico** ao código (`novo_pedido_loja`, `confirmacao_pedido_cliente`) — a função busca exatamente esses nomes
-- Idioma **deve ser** Português (BR) / `pt_BR`
-- Não inclua links, emojis em excesso ou texto promocional ("aproveite", "desconto") — isso joga pra MARKETING
-- Preencha os exemplos de cada variável — sem isso a Meta rejeita
+- Garantir `aria-label` em ícones-botão (Header carrinho já tem `data-debug-id`; adicionar `aria-label="Abrir carrinho"`).
+- Foco visível nos CTAs do Hero (já vem do `focus-visible` do shadcn — verificar que não foi sobrescrito).
 
-### O que eu faço depois (parte de código, modo padrão)
+### Arquivos a editar
+- `src/components/Header.tsx`
+- `src/components/HeroSection.tsx`
+- `src/components/Testimonials.tsx`
+- `src/components/ManufacturerLogos.tsx` (variante compacta + alts)
+- `src/components/BatteryCard.tsx` (alts)
+- `src/components/Benefits.tsx`, `HowItWorks.tsx`, `HowToOrder.tsx`, `FaqHome.tsx`, `QuickNavigation.tsx` (verificar h2)
+- `src/pages/Index.tsx` (SEO + JSON-LD)
+- `src/pages/City.tsx`, `src/pages/BatterySku.tsx` (SEO)
+- `index.html` (title + theme-color)
 
-Quando os templates estiverem com status **Aprovado** no painel:
-
-1. **Adicionar uma checagem no `whatsapp-diagnose`** que liste os templates da WABA e mostre o status de cada um (`APPROVED`, `PENDING`, `REJECTED`) — assim você confirma na página `/admin/whatsapp-diagnostico` antes de testar
-2. **Melhorar mensagens de erro no `send-whatsapp-order`**: detectar erro 132001 e devolver um texto claro tipo *"Template ainda não aprovado ou idioma errado — confira em /admin/whatsapp-diagnostico"* em vez do JSON cru da Meta
-3. **Testar de ponta a ponta em `/admin/whatsapp-test`** com seu telefone e validar:
-   - Mensagem chega na loja (`5551993199486`)
-   - Mensagem chega no cliente
-   - Logs aparecem em `/admin/whatsapp-logs` com `ok = true`
-
-### Fluxo completo
-
-```text
-Você → cria 2 templates no painel Meta (manual, ~30 min + 1h aprovação)
-   ↓
-Você → me avisa "templates aprovados"
-   ↓
-Eu → adiciono listagem de templates no /admin/whatsapp-diagnostico
-Eu → melhoro mensagens de erro da edge function
-Eu → testo via /admin/whatsapp-test com seu número
-   ↓
-Pronto: pedido sai do checkout direto pro WhatsApp da loja + cliente
-```
-
-### Próxima ação sua
-
-Crie os 2 templates agora seguindo os textos acima. Quando aparecerem como **Aprovado** no painel da Meta, me responde **"templates aprovados"** que eu sigo com os passos 1–3.
+### Fora do escopo (próximas fases, se aprovar)
+- Reformulação total do catálogo navegável (modal → página) — frente grande, separada.
+- A/B testing de CTA (precisa instrumentação).
+- Blog / FAQ expandida com artigos.
+- Auditoria de performance aprofundada.
 
