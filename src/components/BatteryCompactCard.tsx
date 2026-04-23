@@ -126,7 +126,7 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel }: Props) 
             className="flex-1 gap-2 border-awr-green/50 bg-awr-green/10 text-awr-green hover:bg-awr-green hover:text-white"
           >
             <a href={whatsHref} target="_blank" rel="noopener noreferrer">
-              <FaWhatsapp className="h-4 w-4" />
+              <MessageCircle className="h-4 w-4" />
               WhatsApp
             </a>
           </Button>
