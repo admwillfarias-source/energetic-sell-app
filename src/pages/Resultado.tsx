@@ -48,6 +48,7 @@ export default function Resultado() {
   );
 
   return (
+    <CartProvider>
     <div className="flex min-h-screen flex-col">
       <SEO
         title={vehicle ? `Baterias para ${vehicle} | AWR Baterias` : "Resultado da busca | AWR Baterias"}
@@ -150,6 +151,8 @@ export default function Resultado() {
       </main>
 
       <Footer />
+      <CartDrawer />
     </div>
+    </CartProvider>
   );
 }
