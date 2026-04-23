@@ -152,7 +152,7 @@ export default function HeroSection() {
               aria-label="Empresa atuando desde 2009, distribuidor oficial"
             >
               <Award className="h-4 w-4 text-accent" aria-hidden="true" />
-              Desde 2009 · Distribuidor oficial
+              Desde 2009 · Revenda Moura, Heliar, Excell e Zetta
             </div>
           </div>
 
@@ -163,7 +163,8 @@ export default function HeroSection() {
           </h1>
 
           <p className="text-lg md:text-xl text-secondary-foreground/80 mb-4">
-            Faça a sua encomenda <strong className="text-accent">on-line</strong>, por{" "}
+            Encontre e escolha o modelo de bateria no campo abaixo e faça a sua encomenda{" "}
+            <strong className="text-accent">on-line</strong>, por{" "}
             <strong className="text-accent">Telefone</strong> ou{" "}
             <strong className="text-accent">WhatsApp</strong>.
           </p>
@@ -174,7 +175,7 @@ export default function HeroSection() {
           >
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
             <span>
-              <strong>Carro não pega?</strong> Evite reboque (R$ 150+) e atrasos. Resolva em 35 min.
+              <strong>Precisando de bateria para o seu carro?</strong> Resolva em 35 min.
             </span>
           </div>
 
