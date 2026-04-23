@@ -169,7 +169,7 @@ export default function HeroSection() {
           </p>
 
           <div
-            className="mb-6 inline-flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-secondary-foreground"
+            className="mb-6 hidden sm:inline-flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-secondary-foreground"
             role="note"
           >
             <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
