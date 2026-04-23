@@ -11,6 +11,8 @@ import { fetchBatteriesByVehicle, fetchBatteries, type VehicleBrand } from "@/li
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { BatteryCompactCard } from "@/components/BatteryCompactCard";
 import { Battery } from "@/data/batteries";
+import { CartProvider } from "@/context/CartContext";
+import { CartDrawer } from "@/components/CartDrawer";
 
 export default function Resultado() {
   const [searchParams] = useSearchParams();
