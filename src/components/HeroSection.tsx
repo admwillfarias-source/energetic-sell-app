@@ -158,8 +158,8 @@ export default function HeroSection() {
 
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4">
             Bateria entregue e instalada em{" "}
-            <span className="text-primary">Porto Alegre</span> em até{" "}
-            <span className="text-primary">35 minutos</span>
+            <span className="text-primary">Porto Alegre</span>{" "}
+            em até <span className="text-primary">35 minutos</span>
           </h1>
 
           <p className="text-lg md:text-xl text-secondary-foreground/80 mb-4">
