@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState, useRef, useEffect } from "react";
-import { Search, Car, Clock, Star, Truck, CreditCard } from "lucide-react";
+import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle } from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
 
 function getLiveDeliveries() {
@@ -51,7 +51,7 @@ function SearchPlaceholder({
       </div>
       <button
         onClick={onActivate}
-        className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-accent px-4 font-semibold text-accent-foreground hover:bg-accent/90"
+        className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary px-5 font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-colors"
       >
         <Car className="h-4 w-4" />
         <span className="hidden sm:inline">Buscar</span>
@@ -146,18 +146,36 @@ export default function HeroSection() {
                 {getLiveDeliveries()} entregas em andamento agora
               </div>
             )}
+            <div
+              className="inline-flex items-center gap-2 bg-secondary-foreground/10 border border-secondary-foreground/20 text-secondary-foreground rounded-full px-4 py-1.5 font-semibold text-sm"
+              aria-label="Empresa atuando desde 2009, distribuidor oficial"
+            >
+              <Award className="h-4 w-4 text-accent" aria-hidden="true" />
+              Desde 2009 · Distribuidor oficial
+            </div>
           </div>
 
           <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4">
-            A bateria do seu carro entregue e instalada em até{" "}
+            Bateria automotiva entregue e instalada em{" "}
+            <span className="text-primary">Porto Alegre</span> em até{" "}
             <span className="text-primary">35 minutos</span>
           </h1>
 
-          <p className="text-lg md:text-xl text-secondary-foreground/80 mb-6">
+          <p className="text-lg md:text-xl text-secondary-foreground/80 mb-4">
             Faça a sua encomenda <strong className="text-accent">on-line</strong>, por{" "}
             <strong className="text-accent">Telefone</strong> ou{" "}
             <strong className="text-accent">WhatsApp</strong>.
           </p>
+
+          <div
+            className="mb-6 inline-flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-secondary-foreground"
+            role="note"
+          >
+            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+            <span>
+              <strong>Carro não pega?</strong> Evite reboque (R$ 150+) e atrasos. Resolva em 35 min.
+            </span>
+          </div>
 
           <div className="mb-6 rounded-2xl bg-card/95 p-4 shadow-lg backdrop-blur md:p-5">
             {searchActive ? (

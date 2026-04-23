@@ -43,7 +43,7 @@ export function BatteryCard({ battery, onSelect }: Props) {
         )}
         <img
           src={isRemote(battery.image) ? battery.image : batteryImg}
-          alt={battery.name}
+          alt={`Bateria ${battery.brand} ${battery.name} ${battery.amperage}Ah — garantia ${battery.warranty} meses`}
           onError={(e) => ((e.currentTarget as HTMLImageElement).src = batteryImg)}
           loading="lazy"
           width={400}

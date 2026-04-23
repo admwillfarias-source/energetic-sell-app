@@ -36,6 +36,7 @@ const Index = () => {
     url: SITE,
     telephone: "+5551985419143",
     priceRange: "R$ 350 - R$ 2.500",
+    foundingDate: "2009",
     address: {
       "@type": "PostalAddress",
       addressRegion: "RS",
@@ -45,13 +46,26 @@ const Index = () => {
       "@type": "City",
       name: c.name,
     })),
+    openingHoursSpecification: [
+      {
+        "@type": "OpeningHoursSpecification",
+        dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
+        opens: "06:00",
+        closes: "22:00",
+      },
+    ],
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: "5.0",
+      reviewCount: 1500,
+    },
   };
 
   return (
     <CartProvider>
       <SEO
-        title="AWR Baterias | Entrega e instalação em até 35 minutos | Porto Alegre e Região"
-        description="Bateria automotiva entregue e instalada em até 35 minutos em Porto Alegre, Canoas, Gravataí, Cachoeirinha, Esteio e Novo Hamburgo. Moura, Heliar, Zetta e Excell com garantia de fábrica."
+        title="AWR Baterias Porto Alegre | Entrega e instalação em 35 min | Moura, Heliar, Zetta"
+        description="Bateria automotiva 24h em Porto Alegre, Canoas, Gravataí, Cachoeirinha, Esteio e Novo Hamburgo. Instalação grátis no local, garantia de fábrica e 10x sem juros. Moura, Heliar, Freedom, Zetta e Excell. Plantão das 6h às 22h."
         canonical={SITE}
         jsonLd={orgLd}
       />
