@@ -17,6 +17,7 @@ function getLiveDeliveries() {
 
 const VehicleAutocomplete = lazy(() => import("@/components/VehicleAutocomplete"));
 const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
+const ManufacturerLogos = lazy(() => import("@/components/ManufacturerLogos"));
 
 import heroBg from "@/assets/hero-bg.webp";
 import heroBgSm from "@/assets/hero-bg-sm.webp";
@@ -207,13 +208,22 @@ export default function HeroSection() {
             )}
           </div>
 
-          <div className="flex items-center gap-2 text-secondary-foreground/90">
+          <div className="flex items-center gap-2 text-secondary-foreground/90 mb-5">
             <div className="flex">
               {[...Array(5)].map((_, i) => (
                 <Star key={i} className="h-4 w-4 fill-accent text-accent" />
               ))}
             </div>
             <span className="text-sm font-medium">1500+ clientes satisfeitos no Google</span>
+          </div>
+
+          <div className="rounded-lg bg-card/80 backdrop-blur px-4 py-3">
+            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
+              Distribuidor oficial das principais marcas
+            </p>
+            <Suspense fallback={null}>
+              <ManufacturerLogos variant="compact" />
+            </Suspense>
           </div>
         </div>
       </div>
