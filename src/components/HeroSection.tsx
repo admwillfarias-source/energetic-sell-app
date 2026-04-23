@@ -219,9 +219,6 @@ export default function HeroSection() {
           </div>
 
           <div className="rounded-lg bg-card/80 backdrop-blur px-4 py-3">
-            <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">
-              Distribuidor oficial das principais marcas
-            </p>
             <Suspense fallback={null}>
               <ManufacturerLogos variant="compact" />
             </Suspense>
