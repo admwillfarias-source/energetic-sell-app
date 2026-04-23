@@ -40,21 +40,21 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel }: Props) 
 
   return (
     <article
-      className={`group relative flex flex-col overflow-hidden rounded-2xl border bg-card shadow-card transition-all hover:-translate-y-0.5 hover:shadow-elevated md:flex-row ${
-        highlight ? "border-accent shadow-elevated ring-2 ring-accent/30" : "border-border"
+      className={`group relative flex flex-row overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:shadow-md ${
+        highlight ? "border-accent ring-1 ring-accent/30" : "border-border"
       }`}
     >
       {highlight && (
-        <span className="absolute left-4 top-4 z-10 inline-flex items-center gap-1 rounded-full bg-accent px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-accent-foreground shadow-md">
-          <Award className="h-3 w-3" />
-          Recomendada
+        <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-accent-foreground shadow">
+          <Award className="h-2.5 w-2.5" />
+          Top
         </span>
       )}
 
       {/* Imagem */}
-      <div className="relative flex aspect-square w-full shrink-0 items-center justify-center bg-white p-4 md:aspect-auto md:w-44">
+      <div className="relative flex w-24 shrink-0 items-center justify-center bg-white p-2 sm:w-28">
         {discount > 0 && (
-          <span className="absolute right-3 top-3 rounded-full bg-primary px-2 py-0.5 text-[10px] font-bold uppercase text-primary-foreground">
+          <span className="absolute right-1 top-1 rounded-full bg-primary px-1.5 py-0.5 text-[9px] font-bold uppercase text-primary-foreground">
             -{discount}%
           </span>
         )}
@@ -63,70 +63,72 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel }: Props) 
           alt={`Bateria ${battery.brand} ${battery.name} ${battery.amperage}Ah`}
           onError={(e) => ((e.currentTarget as HTMLImageElement).src = batteryImg)}
           loading="lazy"
-          width={300}
-          height={300}
-          className="h-full w-full max-w-[160px] object-contain transition-transform duration-300 group-hover:scale-105"
+          width={200}
+          height={200}
+          className="h-full w-full object-contain"
         />
       </div>
 
       {/* Conteúdo */}
-      <div className="flex flex-1 flex-col gap-3 p-4 md:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+      <div className="flex flex-1 flex-col gap-1.5 p-2.5 sm:p-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0">
+            <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
               {battery.brand}
             </span>
-            <h3 className="font-display text-base font-bold leading-tight md:text-lg">
+            <h3 className="truncate font-display text-sm font-bold leading-tight">
               {battery.name}
             </h3>
           </div>
           <div className="text-right">
             {battery.oldPrice && (
-              <div className="text-[11px] text-muted-foreground line-through">
+              <div className="text-[10px] text-muted-foreground line-through">
                 {formatBRL(battery.oldPrice)}
               </div>
             )}
-            <div className="font-display text-xl font-extrabold leading-none text-foreground md:text-2xl">
+            <div className="font-display text-base font-extrabold leading-none text-foreground sm:text-lg">
               {formatBRL(battery.price)}
             </div>
-            <div className="text-[11px] font-semibold text-accent">
-              ou 10x de {formatBRL(installment)} sem juros
+            <div className="text-[9px] font-semibold text-accent">
+              10x {formatBRL(installment)}
             </div>
           </div>
         </div>
 
         {/* Specs em linha */}
-        <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
-          <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 font-semibold text-primary">
-            <Zap className="h-3 w-3" />
+        <div className="flex flex-wrap items-center gap-1 text-[10px]">
+          <span className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
+            <Zap className="h-2.5 w-2.5" />
             {battery.amperage}Ah
           </span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-1 font-semibold text-primary">
-            <ShieldCheck className="h-3 w-3" />
-            {battery.warranty} meses garantia
+          <span className="inline-flex items-center gap-0.5 rounded bg-primary/10 px-1.5 py-0.5 font-semibold text-primary">
+            <ShieldCheck className="h-2.5 w-2.5" />
+            {battery.warranty}m
           </span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-awr-green/10 px-2 py-1 font-semibold text-awr-green">
-            <Clock className="h-3 w-3" />
-            Entrega em 35 min
+          <span className="inline-flex items-center gap-0.5 rounded bg-awr-green/10 px-1.5 py-0.5 font-semibold text-awr-green">
+            <Clock className="h-2.5 w-2.5" />
+            35 min
           </span>
         </div>
 
         {/* CTAs */}
-        <div className="mt-auto flex flex-col gap-2 pt-1 sm:flex-row">
+        <div className="mt-auto flex gap-1.5 pt-1">
           <Button
             onClick={onBuy}
-            className="flex-1 gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+            size="sm"
+            className="h-8 flex-1 gap-1 px-2 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            <ShoppingCart className="h-4 w-4" />
-            Comprar agora
+            <ShoppingCart className="h-3.5 w-3.5" />
+            Comprar
           </Button>
           <Button
             asChild
+            size="sm"
             variant="outline"
-            className="flex-1 gap-2 border-awr-green/50 bg-awr-green/10 text-awr-green hover:bg-awr-green hover:text-white"
+            className="h-8 flex-1 gap-1 px-2 text-xs border-awr-green/50 bg-awr-green/10 text-awr-green hover:bg-awr-green hover:text-white"
           >
             <a href={whatsHref} target="_blank" rel="noopener noreferrer">
-              <MessageCircle className="h-4 w-4" />
+              <MessageCircle className="h-3.5 w-3.5" />
               WhatsApp
             </a>
           </Button>
