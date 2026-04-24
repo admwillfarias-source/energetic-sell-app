@@ -136,7 +136,7 @@ export default function Resultado() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {sorted.map((b, i) => (
                 <BatteryCompactCard
                   key={b.id}
