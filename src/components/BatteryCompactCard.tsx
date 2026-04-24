@@ -114,24 +114,24 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel }: Props) 
         </div>
 
         {/* CTAs */}
-        <div className="mt-auto flex gap-1.5 pt-1">
+        <div className="mt-auto flex flex-col gap-1.5 pt-1">
           <Button
             onClick={onBuy}
             size="sm"
-            className="h-8 flex-1 gap-1 px-2 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
+            className="h-8 w-full min-w-0 gap-1 px-2 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <ShoppingCart className="h-3.5 w-3.5" />
-            Encomendar
+            <span className="truncate">Encomendar</span>
           </Button>
           <Button
             asChild
             size="sm"
             variant="outline"
-            className="h-8 flex-1 gap-1 px-2 text-xs border-awr-green/50 bg-awr-green/10 text-awr-green hover:bg-awr-green hover:text-white"
+            className="h-8 w-full min-w-0 gap-1 px-2 text-xs border-awr-green/50 bg-awr-green/10 text-awr-green hover:bg-awr-green hover:text-white"
           >
             <a href={whatsHref} target="_blank" rel="noopener noreferrer">
               <MessageCircle className="h-3.5 w-3.5" />
-              WhatsApp
+              <span className="truncate">WhatsApp</span>
             </a>
           </Button>
         </div>
