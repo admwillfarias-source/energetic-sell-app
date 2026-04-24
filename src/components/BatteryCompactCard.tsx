@@ -70,28 +70,26 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel }: Props) 
       </div>
 
       {/* Conteúdo */}
-      <div className="flex flex-1 flex-col gap-1.5 p-2.5 sm:p-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
-              {battery.brand}
-            </span>
-            <h3 className="truncate font-display text-sm font-bold leading-tight">
-              {battery.name}
-            </h3>
+      <div className="flex min-w-0 flex-1 flex-col gap-1.5 p-2.5 sm:p-3">
+        <div className="min-w-0">
+          <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground">
+            {battery.brand}
+          </span>
+          <h3 className="truncate font-display text-sm font-bold leading-tight">
+            {battery.name}
+          </h3>
+        </div>
+        <div className="min-w-0">
+          {battery.oldPrice && (
+            <div className="text-[10px] text-muted-foreground line-through">
+              {formatBRL(battery.oldPrice)}
+            </div>
+          )}
+          <div className="font-display text-base font-extrabold leading-none text-foreground sm:text-lg truncate">
+            {formatBRL(battery.price)}
           </div>
-          <div className="text-right">
-            {battery.oldPrice && (
-              <div className="text-[10px] text-muted-foreground line-through">
-                {formatBRL(battery.oldPrice)}
-              </div>
-            )}
-            <div className="font-display text-base font-extrabold leading-none text-foreground sm:text-lg">
-              {formatBRL(battery.price)}
-            </div>
-            <div className="text-[9px] font-semibold text-accent">
-              10x {formatBRL(installment)}
-            </div>
+          <div className="text-[9px] font-semibold text-accent truncate">
+            10x {formatBRL(installment)} sem juros
           </div>
         </div>
 
