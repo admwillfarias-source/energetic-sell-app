@@ -265,7 +265,30 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     return taxaEntregaPorMinutos(entregaMin);
   }, [form.entregaTipo, entregaMin]);
 
-  const totalComEntrega = subtotal + taxaEntrega;
+  // Desconto à vista (PIX/Dinheiro): 3,5% sobre subtotal
+  const pagamentoComDesconto =
+    form.pagamento === "PIX" || form.pagamento === "Dinheiro";
+  const descontoPagamento = pagamentoComDesconto
+    ? Math.round(subtotal * 0.035 * 100) / 100
+    : 0;
+
+  const totalComEntrega = subtotal + taxaEntrega - descontoPagamento;
+
+  // Parcelamento por bandeira
+  const maxParcelas = useMemo(() => {
+    if (form.pagamento === "Banricompras") return 5;
+    if (
+      form.pagamento === "Visa" ||
+      form.pagamento === "Mastercard" ||
+      form.pagamento === "Elo" ||
+      form.pagamento === "Hipercard" ||
+      form.pagamento === "Amex"
+    )
+      return 10;
+    return 1;
+  }, [form.pagamento]);
+
+  const valorParcela = maxParcelas > 1 ? totalComEntrega / maxParcelas : totalComEntrega;
 
   const entregaResumo = () => {
     if (form.entregaTipo === "rapida") {
