@@ -93,6 +93,9 @@ export function BatteryCard({ battery, onSelect }: Props) {
               {formatBRL(battery.price)}
             </span>
           </div>
+          <p className="text-xs font-bold text-awr-green">
+            {formatBRL(battery.price * 0.965)} no Pix <span className="font-normal text-muted-foreground">(-3,5%)</span>
+          </p>
           <p className="text-[11px] text-muted-foreground">ou 10x sem juros</p>
 
           <Button
