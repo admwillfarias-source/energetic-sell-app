@@ -1062,12 +1062,25 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   </span>
                 </div>
               )}
+              {descontoPagamento > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Desconto à vista (3,5%)</span>
+                  <span className="font-medium text-success">
+                    -{formatBRL(descontoPagamento)}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="font-display text-sm font-bold">Total</span>
                 <span className="font-display text-xl font-bold text-primary">
                   {formatBRL(totalComEntrega)}
                 </span>
               </div>
+              {maxParcelas > 1 && (
+                <div className="text-right text-[11px] text-muted-foreground">
+                  ou {maxParcelas}x de {formatBRL(valorParcela)} sem juros
+                </div>
+              )}
             </div>
 
             {step < 3 ? (
