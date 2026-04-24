@@ -265,7 +265,30 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     return taxaEntregaPorMinutos(entregaMin);
   }, [form.entregaTipo, entregaMin]);
 
-  const totalComEntrega = subtotal + taxaEntrega;
+  // Desconto à vista (PIX/Dinheiro): 3,5% sobre subtotal
+  const pagamentoComDesconto =
+    form.pagamento === "PIX" || form.pagamento === "Dinheiro";
+  const descontoPagamento = pagamentoComDesconto
+    ? Math.round(subtotal * 0.035 * 100) / 100
+    : 0;
+
+  const totalComEntrega = subtotal + taxaEntrega - descontoPagamento;
+
+  // Parcelamento por bandeira
+  const maxParcelas = useMemo(() => {
+    if (form.pagamento === "Banricompras") return 5;
+    if (
+      form.pagamento === "Visa" ||
+      form.pagamento === "Mastercard" ||
+      form.pagamento === "Elo" ||
+      form.pagamento === "Hipercard" ||
+      form.pagamento === "Amex"
+    )
+      return 10;
+    return 1;
+  }, [form.pagamento]);
+
+  const valorParcela = maxParcelas > 1 ? totalComEntrega / maxParcelas : totalComEntrega;
 
   const entregaResumo = () => {
     if (form.entregaTipo === "rapida") {
@@ -429,9 +452,19 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `Modalidade: ${entregaResumo()}\n\n` +
       `*Veículo*\n${form.carroAno}\n\n` +
       `*Bateria(s) solicitada(s)*\n${bateriaLinhas}\n\n` +
-      `*Pagamento*\n${form.pagamento}\n\n` +
+      `*Pagamento*\n${form.pagamento}` +
+      (maxParcelas > 1
+        ? ` em até ${maxParcelas}x de ${formatBRL(valorParcela)} sem juros`
+        : "") +
+      (descontoPagamento > 0
+        ? `\nDesconto à vista (3,5%): -${formatBRL(descontoPagamento)}`
+        : "") +
+      `\n\n` +
       `Subtotal: ${formatBRL(subtotal)}\n` +
       `Taxa de entrega: ${taxaEntrega > 0 ? formatBRL(taxaEntrega) : "Grátis"}\n` +
+      (descontoPagamento > 0
+        ? `Desconto: -${formatBRL(descontoPagamento)}\n`
+        : "") +
       `*Total: ${formatBRL(totalComEntrega)}*`;
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   };
@@ -889,14 +922,92 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="pagamento">Forma de pagamento</Label>
-                    <Input
-                      id="pagamento"
-                      value={form.pagamento}
-                      onChange={update("pagamento")}
-                      placeholder="Pix, dinheiro, cartão (Visa, Master...)"
-                    />
+                  <div className="space-y-2">
+                    <Label>Forma de pagamento</Label>
+
+                    {/* À vista — com desconto */}
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-success">
+                        À vista — 3,5% de desconto
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {["PIX", "Dinheiro"].map((op) => (
+                          <button
+                            key={op}
+                            type="button"
+                            onClick={() => setForm((p) => ({ ...p, pagamento: op }))}
+                            className={cn(
+                              "rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
+                              form.pagamento === op
+                                ? "border-success bg-success/10 text-success"
+                                : "border-border bg-background hover:bg-muted",
+                            )}
+                          >
+                            {op}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cartão de crédito */}
+                    <div className="space-y-1.5 pt-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Cartão de crédito — até 10x sem juros
+                      </p>
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                        {["Visa", "Mastercard", "Elo", "Hipercard", "Amex"].map((op) => (
+                          <button
+                            key={op}
+                            type="button"
+                            onClick={() => setForm((p) => ({ ...p, pagamento: op }))}
+                            className={cn(
+                              "rounded-lg border px-2 py-2 text-xs font-semibold transition-colors",
+                              form.pagamento === op
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-background hover:bg-muted",
+                            )}
+                          >
+                            {op}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Banricompras */}
+                    <div className="space-y-1.5 pt-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Banricompras — até 5x sem juros
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setForm((p) => ({ ...p, pagamento: "Banricompras" }))}
+                        className={cn(
+                          "w-full rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
+                          form.pagamento === "Banricompras"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background hover:bg-muted",
+                        )}
+                      >
+                        Banricompras
+                      </button>
+                    </div>
+
+                    {/* Resumo da escolha */}
+                    {form.pagamento && (
+                      <div className="mt-2 rounded-lg border border-accent/30 bg-accent/5 p-2.5 text-xs">
+                        <div className="font-semibold text-foreground">{form.pagamento}</div>
+                        {descontoPagamento > 0 && (
+                          <div className="text-success">
+                            Desconto à vista: -{formatBRL(descontoPagamento)} (3,5%)
+                          </div>
+                        )}
+                        {maxParcelas > 1 && (
+                          <div className="text-muted-foreground">
+                            Em até {maxParcelas}x de {formatBRL(valorParcela)} sem juros
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -951,12 +1062,25 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   </span>
                 </div>
               )}
+              {descontoPagamento > 0 && (
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Desconto à vista (3,5%)</span>
+                  <span className="font-medium text-success">
+                    -{formatBRL(descontoPagamento)}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center justify-between">
                 <span className="font-display text-sm font-bold">Total</span>
                 <span className="font-display text-xl font-bold text-primary">
                   {formatBRL(totalComEntrega)}
                 </span>
               </div>
+              {maxParcelas > 1 && (
+                <div className="text-right text-[11px] text-muted-foreground">
+                  ou {maxParcelas}x de {formatBRL(valorParcela)} sem juros
+                </div>
+              )}
             </div>
 
             {step < 3 ? (
