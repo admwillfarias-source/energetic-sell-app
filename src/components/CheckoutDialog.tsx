@@ -452,9 +452,19 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `Modalidade: ${entregaResumo()}\n\n` +
       `*Veículo*\n${form.carroAno}\n\n` +
       `*Bateria(s) solicitada(s)*\n${bateriaLinhas}\n\n` +
-      `*Pagamento*\n${form.pagamento}\n\n` +
+      `*Pagamento*\n${form.pagamento}` +
+      (maxParcelas > 1
+        ? ` em até ${maxParcelas}x de ${formatBRL(valorParcela)} sem juros`
+        : "") +
+      (descontoPagamento > 0
+        ? `\nDesconto à vista (3,5%): -${formatBRL(descontoPagamento)}`
+        : "") +
+      `\n\n` +
       `Subtotal: ${formatBRL(subtotal)}\n` +
       `Taxa de entrega: ${taxaEntrega > 0 ? formatBRL(taxaEntrega) : "Grátis"}\n` +
+      (descontoPagamento > 0
+        ? `Desconto: -${formatBRL(descontoPagamento)}\n`
+        : "") +
       `*Total: ${formatBRL(totalComEntrega)}*`;
     return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
   };
