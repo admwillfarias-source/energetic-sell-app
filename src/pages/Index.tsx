@@ -122,9 +122,7 @@ const Index = () => {
         <Suspense fallback={null}>
           <FloatingWhatsApp />
         </Suspense>
-        <Suspense fallback={null}>
-          <EngagementPopup />
-        </Suspense>
+        
         <Suspense fallback={null}>
           <PerfReport />
         </Suspense>
