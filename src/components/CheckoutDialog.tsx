@@ -922,14 +922,92 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     </div>
                   </div>
 
-                  <div className="space-y-1.5">
-                    <Label htmlFor="pagamento">Forma de pagamento</Label>
-                    <Input
-                      id="pagamento"
-                      value={form.pagamento}
-                      onChange={update("pagamento")}
-                      placeholder="Pix, dinheiro, cartão (Visa, Master...)"
-                    />
+                  <div className="space-y-2">
+                    <Label>Forma de pagamento</Label>
+
+                    {/* À vista — com desconto */}
+                    <div className="space-y-1.5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-success">
+                        À vista — 3,5% de desconto
+                      </p>
+                      <div className="grid grid-cols-2 gap-2">
+                        {["PIX", "Dinheiro"].map((op) => (
+                          <button
+                            key={op}
+                            type="button"
+                            onClick={() => setForm((p) => ({ ...p, pagamento: op }))}
+                            className={cn(
+                              "rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
+                              form.pagamento === op
+                                ? "border-success bg-success/10 text-success"
+                                : "border-border bg-background hover:bg-muted",
+                            )}
+                          >
+                            {op}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Cartão de crédito */}
+                    <div className="space-y-1.5 pt-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Cartão de crédito — até 10x sem juros
+                      </p>
+                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                        {["Visa", "Mastercard", "Elo", "Hipercard", "Amex"].map((op) => (
+                          <button
+                            key={op}
+                            type="button"
+                            onClick={() => setForm((p) => ({ ...p, pagamento: op }))}
+                            className={cn(
+                              "rounded-lg border px-2 py-2 text-xs font-semibold transition-colors",
+                              form.pagamento === op
+                                ? "border-primary bg-primary/10 text-primary"
+                                : "border-border bg-background hover:bg-muted",
+                            )}
+                          >
+                            {op}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Banricompras */}
+                    <div className="space-y-1.5 pt-2">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                        Banricompras — até 5x sem juros
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setForm((p) => ({ ...p, pagamento: "Banricompras" }))}
+                        className={cn(
+                          "w-full rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
+                          form.pagamento === "Banricompras"
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-background hover:bg-muted",
+                        )}
+                      >
+                        Banricompras
+                      </button>
+                    </div>
+
+                    {/* Resumo da escolha */}
+                    {form.pagamento && (
+                      <div className="mt-2 rounded-lg border border-accent/30 bg-accent/5 p-2.5 text-xs">
+                        <div className="font-semibold text-foreground">{form.pagamento}</div>
+                        {descontoPagamento > 0 && (
+                          <div className="text-success">
+                            Desconto à vista: -{formatBRL(descontoPagamento)} (3,5%)
+                          </div>
+                        )}
+                        {maxParcelas > 1 && (
+                          <div className="text-muted-foreground">
+                            Em até {maxParcelas}x de {formatBRL(valorParcela)} sem juros
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
 
