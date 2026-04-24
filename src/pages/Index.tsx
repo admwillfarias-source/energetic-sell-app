@@ -22,7 +22,7 @@ const Footer = lazy(() => import("@/components/Footer").then((m) => ({ default: 
 const CartDrawer = lazy(() =>
   import("@/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
 );
-const EngagementPopup = lazy(() => import("@/components/EngagementPopup"));
+
 const PerfReport = lazy(() => import("@/components/PerfReport"));
 const MobileDebugOverlay = lazy(() => import("@/components/MobileDebugOverlay"));
 
@@ -122,9 +122,7 @@ const Index = () => {
         <Suspense fallback={null}>
           <FloatingWhatsApp />
         </Suspense>
-        <Suspense fallback={null}>
-          <EngagementPopup />
-        </Suspense>
+        
         <Suspense fallback={null}>
           <PerfReport />
         </Suspense>

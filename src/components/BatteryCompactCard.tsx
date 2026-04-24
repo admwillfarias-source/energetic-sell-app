@@ -89,8 +89,8 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel }: Props) 
             {formatBRL(battery.price)}
           </div>
           <div className="text-[10px] font-bold text-awr-green truncate">
-            {formatBRL(battery.price * 0.965)} no Pix
-            <span className="font-normal text-muted-foreground"> (-3,5%)</span>
+            {formatBRL(battery.price * 0.97)} no Pix
+            <span className="font-normal text-muted-foreground"> (-3%)</span>
           </div>
           <div className="text-[9px] font-semibold text-accent truncate">
             10x {formatBRL(installment)} sem juros

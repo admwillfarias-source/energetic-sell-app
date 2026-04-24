@@ -265,11 +265,11 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     return taxaEntregaPorMinutos(entregaMin);
   }, [form.entregaTipo, entregaMin]);
 
-  // Desconto à vista (PIX/Dinheiro): 3,5% sobre subtotal
+  // Desconto à vista (PIX/Dinheiro): 3% sobre subtotal
   const pagamentoComDesconto =
     form.pagamento === "PIX" || form.pagamento === "Dinheiro";
   const descontoPagamento = pagamentoComDesconto
-    ? Math.round(subtotal * 0.035 * 100) / 100
+    ? Math.round(subtotal * 0.03 * 100) / 100
     : 0;
 
   const totalComEntrega = subtotal + taxaEntrega - descontoPagamento;
@@ -457,7 +457,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
         ? ` em até ${maxParcelas}x de ${formatBRL(valorParcela)} sem juros`
         : "") +
       (descontoPagamento > 0
-        ? `\nDesconto à vista (3,5%): -${formatBRL(descontoPagamento)}`
+        ? `\nDesconto à vista (3%): -${formatBRL(descontoPagamento)}`
         : "") +
       `\n\n` +
       `Subtotal: ${formatBRL(subtotal)}\n` +
@@ -928,7 +928,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     {/* À vista — com desconto */}
                     <div className="space-y-1.5">
                       <p className="text-[11px] font-semibold uppercase tracking-wide text-success">
-                        À vista — 3,5% de desconto
+                        À vista — 3% de desconto
                       </p>
                       <div className="grid grid-cols-2 gap-2">
                         {["PIX", "Dinheiro"].map((op) => (
@@ -998,7 +998,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                         <div className="font-semibold text-foreground">{form.pagamento}</div>
                         {descontoPagamento > 0 && (
                           <div className="text-success">
-                            Desconto à vista: -{formatBRL(descontoPagamento)} (3,5%)
+                            Desconto à vista: -{formatBRL(descontoPagamento)} (3%)
                           </div>
                         )}
                         {maxParcelas > 1 && (
@@ -1064,7 +1064,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
               )}
               {descontoPagamento > 0 && (
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Desconto à vista (3,5%)</span>
+                  <span className="text-muted-foreground">Desconto à vista (3%)</span>
                   <span className="font-medium text-success">
                     -{formatBRL(descontoPagamento)}
                   </span>
