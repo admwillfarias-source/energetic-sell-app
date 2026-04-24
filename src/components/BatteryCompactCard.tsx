@@ -121,7 +121,7 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel }: Props) 
             className="h-8 flex-1 gap-1 px-2 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <ShoppingCart className="h-3.5 w-3.5" />
-            Comprar
+            Encomendar
           </Button>
           <Button
             asChild
