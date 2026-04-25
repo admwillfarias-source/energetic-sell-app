@@ -23,12 +23,13 @@ export function BatteryGrid() {
     [codesParam],
   );
 
+  const isVehicleSearch = !!vehicle && codes.length > 0;
+
   const [catalogReady, setCatalogReady] = useState(false);
   useEffect(() => {
+    if (!isVehicleSearch) return;
     ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
-  }, []);
-
-  const isVehicleSearch = !!vehicle && codes.length > 0;
+  }, [isVehicleSearch]);
 
   const { data: results = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["batteries", { search, codes, vehicle: isVehicleSearch, catalogReady }],

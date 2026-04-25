@@ -23,8 +23,12 @@ const CartDrawer = lazy(() =>
   import("@/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
 );
 
-const PerfReport = lazy(() => import("@/components/PerfReport"));
-const MobileDebugOverlay = lazy(() => import("@/components/MobileDebugOverlay"));
+const PerfReport = import.meta.env.DEV
+  ? lazy(() => import("@/components/PerfReport"))
+  : null;
+const MobileDebugOverlay = import.meta.env.DEV
+  ? lazy(() => import("@/components/MobileDebugOverlay"))
+  : null;
 
 const SITE = "https://awrbaterias.com.br";
 
@@ -123,12 +127,16 @@ const Index = () => {
           <FloatingWhatsApp />
         </Suspense>
         
-        <Suspense fallback={null}>
-          <PerfReport />
-        </Suspense>
-        <Suspense fallback={null}>
-          <MobileDebugOverlay />
-        </Suspense>
+        {PerfReport && (
+          <Suspense fallback={null}>
+            <PerfReport />
+          </Suspense>
+        )}
+        {MobileDebugOverlay && (
+          <Suspense fallback={null}>
+            <MobileDebugOverlay />
+          </Suspense>
+        )}
       </div>
     </CartProvider>
   );
