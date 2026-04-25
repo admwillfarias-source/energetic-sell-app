@@ -1,72 +1,62 @@
+# Plano de otimização de performance
 
+Baseado no relatório do PageSpeed: LCP atrasado em ~3,4s, 124 KiB de JS não usado, hero-image maior que necessário, fontes bloqueando render, e componentes de debug carregando em produção.
 
-## Melhorias: Gatilhos mentais + SEO + Prova social
+## 1. Remover componentes de debug do bundle de produção
 
-Tom equilibrado: autoridade ("Desde 2009", marcas oficiais, garantia) combinado com urgência sutil ("plantão agora", "35 min").
+`PerfReport` e `MobileDebugOverlay` estão sendo importados sempre em `Index.tsx` (mesmo lazy, geram chunks e fetch). Em produção eles não devem nem aparecer no grafo.
 
-### 1. Hero + Header (gatilhos mentais)
+- Em `src/pages/Index.tsx`: envolver os imports/uso de `PerfReport` e `MobileDebugOverlay` em `import.meta.env.DEV` para que o tree-shaking do Vite os remova do build de produção.
 
-**`src/components/Header.tsx`**
-- Adicionar microbadge "Desde 2009 · +1500 clientes" ao lado da logo (visível em md+).
-- Manter telefone e carrinho; melhorar contraste do CTA telefone (bg accent leve em hover).
+## 2. Otimizar a imagem LCP (hero)
 
-**`src/components/HeroSection.tsx`**
-- Trocar h1 para incluir palavra-chave forte: "Bateria automotiva entregue e instalada em **Porto Alegre** em até 35 minutos".
-- Adicionar **3ª badge de autoridade**: "Desde 2009 · Distribuidor oficial" (ícone Award).
-- Adicionar **bloco de aversão à perda** abaixo do parágrafo: caixa pequena com ícone AlertTriangle e texto "Carro não pega? Evite reboque (R$ 150+) e atrasos. Resolva em 35 min."
-- Substituir o card de busca por um CTA primário maior + busca; o botão "Buscar" passa a ser cor primary (vermelho), mais proeminente.
-- Logo abaixo das estrelas: faixa horizontal com **logos das marcas oficiais** (Moura, Heliar, Freedom, Excell, Zetta, Eletran) em escala de cinza com hover colorido — reforço de autoridade. Reaproveita `ManufacturerLogos` em versão compacta.
+`hero-bg-sm.webp` está em 800x600 com 70 KiB. O viewport mobile real renderiza menor, e o relatório indica ~38 KiB de economia.
 
-### 2. Depoimentos aprofundados (`src/components/Testimonials.tsx`)
+- Recomprimir `hero-bg-sm.webp` com qualidade ~70 (cwebp -q 70) e ajustar para 720x540 — alvo ~30–35 KiB.
+- Recomprimir `hero-bg.webp` (1200x900) com qualidade 72 — alvo ~70 KiB.
+- Adicionar `<link rel="preload" as="image" href="..." fetchpriority="high">` no `index.html` para o hero-bg-sm (mobile) e hero-bg (desktop) usando `imagesrcset`/`media`, antecipando o download do LCP.
 
-- Expandir de 3 para **6 depoimentos** com cidades variadas, modelos de carro mencionados, e cenários distintos (emergência noturna, agendado, frota, etc.).
-- Adicionar header da seção com **selo Google grande**: "★ 5.0 · 1500+ avaliações no Google" + link.
-- Cada card ganha: badge "Compra verificada", chip do modelo de bateria comprada, resposta da AWR (1 linha) em 2 dos cards (mostra atendimento ativo).
-- Manter JSON-LD `aggregateRating` com novos números.
-- Adicionar **faixa de selos** abaixo dos depoimentos: Garantia 24m, Instalação grátis, Pague na entrega, Distribuidor oficial — com ícones ShieldCheck/Wrench/Wallet/Award.
+## 3. Reduzir CLS de fontes (Google Fonts)
 
-### 3. SEO on-page
+A página carrega Google Fonts via CSS dinâmico (importado pelos componentes), o que atrasa render e causa CLS de 0,010.
 
-**Hierarquia de cabeçalhos** — auditoria e correção:
-- Garantir um único `<h1>` por página (Hero usa h1; demais seções usam h2 com `id` para âncoras; sub-blocos usam h3).
-- `Benefits`, `HowItWorks`, `HowToOrder`, `FaqHome`, `QuickNavigation`, `ManufacturerLogos` recebem `<h2>` de seção quando faltar.
+- Adicionar `<link rel="preload" href="https://fonts.googleapis.com/css2?family=...&display=swap" as="style">` + `<link rel="stylesheet" ...>` no `index.html` para iniciar o download da folha de estilo de fontes em paralelo ao HTML.
+- Garantir `display=swap` na URL.
+- Adicionar `<link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co">` para encurtar a cadeia das chamadas de catálogo.
 
-**Atributos `alt` em imagens**:
-- `BatteryCard`: alt descritivo "Bateria {marca} {modelo} {amperagem}Ah" (verificar se já está — corrigir se genérico).
-- `ManufacturerLogos`: alt "Logo {marca} — distribuidor autorizado AWR Baterias".
-- Hero já tem alt bom; manter.
+## 4. Reduzir JS não usado (123 KiB no index.js)
 
-**Meta tags / SEO component**:
-- Em `src/pages/Index.tsx`: enriquecer `description` com palavras-chave de cauda longa ("bateria automotiva 24h", "instalação grátis Porto Alegre", marcas).
-- Adicionar `image` (og) usando hero-bg.
-- Em `City.tsx` e `BatterySku.tsx`: revisar para ter title único + h1 único e meta description com cidade/sku.
+Chunks principais que estão no entry mesmo sem precisarem no carregamento inicial:
 
-**`index.html`**:
-- Atualizar `<title>` para incluir "Porto Alegre" e marca.
-- Adicionar `<meta name="theme-color">`, `<link rel="preconnect">` para fontes.
+- `Toaster` (radix-toast) e `Sonner` em `App.tsx` — usados raramente. Converter para `lazy` + `Suspense` no `App.tsx`.
+- `TooltipProvider` — manter (leve).
+- Auditar `src/components/Header.tsx` para usar ícones individuais do lucide e adiar dropdown/menus.
 
-**JSON-LD adicional**:
-- Em `Index.tsx`, somar `LocalBusiness` com `openingHoursSpecification` (06h–22h), `foundingDate: 2009`, `sameAs` (Google, Instagram se disponível).
+## 5. Adiar carga do catálogo de fitments
 
-### 4. Acessibilidade rápida
+Hoje `BatteryGrid` chama `ensureCatalogLoaded()` no mount, baixando ~70 KiB de fitments mesmo sem o usuário ter buscado um veículo.
 
-- Garantir `aria-label` em ícones-botão (Header carrinho já tem `data-debug-id`; adicionar `aria-label="Abrir carrinho"`).
-- Foco visível nos CTAs do Hero (já vem do `focus-visible` do shadcn — verificar que não foi sobrescrito).
+- Em `BatteryGrid.tsx`: só chamar `ensureCatalogLoaded()` quando `isVehicleSearch` for true (já há `enabled: !isVehicleSearch || catalogReady`, então a chamada antecipada é desnecessária).
+- Isto remove 2 fetches `/fitments?select=...` da cadeia crítica inicial.
 
-### Arquivos a editar
-- `src/components/Header.tsx`
-- `src/components/HeroSection.tsx`
-- `src/components/Testimonials.tsx`
-- `src/components/ManufacturerLogos.tsx` (variante compacta + alts)
-- `src/components/BatteryCard.tsx` (alts)
-- `src/components/Benefits.tsx`, `HowItWorks.tsx`, `HowToOrder.tsx`, `FaqHome.tsx`, `QuickNavigation.tsx` (verificar h2)
-- `src/pages/Index.tsx` (SEO + JSON-LD)
-- `src/pages/City.tsx`, `src/pages/BatterySku.tsx` (SEO)
-- `index.html` (title + theme-color)
+## 6. Acessibilidade rápida (botões sem nome)
 
-### Fora do escopo (próximas fases, se aprovar)
-- Reformulação total do catálogo navegável (modal → página) — frente grande, separada.
-- A/B testing de CTA (precisa instrumentação).
-- Blog / FAQ expandida com artigos.
-- Auditoria de performance aprofundada.
+Lighthouse aponta um botão sem nome acessível em `div.mb-6 > div.relative > div.flex > button.inline-flex` (botão "Buscar" do `SearchPlaceholder` no mobile, onde o texto está em `hidden sm:inline`).
 
+- Em `HeroSection.tsx` `SearchPlaceholder`: adicionar `aria-label="Buscar"` no `<button>`.
+
+## Resumo técnico de arquivos a editar
+
+- `index.html` — preload da imagem LCP, preload do CSS de Google Fonts, dns-prefetch do Supabase.
+- `src/pages/Index.tsx` — guardar `PerfReport` e `MobileDebugOverlay` em `import.meta.env.DEV`.
+- `src/App.tsx` — `lazy()` para `Toaster` e `Sonner`.
+- `src/components/HeroSection.tsx` — `aria-label` no botão Buscar.
+- `src/components/BatteryGrid.tsx` — só chamar `ensureCatalogLoaded` quando há busca por veículo.
+- `src/assets/hero-bg-sm.webp` e `hero-bg.webp` — recompressão.
+
+## Ganhos esperados
+
+- LCP: −800ms a −1.500ms (preload + imagem menor + fontes paralelas).
+- JS transferido: −60 a −90 KiB (debug fora do prod, toaster lazy).
+- Network requests críticas: −2 chamadas de fitments no carregamento da home.
+- Acessibilidade: corrige falha do botão sem nome.
