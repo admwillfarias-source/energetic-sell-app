@@ -52,6 +52,7 @@ function SearchPlaceholder({
       </div>
       <button
         onClick={onActivate}
+        aria-label="Buscar"
         className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary px-5 font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-colors"
       >
         <Car className="h-4 w-4" />
