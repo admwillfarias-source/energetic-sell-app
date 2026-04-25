@@ -143,6 +143,7 @@ export default function Resultado() {
                   battery={b}
                   highlight={i === 0}
                   vehicleLabel={vehicle}
+                  priority={i < 4}
                 />
               ))}
             </div>

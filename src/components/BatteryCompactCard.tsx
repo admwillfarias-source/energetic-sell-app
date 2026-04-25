@@ -3,18 +3,20 @@ import { Battery } from "@/data/batteries";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import batteryImg from "@/assets/battery-product.png";
+import { BatteryImage } from "@/components/BatteryImage";
+import { COMPACT_SIZES } from "@/lib/imageSrcset";
 
-const isRemote = (s: string) => /^https?:\/\//.test(s);
 const WHATSAPP_NUMBER = "555135165472";
 
 type Props = {
   battery: Battery;
   highlight?: boolean;
   vehicleLabel?: string;
+  /** Cards na primeira dobra: carrega ansioso e prioriza */
+  priority?: boolean;
 };
 
-export function BatteryCompactCard({ battery, highlight, vehicleLabel }: Props) {
+export function BatteryCompactCard({ battery, highlight, vehicleLabel, priority = false }: Props) {
   const { add } = useCart();
 
   const onBuy = () => {
@@ -58,14 +60,13 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel }: Props) 
             -{discount}%
           </span>
         )}
-        <img
-          src={isRemote(battery.image) ? battery.image : batteryImg}
+        <BatteryImage
+          src={battery.image}
           alt={`Bateria ${battery.brand} ${battery.name} ${battery.amperage}Ah`}
-          onError={(e) => ((e.currentTarget as HTMLImageElement).src = batteryImg)}
-          loading="lazy"
           width={200}
           height={200}
-          className="h-full w-full object-contain"
+          priority={priority}
+          sizes={COMPACT_SIZES}
         />
       </div>
 
