@@ -3,16 +3,17 @@ import { Battery } from "@/data/batteries";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { toast } from "@/hooks/use-toast";
-import batteryImg from "@/assets/battery-product.png";
-
-const isRemote = (s: string) => /^https?:\/\//.test(s);
+import { BatteryImage } from "@/components/BatteryImage";
+import { CARD_SIZES } from "@/lib/imageSrcset";
 
 type Props = {
   battery: Battery;
   onSelect?: (b: Battery) => void;
+  /** Cards na primeira dobra: carrega ansioso e prioriza */
+  priority?: boolean;
 };
 
-export function BatteryCard({ battery, onSelect }: Props) {
+export function BatteryCard({ battery, onSelect, priority = false }: Props) {
   const { add } = useCart();
 
   const onBuy = (e: React.MouseEvent) => {
@@ -41,14 +42,14 @@ export function BatteryCard({ battery, onSelect }: Props) {
             -{discount}%
           </span>
         )}
-        <img
-          src={isRemote(battery.image) ? battery.image : batteryImg}
+        <BatteryImage
+          src={battery.image}
           alt={`Bateria ${battery.brand} ${battery.name} ${battery.amperage}Ah — garantia ${battery.warranty} meses`}
-          onError={(e) => ((e.currentTarget as HTMLImageElement).src = batteryImg)}
-          loading="lazy"
           width={400}
           height={400}
-          className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+          priority={priority}
+          sizes={CARD_SIZES}
+          className="transition-transform duration-500 group-hover:scale-105"
         />
       </div>
 

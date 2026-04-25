@@ -149,8 +149,8 @@ export function BatteryGrid() {
               </div>
             ) : (
               <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-                {filtered.map((b) => (
-                  <BatteryCard key={b.id} battery={b} onSelect={setActive} />
+                {filtered.map((b, i) => (
+                  <BatteryCard key={b.id} battery={b} onSelect={setActive} priority={i < 3} />
                 ))}
               </div>
             )}
