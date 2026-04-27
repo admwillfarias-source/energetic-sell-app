@@ -503,8 +503,8 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
-        <DialogHeader className="border-b border-border px-6 pb-4 pt-6">
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden p-0 sm:h-auto sm:max-h-[92vh] sm:w-full sm:max-w-xl">
+        <DialogHeader className="border-b border-border px-4 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
           <DialogTitle className="font-display text-xl sm:text-2xl">Finalizar pedido</DialogTitle>
           <DialogDescription className="sr-only">
             Wizard de 3 passos para finalizar o pedido
