@@ -503,8 +503,8 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex max-h-[92vh] flex-col gap-0 overflow-hidden p-0 sm:max-w-xl">
-        <DialogHeader className="border-b border-border px-6 pb-4 pt-6">
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden p-0 sm:h-auto sm:max-h-[92vh] sm:w-full sm:max-w-xl">
+        <DialogHeader className="border-b border-border px-4 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
           <DialogTitle className="font-display text-xl sm:text-2xl">Finalizar pedido</DialogTitle>
           <DialogDescription className="sr-only">
             Wizard de 3 passos para finalizar o pedido
@@ -562,7 +562,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
-          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
             {/* PASSO 1 — ENTREGA */}
             {step === 1 && (
               <div className="space-y-5">
@@ -1128,9 +1128,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           {/* RESUMO + NAVEGAÇÃO — sticky no rodapé */}
           <div
             data-debug-id="checkout-sticky-summary"
-            className="border-t border-border bg-muted/30 px-6 py-4"
+            className="shrink-0 border-t border-border bg-muted/30 px-4 py-3 sm:px-6 sm:py-4"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
-            <div className="mb-3 space-y-1.5">
+            <div className="mb-2.5 space-y-1 sm:mb-3 sm:space-y-1.5">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>
                   {items.reduce((s, i) => s + i.quantity, 0)} item
@@ -1165,7 +1166,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
               )}
               <div className="flex items-center justify-between">
                 <span className="font-display text-sm font-bold">Total</span>
-                <span className="font-display text-xl font-bold text-primary">
+                <span className="font-display text-lg font-bold text-primary sm:text-xl">
                   {formatBRL(totalComEntrega)}
                 </span>
               </div>
@@ -1182,23 +1183,22 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   <Button
                     type="button"
                     variant="outline"
-                    size="lg"
                     onClick={voltar}
                     aria-label="Voltar para o passo anterior"
+                    className="h-11 shrink-0 px-3 text-sm sm:px-4"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Voltar
+                    <span className="hidden xs:inline">Voltar</span>
                   </Button>
                 )}
                 <Button
                   type="button"
-                  size="lg"
                   onClick={avancar}
-                  className="flex-1"
+                  className="h-11 min-w-0 flex-1 px-3 text-sm sm:px-4"
                   aria-label="Avançar para o próximo passo"
                 >
-                  Continuar
-                  <ChevronRight className="h-4 w-4" />
+                  <span className="truncate">Continuar</span>
+                  <ChevronRight className="h-4 w-4 shrink-0" />
                 </Button>
               </div>
             ) : (
@@ -1207,23 +1207,25 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   <Button
                     type="button"
                     variant="outline"
-                    size="lg"
                     onClick={voltar}
                     aria-label="Voltar para o passo anterior"
+                    className="h-11 shrink-0 px-3 text-sm sm:px-4"
                   >
                     <ChevronLeft className="h-4 w-4" />
-                    Voltar
+                    <span className="hidden xs:inline">Voltar</span>
                   </Button>
                   <Button
                     type="submit"
-                    size="lg"
-                    className="flex-1 bg-[#25D366] text-white hover:bg-[#20bd5a]"
+                    className="h-11 min-w-0 flex-1 bg-[#25D366] px-2 text-sm text-white hover:bg-[#20bd5a] sm:px-4"
                   >
-                    <MessageCircle className="h-4 w-4" />
-                    Enviar pelo WhatsApp
+                    <MessageCircle className="h-4 w-4 shrink-0" />
+                    <span className="truncate">
+                      <span className="sm:hidden">Enviar no WhatsApp</span>
+                      <span className="hidden sm:inline">Enviar pelo WhatsApp</span>
+                    </span>
                   </Button>
                 </div>
-                <p className="text-center text-xs text-muted-foreground">
+                <p className="text-center text-[11px] text-muted-foreground sm:text-xs">
                   Seu pedido será aberto no WhatsApp com a mensagem pronta — basta enviar
                 </p>
 
@@ -1257,6 +1259,8 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
               </div>
             )}
           </div>
+
+
         </form>
       </DialogContent>
     </Dialog>
