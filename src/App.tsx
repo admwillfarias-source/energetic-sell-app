@@ -37,6 +37,7 @@ const App = () => (
           <Route path="/admin/whatsapp-logs" element={<WhatsappLogs />} />
           <Route path="/admin/whatsapp-test" element={<WhatsappTest />} />
           <Route path="/admin/whatsapp-diagnostico" element={<WhatsappDiagnose />} />
+          <Route path="/checkout-test" element={<CheckoutTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
