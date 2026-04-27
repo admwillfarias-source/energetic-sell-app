@@ -1169,9 +1169,9 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   {formatBRL(totalComEntrega)}
                 </span>
               </div>
-              {maxParcelas > 1 && (
+              {parcelasEfetivas > 1 && (
                 <div className="text-right text-[11px] text-muted-foreground">
-                  ou {maxParcelas}x de {formatBRL(valorParcela)} sem juros
+                  ou {parcelasEfetivas}x de {formatBRL(valorParcela)} sem juros
                 </div>
               )}
             </div>
