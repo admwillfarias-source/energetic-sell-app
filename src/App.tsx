@@ -12,6 +12,7 @@ import WhatsappDiagnose from "./pages/WhatsappDiagnose.tsx";
 import City from "./pages/City.tsx";
 import BatterySku from "./pages/BatterySku.tsx";
 import Resultado from "./pages/Resultado.tsx";
+import CheckoutTest from "./pages/CheckoutTest.tsx";
 
 const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
 const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
@@ -36,6 +37,7 @@ const App = () => (
           <Route path="/admin/whatsapp-logs" element={<WhatsappLogs />} />
           <Route path="/admin/whatsapp-test" element={<WhatsappTest />} />
           <Route path="/admin/whatsapp-diagnostico" element={<WhatsappDiagnose />} />
+          <Route path="/checkout-test" element={<CheckoutTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
