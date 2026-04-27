@@ -554,8 +554,8 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="flex flex-1 flex-col overflow-hidden">
-          <div className="flex-1 overflow-y-auto px-6 py-5">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          <div className="min-h-0 flex-1 overflow-y-auto px-6 py-5">
             {/* PASSO 1 — ENTREGA */}
             {step === 1 && (
               <div className="space-y-5">
