@@ -460,8 +460,8 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `*Veículo*\n${form.carroAno}\n\n` +
       `*Bateria(s) solicitada(s)*\n${bateriaLinhas}\n\n` +
       `*Pagamento*\n${form.pagamento}` +
-      (maxParcelas > 1
-        ? ` em até ${maxParcelas}x de ${formatBRL(valorParcela)} sem juros`
+      (parcelasEfetivas > 1
+        ? ` em até ${parcelasEfetivas}x de ${formatBRL(valorParcela)} sem juros`
         : "") +
       (descontoPagamento > 0
         ? `\nDesconto à vista (3%): -${formatBRL(descontoPagamento)}`
