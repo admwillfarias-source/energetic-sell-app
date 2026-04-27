@@ -922,88 +922,174 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     </div>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     <Label>Forma de pagamento</Label>
 
-                    {/* À vista — com desconto */}
-                    <div className="space-y-1.5">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-success">
-                        À vista — 3% de desconto
-                      </p>
-                      <div className="grid grid-cols-2 gap-2">
-                        {["PIX", "Dinheiro"].map((op) => (
+                    {/* Nível 1 — categoria */}
+                    <div className="grid grid-cols-3 gap-2">
+                      {(
+                        [
+                          { v: "avista", title: "À vista", sub: "-3%", tone: "success" as const },
+                          { v: "cartao", title: "Cartão", sub: "até 10x", tone: "primary" as const },
+                          { v: "banri", title: "Banricompras", sub: "até 5x", tone: "primary" as const },
+                        ] as const
+                      ).map((cat) => {
+                        const selected =
+                          (cat.v === "avista" && (form.pagamento === "PIX" || form.pagamento === "Dinheiro")) ||
+                          (cat.v === "cartao" &&
+                            ["Visa", "Mastercard", "Elo", "Hipercard", "Amex"].includes(form.pagamento)) ||
+                          (cat.v === "banri" && form.pagamento === "Banricompras");
+                        return (
                           <button
-                            key={op}
+                            key={cat.v}
                             type="button"
-                            onClick={() => setForm((p) => ({ ...p, pagamento: op }))}
+                            onClick={() => {
+                              if (cat.v === "avista") setForm((p) => ({ ...p, pagamento: "PIX" }));
+                              else if (cat.v === "banri")
+                                setForm((p) => ({ ...p, pagamento: "Banricompras" }));
+                              else setForm((p) => ({ ...p, pagamento: "" })); // espera escolher bandeira
+                            }}
                             className={cn(
-                              "rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
-                              form.pagamento === op
-                                ? "border-success bg-success/10 text-success"
+                              "flex min-w-0 flex-col items-center gap-0.5 rounded-lg border px-2 py-2.5 text-center transition-colors",
+                              selected
+                                ? cat.tone === "success"
+                                  ? "border-success bg-success/10 text-success"
+                                  : "border-primary bg-primary/10 text-primary"
                                 : "border-border bg-background hover:bg-muted",
                             )}
                           >
-                            {op}
+                            <span className="truncate text-sm font-semibold leading-tight">
+                              {cat.title}
+                            </span>
+                            <span className="text-[10px] font-medium opacity-80">{cat.sub}</span>
                           </button>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
 
-                    {/* Cartão de crédito */}
-                    <div className="space-y-1.5 pt-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        Cartão de crédito — até 10x sem juros
-                      </p>
-                      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
-                        {["Visa", "Mastercard", "Elo", "Hipercard", "Amex"].map((op) => (
-                          <button
-                            key={op}
-                            type="button"
-                            onClick={() => setForm((p) => ({ ...p, pagamento: op }))}
-                            className={cn(
-                              "rounded-lg border px-2 py-2 text-xs font-semibold transition-colors",
-                              form.pagamento === op
-                                ? "border-primary bg-primary/10 text-primary"
-                                : "border-border bg-background hover:bg-muted",
-                            )}
-                          >
-                            {op}
-                          </button>
-                        ))}
+                    {/* Nível 2a — À vista: PIX vs Dinheiro */}
+                    {(form.pagamento === "PIX" || form.pagamento === "Dinheiro") && (
+                      <div className="space-y-1.5 rounded-lg border border-success/30 bg-success/5 p-2.5">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-success">
+                          Selecione
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {["PIX", "Dinheiro"].map((op) => (
+                            <button
+                              key={op}
+                              type="button"
+                              onClick={() => setForm((p) => ({ ...p, pagamento: op }))}
+                              className={cn(
+                                "min-w-0 truncate rounded-lg border px-2 py-2 text-sm font-semibold transition-colors",
+                                form.pagamento === op
+                                  ? "border-success bg-success/15 text-success"
+                                  : "border-border bg-background hover:bg-muted",
+                              )}
+                            >
+                              {op}
+                            </button>
+                          ))}
+                        </div>
                       </div>
-                    </div>
+                    )}
 
-                    {/* Banricompras */}
-                    <div className="space-y-1.5 pt-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                        Banricompras — até 5x sem juros
-                      </p>
-                      <button
-                        type="button"
-                        onClick={() => setForm((p) => ({ ...p, pagamento: "Banricompras" }))}
-                        className={cn(
-                          "w-full rounded-lg border px-3 py-2 text-sm font-semibold transition-colors",
-                          form.pagamento === "Banricompras"
-                            ? "border-primary bg-primary/10 text-primary"
-                            : "border-border bg-background hover:bg-muted",
-                        )}
-                      >
-                        Banricompras
-                      </button>
-                    </div>
+                    {/* Nível 2b — Cartão: bandeira + parcelas */}
+                    {["", "Visa", "Mastercard", "Elo", "Hipercard", "Amex"].includes(form.pagamento) &&
+                      form.pagamento !== "PIX" &&
+                      form.pagamento !== "Dinheiro" &&
+                      form.pagamento !== "Banricompras" && (
+                        <div className="space-y-3 rounded-lg border border-primary/30 bg-primary/5 p-2.5">
+                          <div className="space-y-1.5">
+                            <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                              Bandeira
+                            </p>
+                            <div className="grid grid-cols-3 gap-2 xs:grid-cols-3 sm:grid-cols-5">
+                              {["Visa", "Mastercard", "Elo", "Hipercard", "Amex"].map((op) => (
+                                <button
+                                  key={op}
+                                  type="button"
+                                  onClick={() => {
+                                    setForm((p) => ({ ...p, pagamento: op }));
+                                    setParcelas(1);
+                                  }}
+                                  className={cn(
+                                    "min-w-0 truncate rounded-lg border px-1.5 py-2 text-xs font-semibold transition-colors",
+                                    form.pagamento === op
+                                      ? "border-primary bg-primary/15 text-primary"
+                                      : "border-border bg-background hover:bg-muted",
+                                  )}
+                                >
+                                  {op}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {form.pagamento && form.pagamento !== "" && (
+                            <div className="space-y-1.5">
+                              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                                Parcelas (sem juros)
+                              </p>
+                              <div className="grid grid-cols-5 gap-1.5">
+                                {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
+                                  <button
+                                    key={n}
+                                    type="button"
+                                    onClick={() => setParcelas(n)}
+                                    className={cn(
+                                      "min-w-0 truncate rounded-md border px-1 py-1.5 text-xs font-semibold transition-colors",
+                                      parcelas === n
+                                        ? "border-primary bg-primary text-primary-foreground"
+                                        : "border-border bg-background hover:bg-muted",
+                                    )}
+                                  >
+                                    {n}x
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                    {/* Nível 2c — Banricompras: parcelas */}
+                    {form.pagamento === "Banricompras" && (
+                      <div className="space-y-1.5 rounded-lg border border-primary/30 bg-primary/5 p-2.5">
+                        <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                          Parcelas (sem juros)
+                        </p>
+                        <div className="grid grid-cols-5 gap-1.5">
+                          {Array.from({ length: 5 }, (_, i) => i + 1).map((n) => (
+                            <button
+                              key={n}
+                              type="button"
+                              onClick={() => setParcelas(n)}
+                              className={cn(
+                                "min-w-0 truncate rounded-md border px-1 py-1.5 text-xs font-semibold transition-colors",
+                                parcelas === n
+                                  ? "border-primary bg-primary text-primary-foreground"
+                                  : "border-border bg-background hover:bg-muted",
+                              )}
+                            >
+                              {n}x
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Resumo da escolha */}
                     {form.pagamento && (
-                      <div className="mt-2 rounded-lg border border-accent/30 bg-accent/5 p-2.5 text-xs">
+                      <div className="rounded-lg border border-accent/30 bg-accent/5 p-2.5 text-xs">
                         <div className="font-semibold text-foreground">{form.pagamento}</div>
                         {descontoPagamento > 0 && (
                           <div className="text-success">
                             Desconto à vista: -{formatBRL(descontoPagamento)} (3%)
                           </div>
                         )}
-                        {maxParcelas > 1 && (
+                        {parcelasEfetivas > 1 && (
                           <div className="text-muted-foreground">
-                            Em até {maxParcelas}x de {formatBRL(valorParcela)} sem juros
+                            {parcelasEfetivas}x de {formatBRL(valorParcela)} sem juros
                           </div>
                         )}
                       </div>
