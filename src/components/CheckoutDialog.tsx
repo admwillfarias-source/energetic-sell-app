@@ -1128,9 +1128,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           {/* RESUMO + NAVEGAÇÃO — sticky no rodapé */}
           <div
             data-debug-id="checkout-sticky-summary"
-            className="border-t border-border bg-muted/30 px-6 py-4"
+            className="shrink-0 border-t border-border bg-muted/30 px-4 py-3 sm:px-6 sm:py-4"
+            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
           >
-            <div className="mb-3 space-y-1.5">
+            <div className="mb-2.5 space-y-1 sm:mb-3 sm:space-y-1.5">
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>
                   {items.reduce((s, i) => s + i.quantity, 0)} item
@@ -1165,7 +1166,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
               )}
               <div className="flex items-center justify-between">
                 <span className="font-display text-sm font-bold">Total</span>
-                <span className="font-display text-xl font-bold text-primary">
+                <span className="font-display text-lg font-bold text-primary sm:text-xl">
                   {formatBRL(totalComEntrega)}
                 </span>
               </div>
@@ -1175,6 +1176,89 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                 </div>
               )}
             </div>
+
+            {step < 3 ? (
+              <div className="flex gap-2">
+                {step > 1 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={voltar}
+                    aria-label="Voltar para o passo anterior"
+                    className="h-11 shrink-0 px-3 text-sm sm:px-4"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="hidden xs:inline">Voltar</span>
+                  </Button>
+                )}
+                <Button
+                  type="button"
+                  onClick={avancar}
+                  className="h-11 min-w-0 flex-1 px-3 text-sm sm:px-4"
+                  aria-label="Avançar para o próximo passo"
+                >
+                  <span className="truncate">Continuar</span>
+                  <ChevronRight className="h-4 w-4 shrink-0" />
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={voltar}
+                    aria-label="Voltar para o passo anterior"
+                    className="h-11 shrink-0 px-3 text-sm sm:px-4"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    <span className="hidden xs:inline">Voltar</span>
+                  </Button>
+                  <Button
+                    type="submit"
+                    className="h-11 min-w-0 flex-1 bg-[#25D366] px-2 text-sm text-white hover:bg-[#20bd5a] sm:px-4"
+                  >
+                    <MessageCircle className="h-4 w-4 shrink-0" />
+                    <span className="truncate">
+                      <span className="sm:hidden">Enviar no WhatsApp</span>
+                      <span className="hidden sm:inline">Enviar pelo WhatsApp</span>
+                    </span>
+                  </Button>
+                </div>
+                <p className="text-center text-[11px] text-muted-foreground sm:text-xs">
+                  Seu pedido será aberto no WhatsApp com a mensagem pronta — basta enviar
+                </p>
+
+                {!isMobile && (
+                  <>
+                    <div className="flex items-center gap-3 py-1">
+                      <div className="h-px flex-1 bg-border" />
+                      <span className="text-xs text-muted-foreground">ou</span>
+                      <div className="h-px flex-1 bg-border" />
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="lg"
+                      className="w-full"
+                      onClick={handleWooCommerce}
+                      disabled={submittingWC}
+                    >
+                      {submittingWC ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <ShoppingCart className="h-4 w-4" />
+                      )}
+                      {submittingWC ? "Criando pedido..." : "Finalizar na loja online"}
+                    </Button>
+                    <p className="text-center text-xs text-muted-foreground">
+                      Cria o pedido em awrbaterias.com.br e abre a página de pagamento
+                    </p>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
 
             {step < 3 ? (
               <div className="flex gap-2">
