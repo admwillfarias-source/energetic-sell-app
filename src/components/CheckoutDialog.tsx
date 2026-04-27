@@ -288,7 +288,14 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     return 1;
   }, [form.pagamento]);
 
-  const valorParcela = maxParcelas > 1 ? totalComEntrega / maxParcelas : totalComEntrega;
+  const [parcelas, setParcelas] = useState<number>(1);
+  // Garante parcelas dentro do limite da bandeira escolhida
+  useEffect(() => {
+    setParcelas((p) => Math.min(Math.max(1, p), maxParcelas));
+  }, [maxParcelas]);
+
+  const parcelasEfetivas = Math.min(Math.max(1, parcelas), maxParcelas);
+  const valorParcela = parcelasEfetivas > 1 ? totalComEntrega / parcelasEfetivas : totalComEntrega;
 
   const entregaResumo = () => {
     if (form.entregaTipo === "rapida") {
