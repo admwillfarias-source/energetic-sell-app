@@ -46,12 +46,22 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel, priority 
         highlight ? "border-accent ring-1 ring-accent/30" : "border-border"
       }`}
     >
-      {highlight && (
-        <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-accent-foreground shadow">
-          <Award className="h-2.5 w-2.5" />
-          Top
-        </span>
-      )}
+      {highlight && (() => {
+        const brandLc = battery.brand?.toLowerCase() ?? "";
+        const isMoura = brandLc.includes("moura");
+        const isHeliar = brandLc.includes("heliar");
+        const label = isMoura
+          ? "Recomendada pela Moura"
+          : isHeliar
+            ? "Recomendada pela Heliar"
+            : "Top";
+        return (
+          <span className="absolute left-2 top-2 z-10 inline-flex max-w-[calc(100%-1rem)] items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-accent-foreground shadow">
+            <Award className="h-2.5 w-2.5 shrink-0" />
+            <span className="truncate">{label}</span>
+          </span>
+        );
+      })()}
 
       {/* Imagem */}
       <div className="relative flex w-24 shrink-0 items-center justify-center bg-white p-2 sm:w-28">
