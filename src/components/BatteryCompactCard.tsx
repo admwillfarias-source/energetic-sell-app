@@ -40,28 +40,23 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel, priority 
       : 0;
   const installment = battery.price / 10;
 
+  const brandLc = battery.brand?.toLowerCase() ?? "";
+  const isRecommended = brandLc.includes("moura") || brandLc.includes("heliar");
+  const showRecommended = highlight && isRecommended;
+  const badgeLabel = showRecommended ? "Recomendada pela montadora" : "Top";
+
   return (
     <article
       className={`group relative flex flex-row overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:shadow-md ${
         highlight ? "border-accent ring-1 ring-accent/30" : "border-border"
-      }`}
+      } ${highlight ? "pt-6" : ""}`}
     >
-      {highlight && (() => {
-        const brandLc = battery.brand?.toLowerCase() ?? "";
-        const isMoura = brandLc.includes("moura");
-        const isHeliar = brandLc.includes("heliar");
-        const label = isMoura
-          ? "Recomendada pela Moura"
-          : isHeliar
-            ? "Recomendada pela Heliar"
-            : "Top";
-        return (
-          <span className="absolute left-2 top-2 z-10 inline-flex max-w-[calc(100%-1rem)] items-center gap-0.5 rounded-full bg-accent px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-accent-foreground shadow">
-            <Award className="h-2.5 w-2.5 shrink-0" />
-            <span className="truncate">{label}</span>
-          </span>
-        );
-      })()}
+      {highlight && (
+        <span className="absolute left-2 right-2 top-1 z-10 mx-auto inline-flex w-fit max-w-[calc(100%-1rem)] items-center justify-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-accent-foreground shadow">
+          <Award className="h-2.5 w-2.5 shrink-0" />
+          <span className="truncate">{badgeLabel}</span>
+        </span>
+      )}
 
       {/* Imagem */}
       <div className="relative flex w-24 shrink-0 items-center justify-center bg-white p-2 sm:w-28">
