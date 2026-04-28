@@ -9,6 +9,7 @@ import { looksLikeBatterySku, normalizeSku } from "@/lib/batterySku";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { markEvent } from "@/lib/perfMetrics";
+import { CityDeliverySelector } from "@/components/CityDeliverySelector";
 
 type Props = {
   variant?: "card" | "inline";
@@ -242,6 +243,7 @@ export default function VehicleAutocomplete({
             </p>
           </div>
           {inputBlock}
+          <CityDeliverySelector className="mt-5 border-t border-border pt-5" />
         </div>
       </div>
     </section>

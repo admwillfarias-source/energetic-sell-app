@@ -9,10 +9,12 @@ import Admin from "./pages/Admin.tsx";
 import WhatsappLogs from "./pages/WhatsappLogs.tsx";
 import WhatsappTest from "./pages/WhatsappTest.tsx";
 import WhatsappDiagnose from "./pages/WhatsappDiagnose.tsx";
-import City from "./pages/City.tsx";
 import BatterySku from "./pages/BatterySku.tsx";
 import Resultado from "./pages/Resultado.tsx";
 import CheckoutTest from "./pages/CheckoutTest.tsx";
+
+// Lazy: páginas de cidade são acessadas via deep-link e não precisam estar no bundle inicial.
+const City = lazy(() => import("./pages/City.tsx"));
 
 const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
 const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
@@ -30,7 +32,14 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/resultado" element={<Resultado />} />
-          <Route path="/baterias/:slug" element={<City />} />
+          <Route
+            path="/baterias/:slug"
+            element={
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <City />
+              </Suspense>
+            }
+          />
           <Route path="/bateria/:sku" element={<BatterySku />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/admin" element={<Admin />} />
