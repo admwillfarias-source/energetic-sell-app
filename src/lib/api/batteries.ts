@@ -112,7 +112,7 @@ function mapToBattery(p: WCProduct): Battery {
     name: p.name,
     brand: detectBrand(p.name, fullDesc),
     amperage: detectAmperage(p.name, fullDesc),
-    warranty: detectWarranty(fullDesc),
+    warranty: detectWarranty(fullDesc, p.sku, p.name),
     price,
     oldPrice,
     image: p.images?.[0]?.src ?? "/placeholder.svg",
