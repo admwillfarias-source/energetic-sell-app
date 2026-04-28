@@ -42,8 +42,8 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel, priority 
 
   const brandLc = battery.brand?.toLowerCase() ?? "";
   const isRecommended = brandLc.includes("moura") || brandLc.includes("heliar");
-  const showRecommended = highlight && isRecommended;
-  const badgeLabel = showRecommended ? "Recomendada pela montadora" : "Top";
+  const showBadge = highlight || isRecommended;
+  const badgeLabel = isRecommended ? "Recomendada pela montadora" : "Top";
 
   return (
     <article
