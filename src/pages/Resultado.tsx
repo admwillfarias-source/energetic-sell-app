@@ -41,9 +41,21 @@ export default function Resultado() {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Ordena por preço crescente; primeira é "recomendada"
+  // Ordena por marca (Moura, Zetta, Heliar, Excell) e depois por preço crescente
+  const BRAND_ORDER: Record<string, number> = {
+    moura: 0,
+    zetta: 1,
+    heliar: 2,
+    excell: 3,
+  };
   const sorted = useMemo<Battery[]>(
-    () => [...results].sort((a, b) => a.price - b.price),
+    () =>
+      [...results].sort((a, b) => {
+        const oa = BRAND_ORDER[a.brand?.toLowerCase() ?? ""] ?? 99;
+        const ob = BRAND_ORDER[b.brand?.toLowerCase() ?? ""] ?? 99;
+        if (oa !== ob) return oa - ob;
+        return a.price - b.price;
+      }),
     [results],
   );
 
