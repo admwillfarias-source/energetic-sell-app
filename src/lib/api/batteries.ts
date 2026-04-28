@@ -67,7 +67,38 @@ function detectAmperage(name: string, desc: string): number {
   return 60;
 }
 
-function detectWarranty(text: string): number {
+// SKUs Moura com garantia diferenciada (override por modelo)
+const WARRANTY_24_SKUS = new Set([
+  "M48SR", "M40SD", "M48FE", "M48FD",
+  "M50ED", "M50JE", "M50JD", "M50JL",
+  "M70KD", "M70KE",
+  "M60AD", "M60GD",
+  "M75LD", "M78LD",
+  "MA60AD", "MA70LD", "MA80CD", "MA92QD", "MA105DD",
+  "MF50ED", "MF60AD", "MF72LD", "MF80CD",
+]);
+
+const WARRANTY_15_SKUS = new Set([
+  "M80CD", "M80RD", "M80RE",
+  "M90TD", "M90TE",
+  "M95QD", "M100QD", "M100HE",
+  "M150BD", "M180BD", "M180BE",
+  "M220PD", "M220PE",
+]);
+
+function detectWarranty(text: string, sku?: string, name?: string): number {
+  // 1) Override por SKU/nome (Moura)
+  const candidates: string[] = [];
+  if (sku) candidates.push(sku.toUpperCase());
+  if (name) {
+    const codeMatch = name.toUpperCase().match(/\bM[A-Z]?\d{2,3}[A-Z]{1,3}\b/g);
+    if (codeMatch) candidates.push(...codeMatch);
+  }
+  for (const c of candidates) {
+    if (WARRANTY_24_SKUS.has(c)) return 24;
+    if (WARRANTY_15_SKUS.has(c)) return 15;
+  }
+  // 2) Texto explícito
   const m = text.match(/(\d{1,2})\s*meses/i);
   return m ? Number(m[1]) : 18;
 }
@@ -81,7 +112,7 @@ function mapToBattery(p: WCProduct): Battery {
     name: p.name,
     brand: detectBrand(p.name, fullDesc),
     amperage: detectAmperage(p.name, fullDesc),
-    warranty: detectWarranty(fullDesc),
+    warranty: detectWarranty(fullDesc, p.sku, p.name),
     price,
     oldPrice,
     image: p.images?.[0]?.src ?? "/placeholder.svg",
