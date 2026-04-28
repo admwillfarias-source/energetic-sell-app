@@ -140,7 +140,7 @@ export const cityPages: CityPageData[] = [
       "Centro", "Hamburgo Velho", "Canudos", "Rio Branco", "Liberdade",
       "Ideal", "Operário", "Vila Nova", "Santo Afonso", "Roselândia",
     ],
-    faq: makeFaq("Novo Hamburgo", "até 60 minutos"),
+    faq: makeFaq("Novo Hamburgo", "até 50 minutos"),
   },
   {
     slug: "sao-leopoldo",
