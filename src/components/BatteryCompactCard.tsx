@@ -49,9 +49,9 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel, priority 
     <article
       className={`group relative flex flex-row overflow-hidden rounded-xl border bg-card shadow-sm transition-all hover:shadow-md ${
         highlight ? "border-accent ring-1 ring-accent/30" : "border-border"
-      } ${highlight ? "pt-6" : ""}`}
+      } ${showBadge ? "pt-6" : ""}`}
     >
-      {highlight && (
+      {showBadge && (
         <span className="absolute left-2 right-2 top-1 z-10 mx-auto inline-flex w-fit max-w-[calc(100%-1rem)] items-center justify-center gap-1 rounded-full bg-accent px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-accent-foreground shadow">
           <Award className="h-2.5 w-2.5 shrink-0" />
           <span className="truncate">{badgeLabel}</span>
