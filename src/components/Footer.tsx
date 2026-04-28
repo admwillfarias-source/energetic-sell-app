@@ -1,8 +1,14 @@
 import { Phone, MessageCircle, Clock } from "lucide-react";
+import { Link } from "react-router-dom";
 import { cityPages } from "@/data/cityContent";
 import { brandPages } from "@/data/brandContent";
 import { handleCallClick } from "@/lib/tracking";
 import PaymentMethods from "@/components/PaymentMethods";
+
+// Pré-carrega o chunk da página de cidade ao passar o mouse no link.
+const prefetchCity = () => {
+  void import("@/pages/City.tsx");
+};
 
 const links = [
   { label: "Início", href: "#inicio" },
@@ -57,13 +63,15 @@ export function Footer() {
             <h4 className="font-bold mb-4">Cidades</h4>
             <nav className="flex flex-col gap-2">
               {cityPages.map((c) => (
-                <a
+                <Link
                   key={c.slug}
-                  href={`#busca`}
+                  to={`/baterias/${c.slug}`}
+                  onMouseEnter={prefetchCity}
+                  onFocus={prefetchCity}
                   className="text-secondary-foreground/60 hover:text-primary transition-colors text-sm"
                 >
-                  Bateria em {c.name}
-                </a>
+                  Bateria em {c.name} <span className="text-secondary-foreground/40">• {c.deliveryTime}</span>
+                </Link>
               ))}
             </nav>
           </div>
