@@ -15,6 +15,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { getCityBySlug, cityPages } from "@/data/cityContent";
+import { brandPages } from "@/data/brandContent";
 import {
   MapPin, Clock, ShieldCheck, Truck, Wrench, Phone, ChevronRight,
 } from "lucide-react";
@@ -195,23 +196,110 @@ export default function City() {
             </div>
           </section>
 
-          {/* Outras cidades */}
-          <section className="border-t border-border bg-muted/30 py-12">
+          {/* Links internos: cidades + marcas + categorias */}
+          <section
+            aria-labelledby="links-internos"
+            className="border-t border-border bg-muted/30 py-14"
+          >
             <div className="container">
-              <h2 className="text-center font-display text-xl font-bold md:text-2xl">
-                Outras cidades atendidas
+              <h2
+                id="links-internos"
+                className="text-center font-display text-2xl font-bold md:text-3xl"
+              >
+                Explore baterias e regiões atendidas
               </h2>
-              <div className="mx-auto mt-6 flex max-w-4xl flex-wrap justify-center gap-2">
-                {cityPages.filter((c) => c.slug !== city.slug).map((c) => (
-                  <Link
-                    key={c.slug}
-                    to={`/baterias/${c.slug}`}
-                    className="rounded-full border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary"
-                  >
-                    Bateria em {c.name}
-                  </Link>
-                ))}
+              <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground">
+                Encontre rapidamente a bateria certa para o seu carro, sua marca de
+                preferência ou outra cidade atendida pela AWR.
+              </p>
+
+              <div className="mx-auto mt-10 grid max-w-6xl gap-8 md:grid-cols-3">
+                {/* Outras cidades */}
+                <div>
+                  <h3 className="mb-4 font-display text-lg font-bold">
+                    Outras cidades atendidas
+                  </h3>
+                  <ul className="flex flex-wrap gap-2">
+                    {cityPages
+                      .filter((c) => c.slug !== city.slug)
+                      .map((c) => (
+                        <li key={c.slug}>
+                          <Link
+                            to={`/baterias/${c.slug}`}
+                            title={`Bateria automotiva em ${c.name} — entrega ${c.deliveryTime}`}
+                            className="inline-block rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary"
+                          >
+                            Bateria em {c.name}
+                          </Link>
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+
+                {/* Marcas atendidas */}
+                <div>
+                  <h3 className="mb-4 font-display text-lg font-bold">
+                    Marcas em {city.name}
+                  </h3>
+                  <ul className="flex flex-wrap gap-2">
+                    {brandPages.map((b) => (
+                      <li key={b.slug}>
+                        <Link
+                          to={`/?marca=${b.slug}#catalogo`}
+                          title={`Baterias ${b.name} em ${city.name}`}
+                          className="inline-block rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary"
+                        >
+                          Baterias {b.name}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Categorias por amperagem / uso */}
+                <div>
+                  <h3 className="mb-4 font-display text-lg font-bold">
+                    Baterias por categoria
+                  </h3>
+                  <ul className="flex flex-wrap gap-2">
+                    {[
+                      { label: "Bateria 60Ah", q: "60Ah" },
+                      { label: "Bateria 70Ah", q: "70Ah" },
+                      { label: "Bateria 75Ah", q: "75Ah" },
+                      { label: "Bateria 100Ah", q: "100Ah" },
+                      { label: "Bateria Start-Stop", q: "start-stop" },
+                      { label: "Bateria para utilitário", q: "utilitario" },
+                      { label: "Bateria para caminhão", q: "caminhao" },
+                    ].map((cat) => (
+                      <li key={cat.q}>
+                        <Link
+                          to={`/?categoria=${encodeURIComponent(cat.q)}#catalogo`}
+                          title={`${cat.label} em ${city.name} — entrega ${city.deliveryTime}`}
+                          className="inline-block rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary"
+                        >
+                          {cat.label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
+
+              {/* Linha contextual extra para reforçar âncoras internas */}
+              <p className="mx-auto mt-10 max-w-3xl text-center text-sm text-muted-foreground">
+                Veja também:{" "}
+                {brandPages.slice(0, 4).map((b, i) => (
+                  <span key={b.slug}>
+                    <Link
+                      to={`/?marca=${b.slug}#catalogo`}
+                      className="font-medium text-foreground hover:text-primary"
+                    >
+                      Bateria {b.name} em {city.name}
+                    </Link>
+                    {i < 3 ? " · " : ""}
+                  </span>
+                ))}
+              </p>
             </div>
           </section>
         </main>
