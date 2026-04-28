@@ -134,7 +134,7 @@ export const cityPages: CityPageData[] = [
     tagline: "Bateria automotiva em Novo Hamburgo com entrega no mesmo dia.",
     intro:
       "Em Novo Hamburgo, a AWR Baterias atende Centro, Hamburgo Velho, Canudos, Rio Branco e Liberdade com entrega rápida, instalação por técnico especializado e garantia de fábrica em todas as marcas. Atendimento todos os dias, das 8h às 22h.",
-    deliveryTime: "até 60 minutos",
+    deliveryTime: "até 50 minutos",
     geo: { lat: -29.6783, lng: -51.1308 },
     neighborhoods: [
       "Centro", "Hamburgo Velho", "Canudos", "Rio Branco", "Liberdade",
