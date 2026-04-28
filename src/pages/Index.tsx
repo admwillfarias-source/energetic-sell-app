@@ -68,8 +68,8 @@ const Index = () => {
   return (
     <CartProvider>
       <SEO
-        title="AWR Baterias Porto Alegre | Entrega e instalação em 35 min | Moura, Heliar, Zetta"
-        description="Bateria automotiva 24h em Porto Alegre, Canoas, Gravataí, Cachoeirinha, Esteio e Novo Hamburgo. Instalação grátis no local, garantia de fábrica e 10x sem juros. Moura, Heliar, Freedom, Zetta e Excell. Plantão das 6h às 22h."
+        title="AWR Baterias | Entrega e Instalação em Porto Alegre, Canoas, São Leopoldo e RS"
+        description="Bateria automotiva com entrega e instalação grátis em Porto Alegre, Canoas, Gravataí, Cachoeirinha, Esteio, Novo Hamburgo, São Leopoldo, Sapucaia, Ivoti, Campo Bom, Estância Velha, Nova Santa Rita, Alvorada e Viamão. Moura, Heliar, Zetta, Excell. 10x sem juros, garantia de fábrica."
         canonical={SITE}
         jsonLd={orgLd}
       />
