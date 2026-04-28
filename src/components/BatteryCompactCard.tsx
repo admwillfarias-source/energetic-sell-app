@@ -34,6 +34,12 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel, priority 
   );
   const whatsHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${whatsMsg}`;
 
+  const discount =
+    battery.oldPrice && battery.oldPrice > battery.price
+      ? Math.round(100 - (battery.price / battery.oldPrice) * 100)
+      : 0;
+  const installment = battery.price / 10;
+
   const brandLc = battery.brand?.toLowerCase() ?? "";
   const isRecommended = brandLc.includes("moura") || brandLc.includes("heliar");
   const showRecommended = highlight && isRecommended;
