@@ -128,3 +128,55 @@ export function organizationLd() {
     }],
   };
 }
+
+export type ReviewItem = { author: string; rating: number; body: string; locality?: string };
+
+export function reviewsLd(itemName: string, reviews: ReviewItem[]) {
+  const valid = reviews.filter((r) => r.author && r.body);
+  if (!valid.length) return null;
+  const avg = valid.reduce((s, r) => s + (r.rating || 5), 0) / valid.length;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: itemName,
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: avg.toFixed(1),
+      reviewCount: valid.length,
+    },
+    review: valid.map((r) => ({
+      "@type": "Review",
+      author: { "@type": "Person", name: r.author },
+      reviewRating: { "@type": "Rating", ratingValue: r.rating || 5, bestRating: 5 },
+      reviewBody: r.body,
+      ...(r.locality ? { locationCreated: r.locality } : {}),
+    })),
+  };
+}
+
+export function articleLd(opts: {
+  url: string;
+  headline: string;
+  description: string;
+  datePublished: string;
+  dateModified?: string;
+  image?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    mainEntityOfPage: opts.url,
+    headline: opts.headline,
+    description: opts.description,
+    image: opts.image || SITE_LOGO,
+    datePublished: opts.datePublished,
+    dateModified: opts.dateModified || opts.datePublished,
+    author: { "@type": "Organization", name: SITE_NAME },
+    publisher: {
+      "@type": "Organization",
+      name: SITE_NAME,
+      logo: { "@type": "ImageObject", url: SITE_LOGO },
+    },
+  };
+}
+
