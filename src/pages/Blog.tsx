@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -8,11 +9,12 @@ import { SEO } from "@/components/SEO";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { blogPosts } from "@/data/blogPosts";
+import { blogPosts, getAllTags } from "@/data/blogPosts";
 import {
   breadcrumbLd, localBusinessLd, organizationLd, SITE_URL,
 } from "@/lib/seoSchemas";
-import { Calendar, Clock, ChevronRight, Search, ChevronLeft } from "lucide-react";
+import { trackEvent } from "@/lib/tracking";
+import { Calendar, Clock, ChevronRight, Search, ChevronLeft, Tag as TagIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABEL: Record<string, string> = {
