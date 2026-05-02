@@ -570,4 +570,34 @@
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
+  <url>
+    <loc>https://awrbaterias.com.br/blog</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/blog/como-saber-se-bateria-do-carro-esta-fraca</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/blog/como-trocar-bateria-do-carro-passo-a-passo</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/blog/qual-melhor-marca-de-bateria-automotiva</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/blog/diferenca-bateria-agm-efb-convencional</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/blog/bateria-descarregou-o-que-fazer</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>
