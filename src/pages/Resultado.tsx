@@ -197,7 +197,22 @@ export default function Resultado() {
 
       <main className="flex-1 bg-muted/30 pb-12 pt-24">
         <div className="container">
-          {/* Breadcrumb / volta */}
+          {/* Breadcrumb HTML indexável */}
+          <nav aria-label="Breadcrumb" className="mb-3 text-xs text-muted-foreground md:text-sm">
+            <ol className="flex flex-wrap items-center gap-1.5">
+              <li><Link to="/" className="hover:text-foreground">Início</Link></li>
+              <li aria-hidden>›</li>
+              <li><Link to="/#catalogo" className="hover:text-foreground">Baterias</Link></li>
+              {vehicle && (
+                <>
+                  <li aria-hidden>›</li>
+                  <li className="font-medium text-foreground">Bateria para {vehicle}</li>
+                </>
+              )}
+            </ol>
+          </nav>
+
+          {/* Voltar */}
           <div className="mb-4 flex items-center gap-2 text-sm">
             <Button asChild variant="ghost" size="sm" className="h-8 gap-1 px-2">
               <Link to="/">
