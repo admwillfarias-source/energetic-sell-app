@@ -70,7 +70,7 @@ export default function City() {
         title={title}
         description={description}
         canonical={canonical}
-        jsonLd={[localBusiness, faqLd, breadcrumb]}
+        jsonLd={[localBusiness, faqLdObj, breadcrumb].filter(Boolean) as Record<string, unknown>[]}
       />
       <div className="min-h-screen bg-background">
         <Header />
