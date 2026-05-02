@@ -8,7 +8,6 @@ declare global {
 }
 
 type CallClickEvent = {
-  preventDefault: () => void;
   currentTarget: HTMLAnchorElement;
 };
 
@@ -40,8 +39,6 @@ export function handleCallClick(event: CallClickEvent, page: string, placement: 
   const href = event.currentTarget.getAttribute("href")?.trim();
   if (!href?.startsWith("tel:")) return;
 
-  // Safari/iPhone pode ignorar o comportamento nativo em links dentro de componentes React.
-  // Forçamos a navegação tel: no mesmo gesto do toque para abrir o discador.
-  event.preventDefault();
-  window.location.href = href.replace(/\s+/g, "");
+  // iOS Safari é mais confiável quando o link tel: segue o fluxo nativo do <a>.
+  // Não usamos preventDefault nem navegação programática aqui para não cancelar o discador.
 }

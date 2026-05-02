@@ -18,11 +18,12 @@ export default function MobileActionBar() {
       <div className="grid grid-cols-2 gap-2 px-3 max-w-md mx-auto">
         <a
           href="tel:+555135165472"
-          target="_self"
+          target="_top"
           rel="nofollow"
           onClick={(event) => handleCallClick(event, "home", "mobile-bar")}
           style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           className="flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground font-extrabold text-sm h-11 cursor-pointer active:scale-[0.98] transition-transform shadow-sm relative z-10"
+          aria-label="Ligar agora para AWR Baterias"
         >
           <Phone className="h-4 w-4 pointer-events-none" />
           <span className="pointer-events-none">Ligar agora</span>
