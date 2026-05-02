@@ -18,7 +18,16 @@ export default function MobileActionBar() {
       <div className="grid grid-cols-2 gap-2 px-3 max-w-md mx-auto">
         <a
           href="tel:+555135165472"
-          onClick={(event) => handleCallClick(event, "home", "mobile-bar")}
+          onClick={(event) => {
+            handleCallClick(event, "home", "mobile-bar");
+            // Safari iOS fallback: força a navegação tel: caso o evento padrão seja suprimido
+            if (!event.defaultPrevented) {
+              window.setTimeout(() => {
+                window.location.href = "tel:+555135165472";
+              }, 50);
+            }
+          }}
+          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           className="flex items-center justify-center gap-2 rounded-lg bg-primary text-primary-foreground font-extrabold text-sm h-11 active:scale-[0.98] transition-transform shadow-sm"
         >
           <Phone className="h-4 w-4" />
