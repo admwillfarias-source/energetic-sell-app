@@ -20,8 +20,10 @@ import { Battery } from "@/data/batteries";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
 import { cityPages } from "@/data/cityContent";
-
-const SITE_URL = "https://awrbaterias.com.br";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import {
+  breadcrumbLd, faqLd, localBusinessLd, organizationLd, SITE_URL,
+} from "@/lib/seoSchemas";
 
 const formatBRL = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
