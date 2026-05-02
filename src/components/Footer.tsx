@@ -2,6 +2,7 @@ import { Phone, MessageCircle, Clock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cityPages } from "@/data/cityContent";
 import { brandPages } from "@/data/brandContent";
+import { amperagePages } from "@/data/amperageContent";
 import { handleCallClick } from "@/lib/tracking";
 import PaymentMethods from "@/components/PaymentMethods";
 
@@ -76,20 +77,32 @@ export function Footer() {
             </nav>
           </div>
 
-          {/* Brands */}
+          {/* Brands + Amperagens */}
           <div>
             <h4 className="font-bold mb-4">Marcas</h4>
             <nav className="flex flex-col gap-2">
               {brandPages.map((b) => (
-                <a
+                <Link
                   key={b.slug}
-                  href={`#catalogo`}
+                  to={`/baterias/marca/${b.slug}`}
                   className="text-secondary-foreground/60 hover:text-primary transition-colors text-sm"
                 >
-                  Baterias {b.name}
-                </a>
+                  Bateria {b.name}
+                </Link>
               ))}
             </nav>
+            <h4 className="font-bold mt-6 mb-3">Amperagens</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {amperagePages.map((a) => (
+                <Link
+                  key={a.slug}
+                  to={`/baterias/amperagem/${a.slug}`}
+                  className="rounded-full border border-border px-2.5 py-0.5 text-xs text-secondary-foreground/70 hover:border-primary hover:text-primary"
+                >
+                  {a.ah}Ah
+                </Link>
+              ))}
+            </div>
           </div>
 
           {/* Contact */}
