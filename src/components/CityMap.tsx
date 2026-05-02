@@ -1,25 +1,67 @@
-// Mapa Google embed sem API key — usa o endpoint público de busca.
-// q pode ser "AWR Baterias Gravataí" ou coordenadas "lat,lng".
+// Mapa Google embed sem API key — exibe apenas lojas físicas da AWR Baterias.
+// Aceita uma lista de lojas; renderiza um iframe por loja para garantir que
+// o pin no mapa corresponda exatamente ao endereço da AWR.
+
+import type { Store } from "@/data/stores";
+import { getStoresForCity, stores as ALL_STORES } from "@/data/stores";
+import { MapPin } from "lucide-react";
 
 interface Props {
-  query: string;
+  /** Lista explícita de lojas a mostrar. */
+  stores?: Store[];
+  /** Cidade para resolver lojas via getStoresForCity. */
+  city?: string;
+  /** Título base para os iframes. */
   title: string;
+  /** Altura de cada iframe (px). */
   height?: number;
 }
 
-export function CityMap({ query, title, height = 360 }: Props) {
-  const src = `https://www.google.com/maps?q=${encodeURIComponent(query)}&output=embed`;
+function buildEmbedSrc(store: Store): string {
+  // Usa o endereço completo da loja para garantir o pin correto da AWR.
+  const q = `${store.name}, ${store.address}`;
+  return `https://www.google.com/maps?q=${encodeURIComponent(q)}&output=embed`;
+}
+
+export function CityMap({ stores, city, title, height = 320 }: Props) {
+  const list: Store[] = stores
+    ? stores
+    : city
+      ? getStoresForCity(city)
+      : ALL_STORES;
+
+  if (list.length === 0) return null;
+
   return (
-    <div className="overflow-hidden rounded-xl border border-border">
-      <iframe
-        src={src}
-        title={title}
-        loading="lazy"
-        referrerPolicy="no-referrer-when-downgrade"
-        className="w-full"
-        style={{ height, border: 0 }}
-        allowFullScreen
-      />
+    <div className="space-y-4">
+      {list.map((s) => (
+        <figure key={s.id} className="overflow-hidden rounded-xl border border-border bg-card">
+          <iframe
+            src={buildEmbedSrc(s)}
+            title={`${title} — ${s.name}`}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            className="w-full"
+            style={{ height, border: 0 }}
+            allowFullScreen
+          />
+          <figcaption className="flex flex-col gap-1 p-3 text-sm">
+            <span className="flex items-center gap-1.5 font-semibold">
+              <MapPin className="h-4 w-4 text-primary" /> {s.name}
+            </span>
+            <span className="text-muted-foreground">{s.address}</span>
+            <span className="text-xs text-muted-foreground">{s.hours}</span>
+            <a
+              href={s.mapsUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-primary hover:underline"
+            >
+              Ver no Google Maps →
+            </a>
+          </figcaption>
+        </figure>
+      ))}
     </div>
   );
 }
