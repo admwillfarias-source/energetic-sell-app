@@ -29,10 +29,11 @@ export default function MobileActionBar() {
           href={WHATSAPP_URL}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 rounded-lg bg-awr-green text-awr-green-foreground font-extrabold text-sm h-11 active:scale-[0.98] transition-transform shadow-sm"
+          style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
+          className="flex items-center justify-center gap-2 rounded-lg bg-awr-green text-awr-green-foreground font-extrabold text-sm h-11 active:scale-[0.98] transition-transform shadow-sm relative z-10"
         >
-          <MessageCircle className="h-4 w-4" />
-          WhatsApp
+          <MessageCircle className="h-4 w-4 pointer-events-none" />
+          <span className="pointer-events-none">WhatsApp</span>
         </a>
       </div>
     </div>
