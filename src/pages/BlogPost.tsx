@@ -124,7 +124,9 @@ export default function BlogPost() {
               </p>
               <Button asChild size="lg" className="mt-4 gap-2">
                 <a
-                  href={`https://wa.me/${PHONE_E164.replace("+", "")}`}
+                  href={`https://wa.me/${PHONE_E164.replace("+", "")}?text=${encodeURIComponent(
+                    `Olá! Acabei de ler "${post.title}" no blog da AWR Baterias e quero falar sobre a troca da bateria do meu carro. Pode me ajudar com preço e instalação?`
+                  )}`}
                   target="_blank"
                   rel="noopener noreferrer"
                 >
