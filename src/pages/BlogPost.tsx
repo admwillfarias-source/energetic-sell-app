@@ -15,7 +15,7 @@ import { cityPages } from "@/data/cityContent";
 import { brandPages } from "@/data/brandContent";
 import { amperagePages } from "@/data/amperageContent";
 import {
-  articleLd, breadcrumbLd, faqLd, organizationLd, PHONE_E164, SITE_URL,
+  articleLd, breadcrumbLd, faqLd, localBusinessLd, organizationLd, PHONE_E164, SITE_URL,
 } from "@/lib/seoSchemas";
 import { Calendar, ChevronRight, Clock, MessageCircle } from "lucide-react";
 
