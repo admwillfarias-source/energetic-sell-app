@@ -4,26 +4,63 @@ type Props = {
   title: string;
   description: string;
   canonical?: string;
-  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[] | (Record<string, unknown> | null)[];
   image?: string;
+  /** Override og:type. Default: website. */
+  ogType?: "website" | "article" | "product";
+  /** twitter:site / twitter:creator handle (com @). */
+  twitterSite?: string;
+  /** Set false para gerar noindex,follow. */
+  noindex?: boolean;
 };
 
-export function SEO({ title, description, canonical, jsonLd, image }: Props) {
-  const ld = jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : [];
+const DEFAULT_OG = "https://awrbaterias.com.br/og-image.jpg";
+
+export function SEO({
+  title,
+  description,
+  canonical,
+  jsonLd,
+  image,
+  ogType = "website",
+  twitterSite = "@awrbaterias",
+  noindex,
+}: Props) {
+  const ldArray = jsonLd
+    ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd])
+    : [];
+  const ld = ldArray.filter((x): x is Record<string, unknown> => !!x);
+  const ogImage = image || DEFAULT_OG;
+
   return (
     <Helmet>
       <title>{title}</title>
       <meta name="description" content={description} />
+      {noindex ? (
+        <meta name="robots" content="noindex,follow" />
+      ) : (
+        <meta name="robots" content="index,follow,max-image-preview:large" />
+      )}
       {canonical && <link rel="canonical" href={canonical} />}
+
+      {/* Open Graph */}
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
-      <meta property="og:type" content="website" />
+      <meta property="og:type" content={ogType} />
+      <meta property="og:site_name" content="AWR Baterias" />
+      <meta property="og:locale" content="pt_BR" />
       {canonical && <meta property="og:url" content={canonical} />}
-      {image && <meta property="og:image" content={image} />}
+      <meta property="og:image" content={ogImage} />
+      <meta property="og:image:alt" content={title} />
+
+      {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content={twitterSite} />
       <meta name="twitter:title" content={title} />
       <meta name="twitter:description" content={description} />
-      {image && <meta name="twitter:image" content={image} />}
+      <meta name="twitter:image" content={ogImage} />
+      <meta name="twitter:image:alt" content={title} />
+
       {ld.map((obj, i) => (
         <script key={i} type="application/ld+json">{JSON.stringify(obj)}</script>
       ))}
