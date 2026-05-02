@@ -34,6 +34,14 @@ export function trackCall(_page: string, _placement: string) {
   // no-op
 }
 
-export function handleCallClick(_event: CallClickEvent, _page: string, _placement: string) {
-  // Permite o comportamento nativo do <a href="tel:...">
+export function handleCallClick(event: CallClickEvent, page: string, placement: string) {
+  trackCall(page, placement);
+
+  const href = event.currentTarget.getAttribute("href")?.trim();
+  if (!href?.startsWith("tel:")) return;
+
+  // Safari/iPhone pode ignorar o comportamento nativo em links dentro de componentes React.
+  // Forçamos a navegação tel: no mesmo gesto do toque para abrir o discador.
+  event.preventDefault();
+  window.location.href = href.replace(/\s+/g, "");
 }
