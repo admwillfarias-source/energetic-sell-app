@@ -1,5 +1,6 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Helmet } from "react-helmet-async";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -8,11 +9,12 @@ import { SEO } from "@/components/SEO";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { blogPosts } from "@/data/blogPosts";
+import { blogPosts, getAllTags } from "@/data/blogPosts";
 import {
   breadcrumbLd, localBusinessLd, organizationLd, SITE_URL,
 } from "@/lib/seoSchemas";
-import { Calendar, Clock, ChevronRight, Search, ChevronLeft } from "lucide-react";
+import { trackEvent } from "@/lib/tracking";
+import { Calendar, Clock, ChevronRight, Search, ChevronLeft, Tag as TagIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -107,6 +109,59 @@ export default function Blog() {
     localBusinessLd({ url: canonical }),
   ];
 
+  // rel=prev / rel=next preservando categoria + busca, sem incluir "pagina=1".
+  const buildPageUrl = (n: number) => {
+    const sp = new URLSearchParams();
+    if (category !== "todos") sp.set("categoria", category);
+    if (queryParam) sp.set("q", queryParam);
+    if (n > 1) sp.set("pagina", String(n));
+    const qs = sp.toString();
+    return qs ? `${SITE_URL}/blog?${qs}` : `${SITE_URL}/blog`;
+  };
+  const prevHref = currentPage > 1 ? buildPageUrl(currentPage - 1) : null;
+  const nextHref = currentPage < totalPages ? buildPageUrl(currentPage + 1) : null;
+
+  // --- Analytics (debounce de busca) ---------------------------------------
+  const searchTimer = useRef<number | null>(null);
+  useEffect(() => {
+    if (!queryParam) return;
+    if (searchTimer.current) window.clearTimeout(searchTimer.current);
+    searchTimer.current = window.setTimeout(() => {
+      trackEvent({
+        action: "blog_search",
+        category: "blog",
+        label: queryParam,
+        value: filtered.length,
+      });
+    }, 600);
+    return () => {
+      if (searchTimer.current) window.clearTimeout(searchTimer.current);
+    };
+  }, [queryParam, filtered.length]);
+
+  useEffect(() => {
+    trackEvent({
+      action: "blog_filter_category",
+      category: "blog",
+      label: category,
+      value: filtered.length,
+    });
+  }, [category, filtered.length]);
+
+  useEffect(() => {
+    if (currentPage > 1) {
+      trackEvent({
+        action: "blog_paginate",
+        category: "blog",
+        label: `${category}|${queryParam || "-"}|p${currentPage}`,
+        value: currentPage,
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage]);
+
+  const tagCloud = getAllTags();
+
   return (
     <CartProvider>
       <SEO
@@ -116,6 +171,10 @@ export default function Blog() {
         jsonLd={jsonLd}
         noindex={hasFacet}
       />
+      <Helmet>
+        {prevHref && <link rel="prev" href={prevHref} />}
+        {nextHref && <link rel="next" href={nextHref} />}
+      </Helmet>
       <div className="min-h-screen bg-background">
         <Header />
         <main>
@@ -263,6 +322,35 @@ export default function Blog() {
                     </nav>
                   )}
                 </>
+              )}
+
+              {/* Nuvem de tags */}
+              {tagCloud.length > 0 && (
+                <section className="mt-12 rounded-xl border border-border bg-muted/30 p-5">
+                  <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+                    <TagIcon className="h-4 w-4 text-primary" /> Explorar por tag
+                  </h2>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {tagCloud.map((t) => (
+                      <li key={t.slug}>
+                        <Link
+                          to={`/blog/tag/${t.slug}`}
+                          onClick={() =>
+                            trackEvent({
+                              action: "blog_filter_tag",
+                              category: "blog",
+                              label: t.tag,
+                              value: t.count,
+                            })
+                          }
+                          className="inline-block rounded-full border border-border bg-card px-3 py-1 text-sm hover:border-primary hover:text-primary"
+                        >
+                          {t.tag} <span className="text-xs text-muted-foreground">({t.count})</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
               )}
             </div>
           </section>

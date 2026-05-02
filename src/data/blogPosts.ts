@@ -399,3 +399,42 @@ export function getPostBySlug(slug: string) {
 export function getRelatedPosts(currentSlug: string, limit = 3) {
   return blogPosts.filter((p) => p.slug !== currentSlug).slice(0, limit);
 }
+
+// --- Tags ---------------------------------------------------------------
+
+export function tagToSlug(tag: string): string {
+  return tag
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+
+export function getAllTags(): { tag: string; slug: string; count: number }[] {
+  const map = new Map<string, { tag: string; count: number }>();
+  for (const p of blogPosts) {
+    for (const t of p.tags) {
+      const slug = tagToSlug(t);
+      const cur = map.get(slug);
+      if (cur) cur.count += 1;
+      else map.set(slug, { tag: t, count: 1 });
+    }
+  }
+  return Array.from(map.entries())
+    .map(([slug, v]) => ({ slug, tag: v.tag, count: v.count }))
+    .sort((a, b) => a.tag.localeCompare(b.tag, "pt-BR"));
+}
+
+export function getPostsByTagSlug(slug: string) {
+  return blogPosts.filter((p) => p.tags.some((t) => tagToSlug(t) === slug));
+}
+
+export function getTagBySlug(slug: string): string | undefined {
+  for (const p of blogPosts) {
+    const found = p.tags.find((t) => tagToSlug(t) === slug);
+    if (found) return found;
+  }
+  return undefined;
+}
+

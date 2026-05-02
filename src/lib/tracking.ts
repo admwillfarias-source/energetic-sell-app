@@ -12,8 +12,18 @@ type CallClickEvent = {
   currentTarget: HTMLAnchorElement;
 };
 
-export function trackEvent(_args: { action: string; category: string; label: string }) {
-  // no-op
+export function trackEvent(args: { action: string; category: string; label: string; value?: number }) {
+  try {
+    if (typeof window !== "undefined" && typeof window.gtag === "function") {
+      window.gtag("event", args.action, {
+        event_category: args.category,
+        event_label: args.label,
+        value: args.value,
+      });
+    }
+  } catch {
+    // silencioso
+  }
 }
 
 export function trackLead(_label: string) {

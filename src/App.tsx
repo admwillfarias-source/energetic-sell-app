@@ -21,6 +21,7 @@ const Brand = lazy(() => import("./pages/Brand.tsx"));
 const Amperage = lazy(() => import("./pages/Amperage.tsx"));
 const Blog = lazy(() => import("./pages/Blog.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
+const BlogTag = lazy(() => import("./pages/BlogTag.tsx"));
 
 const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
 const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
@@ -91,6 +92,14 @@ const App = () => (
             element={
               <Suspense fallback={<div className="min-h-screen" />}>
                 <Blog />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/blog/tag/:slug"
+            element={
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <BlogTag />
               </Suspense>
             }
           />
