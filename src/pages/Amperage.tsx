@@ -68,9 +68,19 @@ export default function Amperage() {
               <p className="mt-4 max-w-3xl text-muted-foreground">{data.description}</p>
 
               <div className="mt-5 flex flex-wrap gap-3">
-                <Button asChild size="lg"><a href="#catalogo">Ver baterias {data.ah}Ah</a></Button>
+                <Button asChild size="lg">
+                  <Link to={`/baterias/amperagem/${data.slug}?q=${data.ah}Ah#catalogo`}>
+                    Ver baterias {data.ah}Ah
+                  </Link>
+                </Button>
                 <Button asChild size="lg" variant="outline" className="gap-2">
-                  <a href={`https://wa.me/${PHONE_E164.replace("+","")}`} target="_blank" rel="noopener noreferrer">
+                  <a
+                    href={`https://wa.me/${PHONE_E164.replace("+","")}?text=${encodeURIComponent(
+                      `Olá! Quero uma bateria ${data.ah}Ah para meu carro. Pode me ajudar com preço e instalação?`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
                     <Phone className="h-4 w-4" /> WhatsApp {PHONE_DISPLAY}
                   </a>
                 </Button>
