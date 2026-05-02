@@ -16,6 +16,7 @@ const links = [
   { label: "Serviços", href: "#servicos" },
   { label: "Buscar Bateria", href: "#busca" },
   { label: "Catálogo", href: "#catalogo" },
+  { label: "Blog", href: "/blog" },
   { label: "Contato", href: "#contato" },
 ];
 
