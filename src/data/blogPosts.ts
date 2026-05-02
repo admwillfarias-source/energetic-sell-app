@@ -1,0 +1,401 @@
+// Blog topo de funil para SEO. Mantemos os textos no código para
+// renderização estática + JSON-LD de Article/FAQPage por post.
+
+export type BlogSection = { heading: string; paragraphs: string[] };
+export type BlogFaq = { q: string; a: string };
+
+export type BlogPost = {
+  slug: string;
+  title: string; // <title> e H1
+  metaDescription: string; // <meta description>
+  excerpt: string; // resumo p/ listagem
+  datePublished: string; // ISO yyyy-mm-dd
+  dateModified?: string;
+  readingMinutes: number;
+  category: "manutencao" | "duvidas" | "guia-compra" | "emergencia";
+  tags: string[];
+  intro: string;
+  sections: BlogSection[];
+  faq: BlogFaq[];
+  // links internos relevantes (slug de city/brand/amperage/vehicle)
+  related?: {
+    cities?: string[];
+    brands?: string[];
+    amperages?: string[];
+    vehicles?: string[];
+  };
+};
+
+export const blogPosts: BlogPost[] = [
+  {
+    slug: "como-saber-se-bateria-do-carro-esta-fraca",
+    title: "Como saber se a bateria do carro está fraca: 8 sinais de alerta",
+    metaDescription:
+      "Descubra os 8 sinais de que a bateria do seu carro está fraca e o que fazer antes que ela falhe de vez. Guia prático com dicas e quando trocar.",
+    excerpt:
+      "Luz fraca, partida lenta e painel piscando? Veja os sinais que indicam que sua bateria está no fim e como evitar ficar na mão.",
+    datePublished: "2026-04-10",
+    dateModified: "2026-05-01",
+    readingMinutes: 6,
+    category: "manutencao",
+    tags: ["sintomas", "manutenção", "diagnóstico"],
+    intro:
+      "A bateria automotiva é um componente silencioso: quando começa a falhar, costuma dar pequenos sinais que muitos motoristas ignoram até o carro não pegar mais. Saber reconhecer esses avisos pode evitar uma situação de emergência no estacionamento, na garagem ou no meio do trânsito.",
+    sections: [
+      {
+        heading: "1. Partida demorada ou motor de arranque 'preguiçoso'",
+        paragraphs: [
+          "Esse é o sinal mais clássico. Quando você gira a chave (ou aperta o botão Start) e o motor demora alguns segundos a mais para pegar, a bateria provavelmente já não entrega a corrente necessária.",
+          "Em dias frios o efeito piora porque o óleo do motor fica mais viscoso e a bateria precisa fornecer ainda mais energia.",
+        ],
+      },
+      {
+        heading: "2. Faróis fracos com o motor desligado",
+        paragraphs: [
+          "Acenda os faróis com o carro parado. Se a luz estiver visivelmente mais fraca que o normal, ou se ela 'aumentar' quando você liga o motor, é forte indício de bateria em final de vida.",
+        ],
+      },
+      {
+        heading: "3. Luz da bateria acesa no painel",
+        paragraphs: [
+          "O símbolo de bateria no painel não significa apenas que ela está descarregada — ele indica falha no sistema de carga (bateria, alternador ou correia). Se acender, procure um especialista o quanto antes.",
+        ],
+      },
+      {
+        heading: "4. Eletrônicos 'piscando' ou resetando",
+        paragraphs: [
+          "Rádio que reseta sozinho, vidros que sobem mais devagar e travas que disparam aleatoriamente são sintomas de tensão instável. Isso desgasta os módulos eletrônicos do carro.",
+        ],
+      },
+      {
+        heading: "5. Cheiro de ovo podre no compartimento do motor",
+        paragraphs: [
+          "Cheiro forte de enxofre indica que a bateria pode estar 'fervendo' (sulfatação severa). Nesse caso a troca é urgente: além do risco de pane, há risco de vazamento de ácido.",
+        ],
+      },
+      {
+        heading: "6. Bateria com mais de 2 anos sem teste",
+        paragraphs: [
+          "A vida útil média de uma bateria automotiva no Brasil é de 18 a 30 meses. Se a sua passou desse período sem nunca ser testada, vale fazer um teste de carga gratuito.",
+        ],
+      },
+      {
+        heading: "7. Carro que só pega com 'chupeta'",
+        paragraphs: [
+          "Se você precisou pedir socorro com cabos uma ou duas vezes no mês, a bateria está no fim. Mesmo que o carro pegue depois, a próxima falha pode ser definitiva.",
+        ],
+      },
+      {
+        heading: "8. Bateria estufada ou com terminais oxidados",
+        paragraphs: [
+          "Estufamento na lateral, vazamento e crostas esverdeadas/brancas nos terminais são sinais claros de que ela precisa ser substituída.",
+        ],
+      },
+      {
+        heading: "O que fazer em seguida",
+        paragraphs: [
+          "Se você identificou um ou mais desses sinais, o ideal é fazer um teste de carga e tensão. A AWR Baterias oferece teste gratuito no local: nossos técnicos vão até você em Gravataí, Porto Alegre, Canoas e região metropolitana.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Quanto tempo dura uma bateria de carro no Rio Grande do Sul?",
+        a: "Em média de 18 a 30 meses. O calor do verão acelera a evaporação do eletrólito e o frio do inverno aumenta o esforço na partida — fatores que reduzem a vida útil.",
+      },
+      {
+        q: "Bateria fraca pode danificar o alternador?",
+        a: "Sim. Quando a bateria está fraca, o alternador trabalha em sobrecarga para tentar compensar, o que reduz sua vida útil e pode até queimá-lo.",
+      },
+      {
+        q: "É seguro andar com a luz da bateria acesa?",
+        a: "Não é recomendado. O carro pode desligar a qualquer momento, especialmente à noite com faróis ligados. Procure um especialista assim que possível.",
+      },
+    ],
+    related: {
+      cities: ["porto-alegre", "gravatai", "canoas"],
+      amperages: ["60", "70"],
+    },
+  },
+  {
+    slug: "como-trocar-bateria-do-carro-passo-a-passo",
+    title: "Como trocar a bateria do carro: passo a passo seguro",
+    metaDescription:
+      "Aprenda a trocar a bateria do carro com segurança. Passo a passo, ferramentas, cuidados eletrônicos e quando é melhor chamar um especialista.",
+    excerpt:
+      "Guia completo de troca de bateria automotiva: ferramentas, ordem dos cabos, código do rádio e quando vale chamar atendimento no local.",
+    datePublished: "2026-04-15",
+    dateModified: "2026-05-01",
+    readingMinutes: 7,
+    category: "guia-compra",
+    tags: ["troca", "DIY", "segurança"],
+    intro:
+      "Trocar a bateria parece simples, mas alguns descuidos podem causar curto-circuito, queimar módulos eletrônicos ou perder configurações do carro. Este guia mostra a forma correta — e quando vale a pena pedir ajuda profissional.",
+    sections: [
+      {
+        heading: "Ferramentas necessárias",
+        paragraphs: [
+          "Você vai precisar de: chave fixa ou catraca (geralmente 10mm e 13mm), luvas, óculos de proteção, escova de aço para limpar terminais e, opcionalmente, um memory saver para preservar memórias do veículo.",
+        ],
+      },
+      {
+        heading: "Antes de começar",
+        paragraphs: [
+          "Estacione em local plano, desligue o motor, retire a chave da ignição e tire qualquer carregador de celular ou USB conectado. Veículos modernos com start/stop e híbridos exigem cuidados extras — confira o manual.",
+          "Anote o código do rádio se houver. Em alguns modelos, vidros e teto solar precisam ser recalibrados após a troca.",
+        ],
+      },
+      {
+        heading: "Passo a passo",
+        paragraphs: [
+          "1. Solte primeiro o cabo NEGATIVO (preto, marcado com '-'). Isso evita curto se a chave encostar na lataria.",
+          "2. Solte o cabo POSITIVO (vermelho, '+') e afaste-o.",
+          "3. Remova o suporte de fixação da bateria.",
+          "4. Retire a bateria com cuidado — ela pesa entre 12 e 25 kg.",
+          "5. Limpe a base e os terminais do carro com escova de aço.",
+          "6. Encaixe a bateria nova com a mesma orientação dos polos.",
+          "7. Conecte primeiro o POSITIVO, depois o NEGATIVO.",
+          "8. Aperte os terminais firmemente, sem exagerar (torque típico 5-7 Nm).",
+        ],
+      },
+      {
+        heading: "Cuidados pós-troca",
+        paragraphs: [
+          "Reprograme o rádio (se pedir código), feche e abra os vidros completamente para recalibrar e dê uma volta de 15 minutos para o módulo de gerenciamento de bateria 'aprender' a nova.",
+        ],
+      },
+      {
+        heading: "Quando NÃO trocar sozinho",
+        paragraphs: [
+          "Carros com sistema start/stop exigem bateria EFB ou AGM e precisam de codificação no scanner. Veículos premium (BMW, Audi, Mercedes), híbridos e elétricos sempre devem ser atendidos por profissional.",
+          "Nesses casos, o atendimento da AWR Baterias inclui codificação e garantia — sem risco de comprometer módulos do carro.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Posso trocar a bateria com o carro ligado?",
+        a: "Não. Sempre desligue completamente o veículo. Trocar com o motor ligado pode queimar módulos eletrônicos e oferece risco de choque.",
+      },
+      {
+        q: "Preciso reprogramar algo depois da troca?",
+        a: "Em muitos modelos sim: código de rádio, recalibração de vidros, teto solar e em carros start/stop é necessário codificar a nova bateria no scanner.",
+      },
+      {
+        q: "Quanto custa a troca com instalação?",
+        a: "A instalação é GRATUITA no atendimento AWR. Você paga apenas pela bateria, com preços a partir de R$ 350 dependendo da amperagem.",
+      },
+    ],
+    related: {
+      cities: ["porto-alegre", "gravatai"],
+      brands: ["moura", "heliar"],
+    },
+  },
+  {
+    slug: "qual-melhor-marca-de-bateria-automotiva",
+    title: "Qual a melhor marca de bateria automotiva? Comparativo 2026",
+    metaDescription:
+      "Comparativo entre Moura, Heliar, Zetta e outras marcas de bateria automotiva. Veja qual oferece melhor custo-benefício, garantia e durabilidade.",
+    excerpt:
+      "Moura, Heliar ou Zetta? Comparamos as principais marcas do mercado em durabilidade, garantia, preço e desempenho real para te ajudar a escolher.",
+    datePublished: "2026-04-20",
+    dateModified: "2026-05-01",
+    readingMinutes: 8,
+    category: "guia-compra",
+    tags: ["marcas", "comparativo", "moura", "heliar"],
+    intro:
+      "Escolher a marca certa influencia diretamente na vida útil da bateria, no desempenho do veículo e no valor da garantia. Veja como as três principais marcas brasileiras se comparam.",
+    sections: [
+      {
+        heading: "Moura: tradição e cobertura nacional",
+        paragraphs: [
+          "Líder de mercado no Brasil, a Moura tem fábrica em Belo Jardim (PE) e oferece garantia de 18 meses na maioria dos modelos. Sua linha Moura Clean (selada) e Moura AGM/EFB cobre desde populares até veículos com start/stop.",
+          "Pontos fortes: rede de assistência ampla, ótima durabilidade no clima do Sul e bom preço em revendas autorizadas.",
+        ],
+      },
+      {
+        heading: "Heliar: tecnologia Johnson Controls",
+        paragraphs: [
+          "Pertencente ao grupo Clarios (ex-Johnson Controls), a Heliar é referência em qualidade técnica. A linha Heliar Free é popular entre proprietários de carros de luxo e SUVs.",
+          "Garantia padrão de 18 meses, com modelos AGM para start/stop com até 24 meses.",
+        ],
+      },
+      {
+        heading: "Zetta: melhor custo-benefício",
+        paragraphs: [
+          "Da mesma fabricante da Moura, a Zetta é a opção econômica com qualidade garantida. Indicada para carros populares e quem busca bateria nova com preço próximo de uma recondicionada.",
+          "Garantia de 12 meses e excelente para Gol, Uno, Palio, Onix e similares.",
+        ],
+      },
+      {
+        heading: "Tabela comparativa rápida",
+        paragraphs: [
+          "Premium / Frota intensa: Heliar AGM ou Moura AGM",
+          "Carro de uso diário em cidade: Moura Clean ou Heliar Free",
+          "Popular / segundo carro: Zetta ou Moura linha econômica",
+          "Carro com start/stop obrigatório: AGM ou EFB (Moura ou Heliar)",
+        ],
+      },
+      {
+        heading: "Como escolher na prática",
+        paragraphs: [
+          "Olhe primeiro a amperagem indicada pelo fabricante (Ah) e o tipo (convencional, EFB, AGM). Depois compare garantia e preço — não vale economizar 50 reais e perder 6 meses de garantia.",
+          "Na dúvida, fale com um técnico AWR pelo WhatsApp: enviamos a opção certa para o seu modelo, com preço e prazo de entrega.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Qual a melhor marca para carro popular?",
+        a: "Zetta e Moura linha econômica oferecem o melhor custo-benefício para Gol, Uno, Palio, Onix, HB20 e similares.",
+      },
+      {
+        q: "Vale a pena pagar mais pela AGM?",
+        a: "Se o carro tem start/stop ou muitos eletrônicos (multimídia grande, alarme premium, câmeras), sim. AGM dura mais e suporta milhares de ciclos.",
+      },
+      {
+        q: "Bateria mais cara dura mais?",
+        a: "Nem sempre. O que importa é compatibilidade com o seu carro, marca de procedência e garantia. Uma Moura/Heliar dentro da especificação correta pode durar mais que uma 'premium' subdimensionada.",
+      },
+    ],
+    related: {
+      brands: ["moura", "heliar", "zetta"],
+      cities: ["porto-alegre", "gravatai", "canoas"],
+    },
+  },
+  {
+    slug: "diferenca-bateria-agm-efb-convencional",
+    title: "Bateria AGM, EFB ou convencional: qual a diferença?",
+    metaDescription:
+      "Entenda as diferenças entre baterias AGM, EFB e convencionais. Saiba qual é compatível com seu carro e quando vale a pena trocar para AGM.",
+    excerpt:
+      "Carros com start/stop pedem AGM ou EFB. Entenda o que muda em relação à convencional e como não errar na hora da compra.",
+    datePublished: "2026-04-25",
+    dateModified: "2026-05-01",
+    readingMinutes: 5,
+    category: "duvidas",
+    tags: ["AGM", "EFB", "tecnologia"],
+    intro:
+      "Se você abriu o capô e viu uma etiqueta dizendo 'AGM' ou 'EFB only', não é capricho — instalar a bateria errada pode reduzir a vida útil para meses. Entenda as três tecnologias.",
+    sections: [
+      {
+        heading: "Convencional (chumbo-ácido inundada)",
+        paragraphs: [
+          "É o tipo mais comum e mais barato. Funciona com placas de chumbo imersas em eletrólito líquido. Indicada para carros sem start/stop, com poucos eletrônicos.",
+          "Vida útil: 18-24 meses no clima brasileiro.",
+        ],
+      },
+      {
+        heading: "EFB (Enhanced Flooded Battery)",
+        paragraphs: [
+          "Versão melhorada da convencional, com placas mais robustas e aditivos. Suporta o ciclo extra do start/stop básico (sem regeneração de frenagem).",
+          "Vida útil: 24-36 meses.",
+        ],
+      },
+      {
+        heading: "AGM (Absorbed Glass Mat)",
+        paragraphs: [
+          "Tecnologia premium: o eletrólito é absorvido em mantas de fibra de vidro, eliminando vazamentos e suportando milhares de ciclos. Indicada para carros com start/stop avançado, sistema iStop, mild-hybrid e veículos com muitos eletrônicos.",
+          "Vida útil: 36-60 meses, com maior resistência a descargas profundas.",
+        ],
+      },
+      {
+        heading: "Posso usar AGM no lugar da convencional?",
+        paragraphs: [
+          "Sim, AGM funciona em qualquer carro que aceite convencional. O contrário NÃO vale: instalar convencional em carro projetado para AGM causa falha precoce e pode acender luzes de erro no painel.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Como sei se meu carro precisa de AGM?",
+        a: "Verifique a etiqueta na bateria atual ou no manual do proprietário. Carros com sistema start/stop, mild-hybrid e modelos premium (Audi, BMW, Mercedes, Volvo, alguns Jeep e Renault) geralmente exigem AGM.",
+      },
+      {
+        q: "AGM precisa de carregador especial?",
+        a: "Carregadores externos modernos (com modo AGM) são recomendados para carga lenta. No carro, o alternador comum funciona normalmente.",
+      },
+      {
+        q: "AGM é à prova de vazamento?",
+        a: "Sim. Como o eletrólito está absorvido em fibra de vidro, AGM pode ser instalada inclusive em posições inclinadas, sem risco de vazamento.",
+      },
+    ],
+    related: {
+      brands: ["moura", "heliar"],
+      amperages: ["60", "70", "80"],
+    },
+  },
+  {
+    slug: "bateria-descarregou-o-que-fazer",
+    title: "Bateria descarregou: o que fazer agora? Guia de emergência",
+    metaDescription:
+      "Bateria do carro descarregou? Veja o passo a passo para dar partida com cabos (chupeta), quando NÃO empurrar e como pedir socorro 24h.",
+    excerpt:
+      "Carro não pega? Veja como agir com segurança em uma pane de bateria, quando usar cabos de chupeta e quando chamar atendimento móvel.",
+    datePublished: "2026-04-28",
+    dateModified: "2026-05-01",
+    readingMinutes: 5,
+    category: "emergencia",
+    tags: ["emergência", "chupeta", "socorro"],
+    intro:
+      "Bateria descarregada é a principal causa de chamados de socorro automotivo. Veja o que fazer com calma e segurança quando o seu carro não pegar.",
+    sections: [
+      {
+        heading: "Confirme se é mesmo a bateria",
+        paragraphs: [
+          "Sintomas típicos: faróis fracos, painel apagado ou piscando, motor de arranque que faz 'tic-tic' sem girar. Se o painel acende normal mas o motor não pega, pode ser problema de combustível ou ignição — não força a partida.",
+        ],
+      },
+      {
+        heading: "Como dar partida com cabos (chupeta)",
+        paragraphs: [
+          "1. Posicione os carros próximos, ambos desligados.",
+          "2. Conecte o cabo VERMELHO no polo positivo da bateria descarregada.",
+          "3. Conecte a outra ponta vermelha no polo positivo da bateria boa.",
+          "4. Conecte o PRETO no polo negativo da bateria boa.",
+          "5. Conecte a outra ponta preta em uma parte metálica do carro descarregado (NÃO no polo negativo da bateria — isso evita faíscas próximas dos gases).",
+          "6. Ligue o carro 'doador' e deixe acelerado por 1 minuto.",
+          "7. Tente dar partida no carro descarregado.",
+          "8. Se pegar, retire os cabos na ordem inversa e rode por 30 minutos sem desligar.",
+        ],
+      },
+      {
+        heading: "NÃO empurre carros modernos",
+        paragraphs: [
+          "Veículos com câmbio automático, CVT ou transmissão automatizada NÃO podem ser empurrados para pegar no tranco — você pode danificar a transmissão. Mesmo em manuais com injeção eletrônica, o tranco pode falhar e desgastar embreagem.",
+        ],
+      },
+      {
+        heading: "Quando chamar socorro",
+        paragraphs: [
+          "Se a chupeta não funcionar, se a bateria estiver estufada/vazando ou se você não tiver cabos, chame um atendimento móvel. A AWR Baterias atende em Gravataí, Porto Alegre, Canoas e região metropolitana com técnico, bateria nova e instalação no local.",
+        ],
+      },
+    ],
+    faq: [
+      {
+        q: "Posso dar chupeta em carro híbrido?",
+        a: "Sim na bateria auxiliar de 12V (não na de tração). Confira o manual: muitos híbridos têm pontos específicos sob o capô, sinalizados com '+' e '-'.",
+      },
+      {
+        q: "Quanto tempo o carro precisa rodar depois da chupeta?",
+        a: "No mínimo 30 minutos em velocidade de estrada para o alternador recuperar parte da carga. Mesmo assim, se a bateria já estiver no fim de vida, ela voltará a falhar.",
+      },
+      {
+        q: "Vocês atendem 24 horas?",
+        a: "Sim. A AWR oferece atendimento móvel em Porto Alegre 6h-22h e nas demais cidades 8h30-18h, com plantão de emergência via WhatsApp (51) 99319-9486.",
+      },
+    ],
+    related: {
+      cities: ["porto-alegre", "gravatai", "canoas", "cachoeirinha"],
+    },
+  },
+];
+
+export function getPostBySlug(slug: string) {
+  return blogPosts.find((p) => p.slug === slug);
+}
+
+export function getRelatedPosts(currentSlug: string, limit = 3) {
+  return blogPosts.filter((p) => p.slug !== currentSlug).slice(0, limit);
+}
