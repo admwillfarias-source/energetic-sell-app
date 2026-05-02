@@ -20,8 +20,10 @@ import { Battery } from "@/data/batteries";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
 import { cityPages } from "@/data/cityContent";
-
-const SITE_URL = "https://awrbaterias.com.br";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import {
+  breadcrumbLd, faqLd, localBusinessLd, organizationLd, SITE_URL,
+} from "@/lib/seoSchemas";
 
 const formatBRL = (n: number) =>
   n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
@@ -128,16 +130,13 @@ export default function Resultado() {
 
   // ===== JSON-LD =====
   const jsonLd = useMemo(() => {
-    if (!vehicle) return undefined;
-    const breadcrumb = {
-      "@context": "https://schema.org",
-      "@type": "BreadcrumbList",
-      itemListElement: [
-        { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
-        { "@type": "ListItem", position: 2, name: "Baterias", item: `${SITE_URL}/#catalogo` },
-        { "@type": "ListItem", position: 3, name: `Bateria para ${vehicle}`, item: canonical },
-      ],
-    };
+    if (!vehicle) return [organizationLd()];
+
+    const breadcrumb = breadcrumbLd([
+      { name: "Início", url: SITE_URL },
+      { name: "Baterias", url: `${SITE_URL}/#catalogo` },
+      { name: `Bateria para ${vehicle}`, url: canonical },
+    ]);
 
     const itemList = {
       "@context": "https://schema.org",
@@ -151,8 +150,8 @@ export default function Resultado() {
           "@type": "Product",
           name: b.name,
           brand: { "@type": "Brand", name: b.brand },
-          sku: b.sku,
-          image: b.image,
+          ...(b.sku ? { sku: b.sku } : {}),
+          ...(b.image ? { image: b.image } : {}),
           url: b.permalink || canonical,
           offers: {
             "@type": "Offer",
@@ -165,17 +164,16 @@ export default function Resultado() {
       })),
     };
 
-    const faqPage = {
-      "@context": "https://schema.org",
-      "@type": "FAQPage",
-      mainEntity: faq.map((f) => ({
-        "@type": "Question",
-        name: f.q,
-        acceptedAnswer: { "@type": "Answer", text: f.a },
-      })),
-    };
+    const faqPage = faqLd(faq);
 
-    return [breadcrumb, itemList, faqPage];
+    const localBusiness = localBusinessLd({
+      url: canonical,
+      city: "Porto Alegre",
+      state: "RS",
+      areas: cityPages.map((c) => ({ name: c.name, deliveryTime: c.deliveryTime })),
+    });
+
+    return [breadcrumb, itemList, faqPage, localBusiness, organizationLd()].filter(Boolean) as Record<string, unknown>[];
   }, [vehicle, sorted, canonical, faq]);
 
   // Cidades destacadas para linkagem interna
@@ -199,7 +197,22 @@ export default function Resultado() {
 
       <main className="flex-1 bg-muted/30 pb-12 pt-24">
         <div className="container">
-          {/* Breadcrumb / volta */}
+          {/* Breadcrumb HTML indexável */}
+          <nav aria-label="Breadcrumb" className="mb-3 text-xs text-muted-foreground md:text-sm">
+            <ol className="flex flex-wrap items-center gap-1.5">
+              <li><Link to="/" className="hover:text-foreground">Início</Link></li>
+              <li aria-hidden>›</li>
+              <li><Link to="/#catalogo" className="hover:text-foreground">Baterias</Link></li>
+              {vehicle && (
+                <>
+                  <li aria-hidden>›</li>
+                  <li className="font-medium text-foreground">Bateria para {vehicle}</li>
+                </>
+              )}
+            </ol>
+          </nav>
+
+          {/* Voltar */}
           <div className="mb-4 flex items-center gap-2 text-sm">
             <Button asChild variant="ghost" size="sm" className="h-8 gap-1 px-2">
               <Link to="/">
@@ -364,6 +377,7 @@ export default function Resultado() {
 
       <Footer />
       <CartDrawer />
+      <FloatingWhatsApp />
     </div>
     </CartProvider>
   );

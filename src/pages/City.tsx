@@ -16,11 +16,16 @@ import {
 } from "@/components/ui/accordion";
 import { getCityBySlug, cityPages } from "@/data/cityContent";
 import { brandPages } from "@/data/brandContent";
+import { getNeighborhoodsByCity } from "@/data/neighborhoodContent";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import {
-  MapPin, Clock, ShieldCheck, Truck, Wrench, Phone, ChevronRight,
+  breadcrumbLd, faqLd, localBusinessLd, SITE_URL,
+} from "@/lib/seoSchemas";
+import {
+  MapPin, Clock, ShieldCheck, Truck, Wrench, Phone, ChevronRight, Zap,
 } from "lucide-react";
 
-const SITE = "https://awrbaterias.com.br";
+const SITE = SITE_URL;
 const PHONE_E164 = "+5551985419143";
 const PHONE_DISPLAY = "(51) 98541-9143";
 
@@ -38,58 +43,26 @@ export default function City() {
   const description = `Bateria de carro em ${city.name} com entrega e instalação ${city.deliveryTime}. Moura, Heliar, Zetta e Excell com garantia de fábrica. 10x sem juros. Atendimento 24h.`;
   const canonical = `${SITE}/baterias/${city.slug}`;
 
-  const localBusiness = {
-    "@context": "https://schema.org",
-    "@type": "AutomotiveBusiness",
-    name: `AWR Baterias - ${city.name}`,
-    image: `${SITE}/og-image.jpg`,
+  const featuredNeighborhoods = getNeighborhoodsByCity(city.slug); // já ordenado por tempo
+
+  const localBusiness = localBusinessLd({
     url: canonical,
-    telephone: PHONE_E164,
-    priceRange: "R$ 350 - R$ 2.500",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: city.name,
-      addressRegion: city.state,
-      addressCountry: "BR",
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: city.geo.lat,
-      longitude: city.geo.lng,
-    },
-    areaServed: city.neighborhoods.map((n) => ({
-      "@type": "Place",
+    name: `AWR Baterias - ${city.name}`,
+    city: city.name,
+    state: city.state,
+    geo: city.geo,
+    areas: city.neighborhoods.map((n) => ({
       name: `${n}, ${city.name}`,
+      deliveryTime: city.deliveryTime,
     })),
-    openingHoursSpecification: {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-      opens: "08:00",
-      closes: "22:00",
-    },
-  };
+  });
 
-  const faqLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: city.faq.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
-  };
+  const faqLdObj = faqLd(city.faq);
 
-  const breadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Início", item: SITE },
-      {
-        "@type": "ListItem", position: 2,
-        name: `Bateria em ${city.name}`, item: canonical,
-      },
-    ],
-  };
+  const breadcrumb = breadcrumbLd([
+    { name: "Início", url: SITE },
+    { name: `Bateria em ${city.name}`, url: canonical },
+  ]);
 
   return (
     <CartProvider>
@@ -97,7 +70,7 @@ export default function City() {
         title={title}
         description={description}
         canonical={canonical}
-        jsonLd={[localBusiness, faqLd, breadcrumb]}
+        jsonLd={[localBusiness, faqLdObj, breadcrumb].filter(Boolean) as Record<string, unknown>[]}
       />
       <div className="min-h-screen bg-background">
         <Header />
@@ -150,6 +123,43 @@ export default function City() {
               </div>
             </div>
           </section>
+
+          {/* Bairros prioritários — topo, ordenados por tempo */}
+          {featuredNeighborhoods.length > 0 && (
+            <section className="border-b border-border bg-background py-10">
+              <div className="container">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                      <Zap className="h-3.5 w-3.5" /> Entrega expressa por bairro
+                    </span>
+                    <h2 className="mt-1 font-display text-xl font-bold md:text-2xl">
+                      Bairros mais rápidos em {city.name}
+                    </h2>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Ordenados por tempo de entrega</span>
+                </div>
+                <ul className="mt-5 grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {featuredNeighborhoods.slice(0, 12).map((nb) => (
+                    <li key={nb.slug}>
+                      <Link
+                        to={`/baterias/${city.slug}/${nb.slug}`}
+                        className="group flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary"
+                      >
+                        <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          {nb.name}
+                        </span>
+                        <span className="rounded-full bg-awr-green/10 px-2 py-0.5 text-[10px] font-bold uppercase text-awr-green">
+                          {nb.deliveryTime}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
 
           {/* Busca + Catálogo */}
           <VehicleSearch />
@@ -305,6 +315,7 @@ export default function City() {
         </main>
         <Footer />
         <CartDrawer />
+        <FloatingWhatsApp />
       </div>
     </CartProvider>
   );

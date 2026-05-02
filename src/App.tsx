@@ -15,6 +15,8 @@ import CheckoutTest from "./pages/CheckoutTest.tsx";
 
 // Lazy: páginas de cidade são acessadas via deep-link e não precisam estar no bundle inicial.
 const City = lazy(() => import("./pages/City.tsx"));
+const Neighborhood = lazy(() => import("./pages/Neighborhood.tsx"));
+const VehicleSeo = lazy(() => import("./pages/VehicleSeo.tsx"));
 
 const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
 const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
@@ -37,6 +39,30 @@ const App = () => (
             element={
               <Suspense fallback={<div className="min-h-screen" />}>
                 <City />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/baterias/:citySlug/:slug"
+            element={
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <Neighborhood />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/baterias-para/:slug"
+            element={
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <VehicleSeo />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/baterias-para/:slug/:year"
+            element={
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <VehicleSeo />
               </Suspense>
             }
           />

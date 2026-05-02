@@ -48,30 +48,240 @@
   <url>
     <loc>https://awrbaterias.com.br/baterias/ivoti</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/campo-bom</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/estancia-velha</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/nova-santa-rita</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/alvorada</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
+    <priority>0.8</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/viamao</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/sarandi</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/rubem-berta</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/humaita</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/navegantes</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/sao-geraldo</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/anchieta</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/passo-d-areia</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/cristo-redentor</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/jardim-lindoia</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/sao-joao</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/vila-ipiranga</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/higienopolis</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/boa-vista</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/centro-historico</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/moinhos-de-vento</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/auxiliadora</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/petropolis</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/bela-vista</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/tristeza</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/ipanema</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/cavalhada</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/porto-alegre/menino-deus</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/fiat-strada</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/fiat-uno</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/fiat-toro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/fiat-palio</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/volkswagen-gol</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/volkswagen-polo</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/volkswagen-saveiro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/volkswagen-amarok</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/chevrolet-onix</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/chevrolet-s10</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/hyundai-hb20</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/hyundai-creta</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/toyota-corolla</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/toyota-hilux</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/honda-civic</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/renault-logan</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/renault-sandero</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/jeep-renegade</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/jeep-compass</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias-para/ford-ranger</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
