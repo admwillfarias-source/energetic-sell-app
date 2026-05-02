@@ -124,6 +124,43 @@ export default function City() {
             </div>
           </section>
 
+          {/* Bairros prioritários — topo, ordenados por tempo */}
+          {featuredNeighborhoods.length > 0 && (
+            <section className="border-b border-border bg-background py-10">
+              <div className="container">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                      <Zap className="h-3.5 w-3.5" /> Entrega expressa por bairro
+                    </span>
+                    <h2 className="mt-1 font-display text-xl font-bold md:text-2xl">
+                      Bairros mais rápidos em {city.name}
+                    </h2>
+                  </div>
+                  <span className="text-xs text-muted-foreground">Ordenados por tempo de entrega</span>
+                </div>
+                <ul className="mt-5 grid gap-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+                  {featuredNeighborhoods.slice(0, 12).map((nb) => (
+                    <li key={nb.slug}>
+                      <Link
+                        to={`/baterias/${city.slug}/${nb.slug}`}
+                        className="group flex items-center justify-between rounded-xl border border-border bg-card px-4 py-3 transition-colors hover:border-primary"
+                      >
+                        <span className="inline-flex items-center gap-2 text-sm font-semibold">
+                          <MapPin className="h-4 w-4 text-primary" />
+                          {nb.name}
+                        </span>
+                        <span className="rounded-full bg-awr-green/10 px-2 py-0.5 text-[10px] font-bold uppercase text-awr-green">
+                          {nb.deliveryTime}
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </section>
+          )}
+
           {/* Busca + Catálogo */}
           <VehicleSearch />
           <BatteryGrid />
