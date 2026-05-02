@@ -1,47 +1,96 @@
-## Objetivo
+## Plano de execução — SEO local AWR Baterias
 
-Hoje a página `/resultado?v=...&codes=...` (arquivo `src/pages/Resultado.tsx`) tem apenas um `<SEO>` básico com title e description genéricos. Vamos transformá-la numa página otimizada para SEO orgânico para buscas como "bateria para Fiat Toro", "bateria Hyundai Creta 2020" etc.
+Decisões confirmadas:
+- Domínio canônico: **awrbaterias.com.br** (mantido em todos os schemas/sitemap)
+- NAP unificado: WhatsApp/telefone oficial **(51) 99319-9486** — substituirá `(51) 98541-9143` em `cityContent.ts`, FAQs, schemas e CTAs
+- Ordem de execução: **(1) bairros multi-cidade → (2) expansão de conteúdo → (3) blog topo de funil → (4) fundações técnicas**
 
-## O que será feito
+Fora de escopo (operacional, não-código): Google Meu Negócio, link building, diretórios (Apontador/Kekanto), assessoria de imprensa, automação de pedido de avaliação.
 
-### 1. SEO dinâmico em `src/pages/Resultado.tsx`
+---
 
-Quando houver `vehicle` (ex: "Fiat Toro 2020"):
+### Fase 1 — Páginas de bairro para outras cidades
 
-- **Title**: `Bateria para {Veículo} — Preço, Modelo e Entrega em 35 min | AWR Baterias`
-- **Description**: inclui marcas compatíveis encontradas (Moura, Heliar, Zetta, Excell), faixa de preço (a partir de R$ X), entrega em 35 min em Porto Alegre + cidades atendidas e instalação grátis. Gerada dinamicamente a partir de `sorted` (resultados).
-- **Canonical**: URL absoluta com `?v=...&codes=...` para evitar conteúdo duplicado.
-- **OG image**: imagem da primeira bateria recomendada (quando disponível).
-- **Robots**: `index,follow` quando há resultados; `noindex` quando a busca não retornou nada (evita poluir índice com páginas vazias).
+Hoje só Porto Alegre tem bairros (`neighborhoodPages` em `src/data/neighborhoodContent.ts`, rota `/baterias/porto-alegre/:slug`). Vou replicar o padrão para **Gravataí, Cachoeirinha, Canoas, Alvorada, Viamão, Esteio e Sapucaia do Sul**.
 
-### 2. JSON-LD estruturado
+- Estender o tipo `NeighborhoodPageData` para aceitar qualquer cidade (campo `citySlug`) e agrupar por cidade.
+- Adicionar ~6–10 bairros relevantes por cidade, com `deliveryMinutes`, vias de referência e geo aproximada (centro do bairro).
+  - Gravataí: Centro, Parque dos Anjos, Morada do Vale I/II/III, Neópolis, Salgado Filho, Barnabé, Bom Sucesso, São Geraldo
+  - Cachoeirinha: Vila Vista Alegre, Vila Cachoeirinha, Parque Marechal Rondon, Granja Esperança, Parque Brasília
+  - Canoas: Centro, Mathias Velho, Niterói, Igara, Marechal Rondon, São José, Guajuviras
+  - Alvorada/Viamão/Esteio/Sapucaia: 5–6 principais cada
+- `Neighborhood.tsx`: já lê por slug — ajustar para resolver via `citySlug + slug` e listar “outros bairros próximos” ordenados por `deliveryMinutes`.
+- Página de cidade (`City.tsx`): a seção “entrega mais rápida por bairro” passa a usar a nova base e fica habilitada para todas as cidades, não só POA.
+- Atualizar `public/sitemap.xml` com todas as novas URLs (`/baterias/{cidade}/{bairro}`).
+- JSON-LD `LocalBusiness` + `BreadcrumbList` por bairro, reaproveitando `src/lib/seoSchemas.ts`.
 
-Três schemas injetados via prop `jsonLd` do componente `SEO`:
+### Fase 2 — Expansão de conteúdo
 
-- **BreadcrumbList**: Home › Baterias › {Veículo}
-- **ItemList** com os produtos retornados (nome, marca, preço, link, imagem) — ajuda o Google a exibir resultados ricos.
-- **FAQPage** com 3 perguntas geradas dinamicamente:
-  - "Qual bateria é compatível com {Veículo}?"
-  - "Quanto custa uma bateria para {Veículo}?"
-  - "Quanto tempo demora a entrega da bateria para {Veículo}?"
+**2.1 Páginas de marca** (`/baterias/marca/:slug` para Moura, Heliar, Zetta, Excell, Freedom, Eletran, Global)
+- Nova `src/pages/Brand.tsx` + expansão de `brandContent.ts` com: descrição, garantia, linhas de produto (EFB/AGM/comum), faixa de preço derivada de `batteries.ts`, FAQ específica e ItemList JSON-LD dos SKUs daquela marca.
 
-### 3. Headings e conteúdo on-page (bom para SEO)
+**2.2 Páginas por amperagem** (`/baterias/amperagem/:ah` — 45, 50, 60, 70, 75, 100, 150, 220Ah)
+- Nova `src/pages/Amperage.tsx` que filtra `batteries.ts` pela amperagem, mostra carros compatíveis (via `fitments.json`), faixa de preço, marcas disponíveis.
 
-- Manter o `<h1>` atual ("Baterias compatíveis com {Veículo}").
-- Adicionar abaixo da lista um bloco curto com:
-  - `<h2>` "Sobre as baterias para {Veículo}" — parágrafo curto descrevendo as opções (marcas, amperagens encontradas) gerado a partir dos resultados.
-  - `<h2>` "Perguntas frequentes sobre bateria para {Veículo}" — usa o componente Accordion com as mesmas 3 perguntas do FAQPage JSON-LD (consistência on-page ↔ structured data).
-- Bloco de "Cidades atendidas" com links internos para `/baterias/{slug}` (reaproveitando dados de `cityContent.ts`) — reforça linkagem interna.
+**2.3 Depoimentos localizados**
+- Adicionar `testimonials: { name, neighborhood, text, rating }[]` em cada `CityPageData` (3–5 por cidade) e renderizar bloco com `Review` schema.
 
-### 4. Sitemap
+**2.4 Mapa Google embed**
+- Componente `<CityMap city geo />` usando `<iframe src="https://www.google.com/maps/embed/v1/place...">` com `loading="lazy"` em cada `City.tsx` e `Neighborhood.tsx`. Sem API key (modo place público) ou usando a chave de Maps que já estiver disponível.
 
-Não vamos listar combinações `vehicle × codes` no sitemap (alta cardinalidade). Em vez disso, garantir que a busca exista e seja descoberta via páginas de cidade e marcas. Páginas individuais por modelo de carro popular (Strada, Onix, etc.) ficam como melhoria futura usando `src/data/vehicles.ts`.
+**2.5 Footer e navegação interna**
+- Atualizar `Footer.tsx` para listar marcas, amperagens populares e top-bairros, adensando o link interno.
 
-## Arquivos afetados
+### Fase 3 — Blog / topo de funil
 
-- `src/pages/Resultado.tsx` — SEO dinâmico, JSON-LD, headings extras, FAQ on-page e links de cidades.
+- Nova rota `/blog` (índice) + `/blog/:slug` (artigo), página estática alimentada por `src/data/blogPosts.ts` (TS, sem CMS).
+- 6 artigos iniciais focados nas KWs do plano:
+  1. “Carro não liga e faz tec tec: o que é e como resolver”
+  2. “Quanto tempo dura uma bateria Moura?”
+  3. “Como saber se a bateria do carro pifou — 7 sinais”
+  4. “Bateria 60Ah ou 70Ah: qual escolher?”
+  5. “Bateria descarregou no frio: por que acontece em Porto Alegre/Gravataí”
+  6. “EFB vs AGM vs comum: diferenças para start-stop”
+- Cada artigo com `Article` JSON-LD, breadcrumb, CTA WhatsApp inline e bloco “atendemos sua cidade” linkando às landing pages.
+- Inclusão no sitemap.
 
-## Fora de escopo (sugestões para depois)
+### Fase 4 — Fundações técnicas (Core Web Vitals + NAP)
 
-- Páginas estáticas por modelo (`/baterias-para/{slug}`) usando `vehiclePages` — gera URLs amigáveis indexáveis sem depender de querystring.
-- Sitemap dinâmico incluindo esses modelos.
+- **NAP unificado**: substituir `(51) 98541-9143` por `(51) 99319-9486` em `cityContent.ts`, FAQs e qualquer schema. Garantir mesmo número em `FloatingWhatsApp`, header e footer.
+- **Imagens**: auditar `src/assets/`, converter para WebP (mantendo fallback) e adicionar `width`/`height` + `loading="lazy"` (exceto LCP) para reduzir CLS.
+- **LCP**: marcar imagem hero da home/cidade como `fetchpriority="high"` e `loading="eager"`; pré-carregar fonte principal em `index.html`.
+- **JS**: garantir `lazy()` em rotas pesadas (já parcial em `App.tsx`); revisar imports do Index para code-splitting de componentes abaixo da dobra.
+- **Mobile CRO**: revisar tamanho de toque dos CTAs (mín. 48px), espaçamento e contraste do `FloatingWhatsApp`.
+- **Robots/Sitemap**: regenerar `sitemap.xml` ao final de cada fase incluindo todas as URLs novas; revisar `robots.txt`.
+- **Validação**: revisar manualmente os JSON-LD gerados (LocalBusiness, FAQPage, BreadcrumbList, Product, Article, Review) com base em `src/lib/seoSchemas.ts` para 100% de conformidade Rich Results.
+
+---
+
+### Detalhes técnicos
+
+Arquivos novos:
+- `src/data/blogPosts.ts`, `src/pages/Blog.tsx`, `src/pages/BlogPost.tsx`
+- `src/pages/Brand.tsx`, `src/pages/Amperage.tsx`
+- `src/components/CityMap.tsx`
+
+Arquivos editados:
+- `src/data/neighborhoodContent.ts` (multi-cidade), `src/data/cityContent.ts` (telefone + depoimentos), `src/data/brandContent.ts` (conteúdo rico)
+- `src/pages/Neighborhood.tsx`, `src/pages/City.tsx`, `src/components/Footer.tsx`, `src/App.tsx` (novas rotas)
+- `src/lib/seoSchemas.ts` (helpers para `Article` e `Review`)
+- `public/sitemap.xml`, `public/robots.txt`
+
+Estrutura de rotas resultante:
+
+```text
+/                                    Home
+/baterias/:cidade                    City (7 cidades)
+/baterias/:cidade/:bairro            Neighborhood (~50 URLs)
+/baterias/marca/:slug                Brand (7 URLs)
+/baterias/amperagem/:ah              Amperage (~8 URLs)
+/baterias-para/:slug[/:year]         VehicleSeo (já existe)
+/blog, /blog/:slug                   Conteúdo topo de funil (6+ URLs)
+```
+
+### Como vou entregar
+
+Por ser bastante código, executarei em **4 entregas separadas** (uma por fase), começando pela Fase 1. Após cada fase você revisa antes de eu seguir para a próxima.
