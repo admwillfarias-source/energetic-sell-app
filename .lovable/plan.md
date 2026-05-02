@@ -1,62 +1,47 @@
-# Plano de otimização de performance
+## Objetivo
 
-Baseado no relatório do PageSpeed: LCP atrasado em ~3,4s, 124 KiB de JS não usado, hero-image maior que necessário, fontes bloqueando render, e componentes de debug carregando em produção.
+Hoje a página `/resultado?v=...&codes=...` (arquivo `src/pages/Resultado.tsx`) tem apenas um `<SEO>` básico com title e description genéricos. Vamos transformá-la numa página otimizada para SEO orgânico para buscas como "bateria para Fiat Toro", "bateria Hyundai Creta 2020" etc.
 
-## 1. Remover componentes de debug do bundle de produção
+## O que será feito
 
-`PerfReport` e `MobileDebugOverlay` estão sendo importados sempre em `Index.tsx` (mesmo lazy, geram chunks e fetch). Em produção eles não devem nem aparecer no grafo.
+### 1. SEO dinâmico em `src/pages/Resultado.tsx`
 
-- Em `src/pages/Index.tsx`: envolver os imports/uso de `PerfReport` e `MobileDebugOverlay` em `import.meta.env.DEV` para que o tree-shaking do Vite os remova do build de produção.
+Quando houver `vehicle` (ex: "Fiat Toro 2020"):
 
-## 2. Otimizar a imagem LCP (hero)
+- **Title**: `Bateria para {Veículo} — Preço, Modelo e Entrega em 35 min | AWR Baterias`
+- **Description**: inclui marcas compatíveis encontradas (Moura, Heliar, Zetta, Excell), faixa de preço (a partir de R$ X), entrega em 35 min em Porto Alegre + cidades atendidas e instalação grátis. Gerada dinamicamente a partir de `sorted` (resultados).
+- **Canonical**: URL absoluta com `?v=...&codes=...` para evitar conteúdo duplicado.
+- **OG image**: imagem da primeira bateria recomendada (quando disponível).
+- **Robots**: `index,follow` quando há resultados; `noindex` quando a busca não retornou nada (evita poluir índice com páginas vazias).
 
-`hero-bg-sm.webp` está em 800x600 com 70 KiB. O viewport mobile real renderiza menor, e o relatório indica ~38 KiB de economia.
+### 2. JSON-LD estruturado
 
-- Recomprimir `hero-bg-sm.webp` com qualidade ~70 (cwebp -q 70) e ajustar para 720x540 — alvo ~30–35 KiB.
-- Recomprimir `hero-bg.webp` (1200x900) com qualidade 72 — alvo ~70 KiB.
-- Adicionar `<link rel="preload" as="image" href="..." fetchpriority="high">` no `index.html` para o hero-bg-sm (mobile) e hero-bg (desktop) usando `imagesrcset`/`media`, antecipando o download do LCP.
+Três schemas injetados via prop `jsonLd` do componente `SEO`:
 
-## 3. Reduzir CLS de fontes (Google Fonts)
+- **BreadcrumbList**: Home › Baterias › {Veículo}
+- **ItemList** com os produtos retornados (nome, marca, preço, link, imagem) — ajuda o Google a exibir resultados ricos.
+- **FAQPage** com 3 perguntas geradas dinamicamente:
+  - "Qual bateria é compatível com {Veículo}?"
+  - "Quanto custa uma bateria para {Veículo}?"
+  - "Quanto tempo demora a entrega da bateria para {Veículo}?"
 
-A página carrega Google Fonts via CSS dinâmico (importado pelos componentes), o que atrasa render e causa CLS de 0,010.
+### 3. Headings e conteúdo on-page (bom para SEO)
 
-- Adicionar `<link rel="preload" href="https://fonts.googleapis.com/css2?family=...&display=swap" as="style">` + `<link rel="stylesheet" ...>` no `index.html` para iniciar o download da folha de estilo de fontes em paralelo ao HTML.
-- Garantir `display=swap` na URL.
-- Adicionar `<link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co">` para encurtar a cadeia das chamadas de catálogo.
+- Manter o `<h1>` atual ("Baterias compatíveis com {Veículo}").
+- Adicionar abaixo da lista um bloco curto com:
+  - `<h2>` "Sobre as baterias para {Veículo}" — parágrafo curto descrevendo as opções (marcas, amperagens encontradas) gerado a partir dos resultados.
+  - `<h2>` "Perguntas frequentes sobre bateria para {Veículo}" — usa o componente Accordion com as mesmas 3 perguntas do FAQPage JSON-LD (consistência on-page ↔ structured data).
+- Bloco de "Cidades atendidas" com links internos para `/baterias/{slug}` (reaproveitando dados de `cityContent.ts`) — reforça linkagem interna.
 
-## 4. Reduzir JS não usado (123 KiB no index.js)
+### 4. Sitemap
 
-Chunks principais que estão no entry mesmo sem precisarem no carregamento inicial:
+Não vamos listar combinações `vehicle × codes` no sitemap (alta cardinalidade). Em vez disso, garantir que a busca exista e seja descoberta via páginas de cidade e marcas. Páginas individuais por modelo de carro popular (Strada, Onix, etc.) ficam como melhoria futura usando `src/data/vehicles.ts`.
 
-- `Toaster` (radix-toast) e `Sonner` em `App.tsx` — usados raramente. Converter para `lazy` + `Suspense` no `App.tsx`.
-- `TooltipProvider` — manter (leve).
-- Auditar `src/components/Header.tsx` para usar ícones individuais do lucide e adiar dropdown/menus.
+## Arquivos afetados
 
-## 5. Adiar carga do catálogo de fitments
+- `src/pages/Resultado.tsx` — SEO dinâmico, JSON-LD, headings extras, FAQ on-page e links de cidades.
 
-Hoje `BatteryGrid` chama `ensureCatalogLoaded()` no mount, baixando ~70 KiB de fitments mesmo sem o usuário ter buscado um veículo.
+## Fora de escopo (sugestões para depois)
 
-- Em `BatteryGrid.tsx`: só chamar `ensureCatalogLoaded()` quando `isVehicleSearch` for true (já há `enabled: !isVehicleSearch || catalogReady`, então a chamada antecipada é desnecessária).
-- Isto remove 2 fetches `/fitments?select=...` da cadeia crítica inicial.
-
-## 6. Acessibilidade rápida (botões sem nome)
-
-Lighthouse aponta um botão sem nome acessível em `div.mb-6 > div.relative > div.flex > button.inline-flex` (botão "Buscar" do `SearchPlaceholder` no mobile, onde o texto está em `hidden sm:inline`).
-
-- Em `HeroSection.tsx` `SearchPlaceholder`: adicionar `aria-label="Buscar"` no `<button>`.
-
-## Resumo técnico de arquivos a editar
-
-- `index.html` — preload da imagem LCP, preload do CSS de Google Fonts, dns-prefetch do Supabase.
-- `src/pages/Index.tsx` — guardar `PerfReport` e `MobileDebugOverlay` em `import.meta.env.DEV`.
-- `src/App.tsx` — `lazy()` para `Toaster` e `Sonner`.
-- `src/components/HeroSection.tsx` — `aria-label` no botão Buscar.
-- `src/components/BatteryGrid.tsx` — só chamar `ensureCatalogLoaded` quando há busca por veículo.
-- `src/assets/hero-bg-sm.webp` e `hero-bg.webp` — recompressão.
-
-## Ganhos esperados
-
-- LCP: −800ms a −1.500ms (preload + imagem menor + fontes paralelas).
-- JS transferido: −60 a −90 KiB (debug fora do prod, toaster lazy).
-- Network requests críticas: −2 chamadas de fitments no carregamento da home.
-- Acessibilidade: corrige falha do botão sem nome.
+- Páginas estáticas por modelo (`/baterias-para/{slug}`) usando `vehiclePages` — gera URLs amigáveis indexáveis sem depender de querystring.
+- Sitemap dinâmico incluindo esses modelos.

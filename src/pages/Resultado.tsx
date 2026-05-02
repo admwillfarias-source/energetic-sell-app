@@ -1,18 +1,30 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search } from "lucide-react";
+import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search, MapPin } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { fetchBatteriesByVehicle, fetchBatteries, type VehicleBrand } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { BatteryCompactCard } from "@/components/BatteryCompactCard";
 import { Battery } from "@/data/batteries";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
+import { cityPages } from "@/data/cityContent";
+
+const SITE_URL = "https://awrbaterias.com.br";
+
+const formatBRL = (n: number) =>
+  n.toLocaleString("pt-BR", { style: "currency", currency: "BRL", minimumFractionDigits: 0 });
 
 export default function Resultado() {
   const [searchParams] = useSearchParams();
@@ -59,13 +71,130 @@ export default function Resultado() {
     [results],
   );
 
+  // ===== SEO derivado dos resultados =====
+  const hasResults = sorted.length > 0;
+  const minPrice = hasResults ? Math.min(...sorted.map((b) => b.price)) : 0;
+  const maxPrice = hasResults ? Math.max(...sorted.map((b) => b.price)) : 0;
+  const uniqueBrands = useMemo(
+    () => Array.from(new Set(sorted.map((b) => b.brand).filter(Boolean))),
+    [sorted],
+  );
+  const uniqueAmps = useMemo(
+    () => Array.from(new Set(sorted.map((b) => b.amperage).filter(Boolean))).sort((a, b) => a - b),
+    [sorted],
+  );
+
+  const canonical = vehicle
+    ? `${SITE_URL}/resultado?v=${encodeURIComponent(vehicle)}${codes.length ? `&codes=${codes.join(",")}` : ""}`
+    : `${SITE_URL}/resultado`;
+
+  const seoTitle = vehicle
+    ? `Bateria para ${vehicle} — Preço${hasResults ? ` a partir de ${formatBRL(minPrice)}` : ""} e Entrega em 35 min | AWR Baterias`
+    : "Resultado da busca | AWR Baterias";
+
+  const seoDescription = vehicle
+    ? `Bateria para ${vehicle}: ${
+        uniqueBrands.length ? `marcas ${uniqueBrands.join(", ")}` : "Moura, Heliar, Zetta e Excell"
+      }${hasResults ? `, a partir de ${formatBRL(minPrice)}` : ""}. Entrega e instalação grátis em até 35 min em Porto Alegre e região metropolitana. 10x sem juros e garantia de fábrica.`
+    : `Baterias automotivas com entrega e instalação em até 35 min em Porto Alegre. 10x sem juros, garantia de fábrica e atendimento todos os dias.`;
+
+  const ogImage = sorted[0]?.image;
+
+  // FAQ on-page (mesmo conteúdo do FAQPage JSON-LD)
+  const faq = vehicle
+    ? [
+        {
+          q: `Qual bateria é compatível com ${vehicle}?`,
+          a: `Para o ${vehicle} as opções homologadas são ${
+            uniqueBrands.length ? uniqueBrands.join(", ") : "Moura, Heliar, Zetta e Excell"
+          }${
+            uniqueAmps.length
+              ? `, com amperagens de ${uniqueAmps.join("Ah, ")}Ah`
+              : ""
+          }. Todas vêm com nota fiscal e garantia de fábrica.`,
+        },
+        {
+          q: `Quanto custa uma bateria para ${vehicle}?`,
+          a: hasResults
+            ? `As baterias para ${vehicle} custam de ${formatBRL(minPrice)} a ${formatBRL(maxPrice)}, com entrega e instalação inclusas. Aceitamos 10x sem juros no cartão.`
+            : `Os preços das baterias para ${vehicle} variam conforme marca e amperagem. Fale com a gente no WhatsApp para um orçamento na hora.`,
+        },
+        {
+          q: `Quanto tempo demora a entrega da bateria para ${vehicle}?`,
+          a: `Entregamos e instalamos a bateria do ${vehicle} em até 35 minutos em Porto Alegre. Em cidades da região metropolitana (Canoas, Gravataí, Esteio, São Leopoldo, Novo Hamburgo e outras) o tempo é de 50 a 60 minutos.`,
+        },
+      ]
+    : [];
+
+  // ===== JSON-LD =====
+  const jsonLd = useMemo(() => {
+    if (!vehicle) return undefined;
+    const breadcrumb = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      itemListElement: [
+        { "@type": "ListItem", position: 1, name: "Início", item: SITE_URL },
+        { "@type": "ListItem", position: 2, name: "Baterias", item: `${SITE_URL}/#catalogo` },
+        { "@type": "ListItem", position: 3, name: `Bateria para ${vehicle}`, item: canonical },
+      ],
+    };
+
+    const itemList = {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      name: `Baterias compatíveis com ${vehicle}`,
+      numberOfItems: sorted.length,
+      itemListElement: sorted.map((b, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "Product",
+          name: b.name,
+          brand: { "@type": "Brand", name: b.brand },
+          sku: b.sku,
+          image: b.image,
+          url: b.permalink || canonical,
+          offers: {
+            "@type": "Offer",
+            priceCurrency: "BRL",
+            price: b.price,
+            availability: "https://schema.org/InStock",
+            url: b.permalink || canonical,
+          },
+        },
+      })),
+    };
+
+    const faqPage = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faq.map((f) => ({
+        "@type": "Question",
+        name: f.q,
+        acceptedAnswer: { "@type": "Answer", text: f.a },
+      })),
+    };
+
+    return [breadcrumb, itemList, faqPage];
+  }, [vehicle, sorted, canonical, faq]);
+
+  // Cidades destacadas para linkagem interna
+  const featuredCities = useMemo(() => cityPages.slice(0, 8), []);
+
   return (
     <CartProvider>
     <div className="flex min-h-screen flex-col">
       <SEO
-        title={vehicle ? `Baterias para ${vehicle} | AWR Baterias` : "Resultado da busca | AWR Baterias"}
-        description={`Baterias compatíveis ${vehicle ? `com ${vehicle} ` : ""}com entrega e instalação em até 35 minutos em Porto Alegre. 10x sem juros.`}
+        title={seoTitle}
+        description={seoDescription}
+        canonical={canonical}
+        image={ogImage}
+        jsonLd={jsonLd}
       />
+      {/* noindex quando a busca não tem resultados, para não poluir o índice */}
+      {vehicle && !isLoading && catalogReady && !hasResults && (
+        <meta name="robots" content="noindex,follow" />
+      )}
       <Header />
 
       <main className="flex-1 bg-muted/30 pb-12 pt-24">
@@ -93,7 +222,7 @@ export default function Resultado() {
                 <h1 className="font-display text-xl font-extrabold leading-tight md:text-2xl">
                   {vehicle ? (
                     <>
-                      Baterias compatíveis com <span className="text-primary">{vehicle}</span>
+                      Bateria para <span className="text-primary">{vehicle}</span>
                     </>
                   ) : (
                     "Baterias compatíveis"
@@ -159,6 +288,76 @@ export default function Resultado() {
                 />
               ))}
             </div>
+          )}
+
+          {/* ===== Conteúdo SEO on-page ===== */}
+          {vehicle && hasResults && (
+            <>
+              <section className="mt-10 rounded-2xl border border-border bg-card p-5 md:p-7">
+                <h2 className="font-display text-lg font-bold md:text-xl">
+                  Sobre as baterias para {vehicle}
+                </h2>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground md:text-base">
+                  Listamos {sorted.length}{" "}
+                  {sorted.length === 1 ? "bateria homologada" : "baterias homologadas"} para o{" "}
+                  <strong className="text-foreground">{vehicle}</strong>
+                  {uniqueBrands.length ? (
+                    <>
+                      {" "}das marcas <strong className="text-foreground">{uniqueBrands.join(", ")}</strong>
+                    </>
+                  ) : null}
+                  {uniqueAmps.length ? (
+                    <>
+                      , com amperagens de <strong className="text-foreground">{uniqueAmps.join("Ah, ")}Ah</strong>
+                    </>
+                  ) : null}
+                  . Os preços vão de <strong className="text-foreground">{formatBRL(minPrice)}</strong> a{" "}
+                  <strong className="text-foreground">{formatBRL(maxPrice)}</strong>, sempre com
+                  entrega e instalação gratuitas em Porto Alegre e região metropolitana, nota fiscal
+                  e garantia de fábrica de até 24 meses.
+                </p>
+              </section>
+
+              <section className="mt-6 rounded-2xl border border-border bg-card p-5 md:p-7">
+                <h2 className="font-display text-lg font-bold md:text-xl">
+                  Perguntas frequentes sobre bateria para {vehicle}
+                </h2>
+                <Accordion type="single" collapsible className="mt-3">
+                  {faq.map((f, i) => (
+                    <AccordionItem key={i} value={`faq-${i}`}>
+                      <AccordionTrigger className="text-left text-sm font-semibold md:text-base">
+                        {f.q}
+                      </AccordionTrigger>
+                      <AccordionContent className="text-sm text-muted-foreground md:text-base">
+                        {f.a}
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              </section>
+
+              <section className="mt-6 rounded-2xl border border-border bg-card p-5 md:p-7">
+                <h2 className="font-display text-lg font-bold md:text-xl">
+                  Atendimento de bateria para {vehicle} em Porto Alegre e região
+                </h2>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Entregamos a bateria do {vehicle} nas principais cidades da região metropolitana:
+                </p>
+                <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
+                  {featuredCities.map((c) => (
+                    <li key={c.slug}>
+                      <Link
+                        to={`/baterias/${c.slug}`}
+                        className="group inline-flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:border-primary hover:text-primary md:text-sm"
+                      >
+                        <MapPin className="h-3.5 w-3.5 text-primary" />
+                        Bateria em {c.name}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            </>
           )}
         </div>
       </main>
