@@ -17,6 +17,8 @@ import CheckoutTest from "./pages/CheckoutTest.tsx";
 const City = lazy(() => import("./pages/City.tsx"));
 const Neighborhood = lazy(() => import("./pages/Neighborhood.tsx"));
 const VehicleSeo = lazy(() => import("./pages/VehicleSeo.tsx"));
+const Brand = lazy(() => import("./pages/Brand.tsx"));
+const Amperage = lazy(() => import("./pages/Amperage.tsx"));
 
 const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
 const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
@@ -63,6 +65,22 @@ const App = () => (
             element={
               <Suspense fallback={<div className="min-h-screen" />}>
                 <VehicleSeo />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/baterias/marca/:slug"
+            element={
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <Brand />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/baterias/amperagem/:ah"
+            element={
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <Amperage />
               </Suspense>
             }
           />
