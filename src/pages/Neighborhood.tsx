@@ -29,7 +29,7 @@ import {
 } from "@/lib/seoSchemas";
 import { MapPin, Clock, ShieldCheck, Wrench, Phone, ChevronRight } from "lucide-react";
 
-const PHONE_DISPLAY = "(51) 98541-9143";
+const PHONE_DISPLAY = "(51) 99319-9486";
 
 export default function Neighborhood() {
   const { citySlug = "porto-alegre", slug } = useParams<{ citySlug: string; slug: string }>();

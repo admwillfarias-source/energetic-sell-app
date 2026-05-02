@@ -19,7 +19,7 @@ export interface CityPageData {
   geo: { lat: number; lng: number };
 }
 
-const PHONE = "(51) 98541-9143";
+const PHONE = "(51) 99319-9486";
 
 function makeFaq(name: string, deliveryTime: string): { q: string; a: string }[] {
   return [
