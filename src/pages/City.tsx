@@ -237,6 +237,8 @@ export default function City() {
             </div>
           </section>
 
+          <TestimonialsSection city={city.name} items={testimonials} />
+
           {/* Links internos: cidades + marcas + categorias */}
           <section
             aria-labelledby="links-internos"
