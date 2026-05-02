@@ -215,7 +215,7 @@ export default function City() {
               </p>
               <div className="mt-4">
                 <CityMap
-                  query={`AWR Baterias ${city.name} ${city.state}`}
+                  city={city.name}
                   title={`Mapa AWR Baterias em ${city.name}`}
                 />
               </div>
