@@ -8,6 +8,7 @@ import { SEO } from "@/components/SEO";
 import VehicleSearch from "@/components/VehicleSearch";
 import { BatteryGrid } from "@/components/BatteryGrid";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CityMap from "@/components/CityMap";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -153,6 +154,25 @@ export default function Neighborhood() {
           {/* Busca + catálogo */}
           <VehicleSearch />
           <BatteryGrid />
+
+          {/* Mapa do bairro */}
+          <section className="border-t border-border py-12">
+            <div className="container max-w-5xl">
+              <h2 className="font-display text-xl font-bold md:text-2xl">
+                Cobertura em {n.name}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Atendemos {n.name} e arredores em {n.deliveryTime}.
+              </p>
+              <div className="mt-4">
+                <CityMap
+                  query={`${n.name}, ${n.city}, ${n.cityState}`}
+                  title={`Mapa de ${n.name}, ${n.city}`}
+                  height={320}
+                />
+              </div>
+            </div>
+          </section>
 
           {/* FAQ */}
           <section className="py-14">

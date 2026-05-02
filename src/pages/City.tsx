@@ -20,8 +20,10 @@ import { amperagePages } from "@/data/amperageContent";
 import { getNeighborhoodsByCity } from "@/data/neighborhoodContent";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import CityMap from "@/components/CityMap";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import { getTestimonialsByCity } from "@/data/testimonials";
 import {
-  breadcrumbLd, faqLd, localBusinessLd, SITE_URL,
+  breadcrumbLd, faqLd, localBusinessLd, reviewsLd, SITE_URL,
 } from "@/lib/seoSchemas";
 import {
   MapPin, Clock, ShieldCheck, Truck, Wrench, Phone, ChevronRight, Zap,
@@ -46,6 +48,7 @@ export default function City() {
   const canonical = `${SITE}/baterias/${city.slug}`;
 
   const featuredNeighborhoods = getNeighborhoodsByCity(city.slug); // já ordenado por tempo
+  const testimonials = getTestimonialsByCity(city.slug);
 
   const localBusiness = localBusinessLd({
     url: canonical,
@@ -66,13 +69,23 @@ export default function City() {
     { name: `Bateria em ${city.name}`, url: canonical },
   ]);
 
+  const reviewsLdObj = reviewsLd(
+    `Bateria automotiva em ${city.name}`,
+    testimonials.map((t) => ({
+      author: t.author,
+      rating: t.rating,
+      body: t.body,
+      locality: t.neighborhood ? `${t.neighborhood}, ${city.name}` : city.name,
+    })),
+  );
+
   return (
     <CartProvider>
       <SEO
         title={title}
         description={description}
         canonical={canonical}
-        jsonLd={[localBusiness, faqLdObj, breadcrumb].filter(Boolean) as Record<string, unknown>[]}
+        jsonLd={[localBusiness, faqLdObj, breadcrumb, reviewsLdObj].filter(Boolean) as Record<string, unknown>[]}
       />
       <div className="min-h-screen bg-background">
         <Header />
@@ -223,6 +236,8 @@ export default function City() {
               </Accordion>
             </div>
           </section>
+
+          <TestimonialsSection city={city.name} items={testimonials} />
 
           {/* Links internos: cidades + marcas + categorias */}
           <section
