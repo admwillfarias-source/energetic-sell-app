@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -9,6 +9,7 @@ import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import { blogPosts } from "@/data/blogPosts";
 import { breadcrumbLd, organizationLd, SITE_URL } from "@/lib/seoSchemas";
 import { Calendar, Clock, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const CATEGORY_LABEL: Record<string, string> = {
   manutencao: "Manutenção",
@@ -17,8 +18,16 @@ const CATEGORY_LABEL: Record<string, string> = {
   emergencia: "Emergência",
 };
 
+const CATEGORIES = ["todos", "manutencao", "duvidas", "guia-compra", "emergencia"] as const;
+type Category = typeof CATEGORIES[number];
+
 export default function Blog() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
+  const [category, setCategory] = useState<Category>("todos");
+  const filtered = useMemo(
+    () => category === "todos" ? blogPosts : blogPosts.filter((p) => p.category === category),
+    [category],
+  );
 
   const canonical = `${SITE_URL}/blog`;
   const title = "Blog AWR Baterias | Dicas, manutenção e guias sobre baterias automotivas";
