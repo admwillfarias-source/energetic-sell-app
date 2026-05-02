@@ -204,6 +204,23 @@ export default function BlogPost() {
                     </ul>
                   </div>
                 )}
+                {post.tags.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-semibold">Tags</p>
+                    <ul className="mt-2 flex flex-wrap gap-2">
+                      {post.tags.map((t) => (
+                        <li key={t}>
+                          <Link
+                            to={`/blog/tag/${tagToSlug(t)}`}
+                            className="inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-sm hover:border-primary hover:text-primary"
+                          >
+                            <TagIcon className="h-3 w-3" /> {t}
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </section>
             ) : null}
           </article>
