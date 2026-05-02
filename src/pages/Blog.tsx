@@ -323,6 +323,35 @@ export default function Blog() {
                   )}
                 </>
               )}
+
+              {/* Nuvem de tags */}
+              {tagCloud.length > 0 && (
+                <section className="mt-12 rounded-xl border border-border bg-muted/30 p-5">
+                  <h2 className="flex items-center gap-2 font-display text-lg font-bold">
+                    <TagIcon className="h-4 w-4 text-primary" /> Explorar por tag
+                  </h2>
+                  <ul className="mt-3 flex flex-wrap gap-2">
+                    {tagCloud.map((t) => (
+                      <li key={t.slug}>
+                        <Link
+                          to={`/blog/tag/${t.slug}`}
+                          onClick={() =>
+                            trackEvent({
+                              action: "blog_filter_tag",
+                              category: "blog",
+                              label: t.tag,
+                              value: t.count,
+                            })
+                          }
+                          className="inline-block rounded-full border border-border bg-card px-3 py-1 text-sm hover:border-primary hover:text-primary"
+                        >
+                          {t.tag} <span className="text-xs text-muted-foreground">({t.count})</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
             </div>
           </section>
         </main>
