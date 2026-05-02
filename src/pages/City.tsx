@@ -18,6 +18,7 @@ import { getCityBySlug, cityPages } from "@/data/cityContent";
 import { brandPages } from "@/data/brandContent";
 import { getNeighborhoodsByCity } from "@/data/neighborhoodContent";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import CityMap from "@/components/CityMap";
 import {
   breadcrumbLd, faqLd, localBusinessLd, SITE_URL,
 } from "@/lib/seoSchemas";
@@ -189,7 +190,23 @@ export default function City() {
             </div>
           </section>
 
-          {/* FAQ */}
+          {/* Mapa */}
+          <section className="border-t border-border py-12">
+            <div className="container max-w-5xl">
+              <h2 className="font-display text-xl font-bold md:text-2xl">
+                Cobertura em {city.name}
+              </h2>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Atendemos toda a cidade com entrega {city.deliveryTime}.
+              </p>
+              <div className="mt-4">
+                <CityMap
+                  query={`AWR Baterias ${city.name} ${city.state}`}
+                  title={`Mapa AWR Baterias em ${city.name}`}
+                />
+              </div>
+            </div>
+          </section>
           <section className="py-14">
             <div className="container max-w-3xl">
               <h2 className="text-center font-display text-2xl font-bold md:text-3xl">
