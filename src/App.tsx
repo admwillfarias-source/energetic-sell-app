@@ -96,6 +96,14 @@ const App = () => (
             }
           />
           <Route
+            path="/blog/tag/:slug"
+            element={
+              <Suspense fallback={<div className="min-h-screen" />}>
+                <BlogTag />
+              </Suspense>
+            }
+          />
+          <Route
             path="/blog/:slug"
             element={
               <Suspense fallback={<div className="min-h-screen" />}>
