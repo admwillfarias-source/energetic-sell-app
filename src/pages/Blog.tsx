@@ -85,34 +85,60 @@ export default function Blog() {
 
           <section className="py-10 md:py-14">
             <div className="container">
-              <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                {blogPosts.map((p) => (
-                  <li key={p.slug}>
-                    <Link
-                      to={`/blog/${p.slug}`}
-                      className="group flex h-full flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-primary hover:shadow-md"
-                    >
-                      <span className="inline-flex w-fit items-center rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
-                        {CATEGORY_LABEL[p.category]}
-                      </span>
-                      <h2 className="mt-3 font-display text-lg font-bold leading-snug group-hover:text-primary">
-                        {p.title}
-                      </h2>
-                      <p className="mt-2 flex-1 text-sm text-muted-foreground">{p.excerpt}</p>
-                      <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
-                        <span className="inline-flex items-center gap-1">
-                          <Calendar className="h-3.5 w-3.5" />
-                          {new Date(p.datePublished).toLocaleDateString("pt-BR")}
-                        </span>
-                        <span className="inline-flex items-center gap-1">
-                          <Clock className="h-3.5 w-3.5" />
-                          {p.readingMinutes} min de leitura
-                        </span>
-                      </div>
-                    </Link>
-                  </li>
+              <div className="mb-8 flex flex-wrap gap-2" role="tablist" aria-label="Filtrar por categoria">
+                {CATEGORIES.map((c) => (
+                  <button
+                    key={c}
+                    type="button"
+                    role="tab"
+                    aria-selected={category === c}
+                    onClick={() => setCategory(c)}
+                    className={cn(
+                      "rounded-full border px-4 py-1.5 text-sm font-medium transition-colors",
+                      category === c
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-card text-muted-foreground hover:border-primary hover:text-primary",
+                    )}
+                  >
+                    {c === "todos" ? "Todos" : CATEGORY_LABEL[c]}
+                  </button>
                 ))}
-              </ul>
+              </div>
+
+              {filtered.length === 0 ? (
+                <p className="text-center text-muted-foreground py-12">
+                  Nenhum artigo nesta categoria ainda.
+                </p>
+              ) : (
+                <ul className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {filtered.map((p) => (
+                    <li key={p.slug}>
+                      <Link
+                        to={`/blog/${p.slug}`}
+                        className="group flex h-full flex-col rounded-xl border border-border bg-card p-5 transition-all hover:border-primary hover:shadow-md"
+                      >
+                        <span className="inline-flex w-fit items-center rounded-full bg-accent/15 px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider text-accent-foreground">
+                          {CATEGORY_LABEL[p.category]}
+                        </span>
+                        <h2 className="mt-3 font-display text-lg font-bold leading-snug group-hover:text-primary">
+                          {p.title}
+                        </h2>
+                        <p className="mt-2 flex-1 text-sm text-muted-foreground">{p.excerpt}</p>
+                        <div className="mt-4 flex items-center gap-3 text-xs text-muted-foreground">
+                          <span className="inline-flex items-center gap-1">
+                            <Calendar className="h-3.5 w-3.5" />
+                            {new Date(p.datePublished).toLocaleDateString("pt-BR")}
+                          </span>
+                          <span className="inline-flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5" />
+                            {p.readingMinutes} min de leitura
+                          </span>
+                        </div>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
             </div>
           </section>
         </main>
