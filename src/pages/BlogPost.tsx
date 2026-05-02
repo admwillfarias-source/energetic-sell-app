@@ -10,14 +10,14 @@ import { Button } from "@/components/ui/button";
 import {
   Accordion, AccordionContent, AccordionItem, AccordionTrigger,
 } from "@/components/ui/accordion";
-import { getPostBySlug, getRelatedPosts } from "@/data/blogPosts";
+import { getPostBySlug, getRelatedPosts, tagToSlug } from "@/data/blogPosts";
 import { cityPages } from "@/data/cityContent";
 import { brandPages } from "@/data/brandContent";
 import { amperagePages } from "@/data/amperageContent";
 import {
   articleLd, breadcrumbLd, faqLd, localBusinessLd, organizationLd, PHONE_E164, SITE_URL,
 } from "@/lib/seoSchemas";
-import { Calendar, ChevronRight, Clock, MessageCircle } from "lucide-react";
+import { Calendar, ChevronRight, Clock, MessageCircle, Tag as TagIcon } from "lucide-react";
 
 const PHONE_DISPLAY = "(51) 99319-9486";
 
