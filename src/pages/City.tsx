@@ -273,39 +273,31 @@ export default function City() {
                     {brandPages.map((b) => (
                       <li key={b.slug}>
                         <Link
-                          to={`/?marca=${b.slug}#catalogo`}
-                          title={`Baterias ${b.name} em ${city.name}`}
+                          to={`/baterias/marca/${b.slug}`}
+                          title={`Bateria ${b.name} em ${city.name}`}
                           className="inline-block rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary"
                         >
-                          Baterias {b.name}
+                          Bateria {b.name}
                         </Link>
                       </li>
                     ))}
                   </ul>
                 </div>
 
-                {/* Categorias por amperagem / uso */}
+                {/* Amperagens */}
                 <div>
                   <h3 className="mb-4 font-display text-lg font-bold">
-                    Baterias por categoria
+                    Baterias por amperagem
                   </h3>
                   <ul className="flex flex-wrap gap-2">
-                    {[
-                      { label: "Bateria 60Ah", q: "60Ah" },
-                      { label: "Bateria 70Ah", q: "70Ah" },
-                      { label: "Bateria 75Ah", q: "75Ah" },
-                      { label: "Bateria 100Ah", q: "100Ah" },
-                      { label: "Bateria Start-Stop", q: "start-stop" },
-                      { label: "Bateria para utilitário", q: "utilitario" },
-                      { label: "Bateria para caminhão", q: "caminhao" },
-                    ].map((cat) => (
-                      <li key={cat.q}>
+                    {amperagePages.map((a) => (
+                      <li key={a.slug}>
                         <Link
-                          to={`/?categoria=${encodeURIComponent(cat.q)}#catalogo`}
-                          title={`${cat.label} em ${city.name} — entrega ${city.deliveryTime}`}
+                          to={`/baterias/amperagem/${a.slug}`}
+                          title={`Bateria ${a.ah}Ah em ${city.name} — entrega ${city.deliveryTime}`}
                           className="inline-block rounded-full border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:border-primary/40 hover:text-primary"
                         >
-                          {cat.label}
+                          Bateria {a.ah}Ah
                         </Link>
                       </li>
                     ))}
@@ -313,13 +305,12 @@ export default function City() {
                 </div>
               </div>
 
-              {/* Linha contextual extra para reforçar âncoras internas */}
               <p className="mx-auto mt-10 max-w-3xl text-center text-sm text-muted-foreground">
                 Veja também:{" "}
                 {brandPages.slice(0, 4).map((b, i) => (
                   <span key={b.slug}>
                     <Link
-                      to={`/?marca=${b.slug}#catalogo`}
+                      to={`/baterias/marca/${b.slug}`}
                       className="font-medium text-foreground hover:text-primary"
                     >
                       Bateria {b.name} em {city.name}
