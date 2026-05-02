@@ -315,6 +315,7 @@ export default function City() {
         </main>
         <Footer />
         <CartDrawer />
+        <FloatingWhatsApp />
       </div>
     </CartProvider>
   );
