@@ -48,6 +48,7 @@ export default function City() {
   const canonical = `${SITE}/baterias/${city.slug}`;
 
   const featuredNeighborhoods = getNeighborhoodsByCity(city.slug); // já ordenado por tempo
+  const testimonials = getTestimonialsByCity(city.slug);
 
   const localBusiness = localBusinessLd({
     url: canonical,
@@ -68,13 +69,23 @@ export default function City() {
     { name: `Bateria em ${city.name}`, url: canonical },
   ]);
 
+  const reviewsLdObj = reviewsLd(
+    `Bateria automotiva em ${city.name}`,
+    testimonials.map((t) => ({
+      author: t.author,
+      rating: t.rating,
+      body: t.body,
+      locality: t.neighborhood ? `${t.neighborhood}, ${city.name}` : city.name,
+    })),
+  );
+
   return (
     <CartProvider>
       <SEO
         title={title}
         description={description}
         canonical={canonical}
-        jsonLd={[localBusiness, faqLdObj, breadcrumb].filter(Boolean) as Record<string, unknown>[]}
+        jsonLd={[localBusiness, faqLdObj, breadcrumb, reviewsLdObj].filter(Boolean) as Record<string, unknown>[]}
       />
       <div className="min-h-screen bg-background">
         <Header />
