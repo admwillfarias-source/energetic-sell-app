@@ -25,9 +25,11 @@ import {
   breadcrumbLd,
   faqLd,
   localBusinessLd,
+  serviceLd,
   SITE_URL,
   PHONE_E164,
 } from "@/lib/seoSchemas";
+import { getStoresForCity } from "@/data/stores";
 import { MapPin, Clock, ShieldCheck, Wrench, Phone, ChevronRight } from "lucide-react";
 
 const PHONE_DISPLAY = "(51) 99319-9486";
