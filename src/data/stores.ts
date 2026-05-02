@@ -15,7 +15,7 @@ export const stores: Store[] = [
     name: "AWR Baterias Moura e Heliar Porto Alegre - Medianeira",
     city: "Porto Alegre",
     address: "Av. Dr. Carlos Barbosa, 1452 - Medianeira, Porto Alegre - RS, 90880-001",
-    phone: "tel:5135165472",
+    phone: "tel:+555135165472",
     whatsapp: "5551993199486",
     hours: "Seg-Sex: 8h-19h | Sáb: 8h-13h",
     mapsUrl:
@@ -26,7 +26,7 @@ export const stores: Store[] = [
     name: "AWR Baterias Moura e Heliar Porto Alegre - Petrópolis",
     city: "Porto Alegre",
     address: "Av. Protásio Alves, 4189 - Petrópolis, Porto Alegre - RS, 90410-006",
-    phone: "tel:51357-49267",
+    phone: "tel:+555135749267",
     whatsapp: "5551993199486",
     hours: "Seg-Sex: 8h-19h | Sáb: 8h-13h",
     mapsUrl:
@@ -37,7 +37,7 @@ export const stores: Store[] = [
     name: "AWR Baterias Canoas - Moura Heliar",
     city: "Canoas",
     address: "Av. Guilherme Schell, 3266 - Fátima, Canoas - RS, 92200-714",
-    phone: "tel:5135165472",
+    phone: "tel:+555135165472",
     whatsapp: "5551993199486",
     hours: "Seg-Sex: 8h-19h | Sáb: 8h-18h",
     mapsUrl:
@@ -49,7 +49,7 @@ export const stores: Store[] = [
     city: "Gravataí",
     address:
       "Av. Dorival Cândido Luz de Oliveira, 6625 - Bom Princípio, Gravataí - RS, 94070-001",
-    phone: "tel:5135165472",
+    phone: "tel:+555135165472",
     whatsapp: "5551993199486",
     hours: "Seg-Sex: 8h-19h | Sáb: 8h-16h",
     mapsUrl:
@@ -61,7 +61,7 @@ export const stores: Store[] = [
     city: "Novo Hamburgo",
     address:
       "Av. Victor Hugo Kunz, 961 - Hamburgo Velho, Novo Hamburgo - RS, 93510-150",
-    phone: "tel:5135165472",
+    phone: "tel:+555135165472",
     whatsapp: "5551993199486",
     hours: "Seg-Sex: 8h-19h | Sáb: 8h-14h",
     mapsUrl:
@@ -72,7 +72,7 @@ export const stores: Store[] = [
     name: "AWR Baterias São Leopoldo",
     city: "São Leopoldo",
     address: "Av. Feitoria, 917 - São José, São Leopoldo - RS, 93040-193",
-    phone: "tel:5135165472",
+    phone: "tel:+555135165472",
     whatsapp: "5551993199486",
     hours: "Seg-Sex: 8h-19h | Sáb: 8h-16h",
     mapsUrl:
