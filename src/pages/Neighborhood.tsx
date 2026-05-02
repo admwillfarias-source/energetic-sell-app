@@ -33,7 +33,7 @@ const PHONE_DISPLAY = "(51) 98541-9143";
 
 export default function Neighborhood() {
   const { citySlug = "porto-alegre", slug } = useParams<{ citySlug: string; slug: string }>();
-  const n = slug ? getNeighborhoodBySlug(slug) : undefined;
+  const n = slug ? getNeighborhoodBySlug(slug, citySlug) : undefined;
   const city = getCityBySlug(citySlug);
 
   useEffect(() => {
