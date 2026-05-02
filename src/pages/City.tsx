@@ -20,8 +20,10 @@ import { amperagePages } from "@/data/amperageContent";
 import { getNeighborhoodsByCity } from "@/data/neighborhoodContent";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import CityMap from "@/components/CityMap";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import { getTestimonialsByCity } from "@/data/testimonials";
 import {
-  breadcrumbLd, faqLd, localBusinessLd, SITE_URL,
+  breadcrumbLd, faqLd, localBusinessLd, reviewsLd, SITE_URL,
 } from "@/lib/seoSchemas";
 import {
   MapPin, Clock, ShieldCheck, Truck, Wrench, Phone, ChevronRight, Zap,
