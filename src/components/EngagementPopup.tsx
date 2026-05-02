@@ -82,7 +82,8 @@ export default function EngagementPopup() {
             href="tel:+555135165472"
             onClick={(event) => {
               handleCallClick(event, "home", "popup");
-              dismiss();
+              // Safari iOS: adia o unmount para não cancelar a navegação tel:
+              window.setTimeout(() => dismiss(), 300);
             }}
           >
             <Phone className="h-5 w-5" />
