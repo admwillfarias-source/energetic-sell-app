@@ -64,6 +64,28 @@ export default function Neighborhood() {
     },
   ];
 
+  // Loja física mais próxima do bairro (NAP completo) e bairros vizinhos atendidos.
+  const nearestStore = getStoresForCity(n.city)[0];
+  const napAddress = nearestStore
+    ? (() => {
+        // Address pattern: "Rua X, 123 - Bairro, Cidade - UF, CEP"
+        const cepMatch = nearestStore.address.match(/(\d{5}-?\d{3})/);
+        const streetPart = nearestStore.address.split(" - ")[0];
+        return {
+          streetAddress: streetPart,
+          postalCode: cepMatch ? cepMatch[1] : undefined,
+          city: n.city,
+          state: n.cityState,
+        };
+      })()
+    : undefined;
+
+  const otherInZone = getNeighborhoodsByCity(citySlug).filter((x) => x.slug !== n.slug);
+  const nearbyAreas = otherInZone.slice(0, 8).map((nb) => ({
+    name: `${nb.name}, ${nb.city}`,
+    deliveryTime: nb.deliveryTime,
+  }));
+
   const jsonLd = [
     breadcrumbLd([
       { name: "Início", url: SITE_URL },
@@ -76,12 +98,24 @@ export default function Neighborhood() {
       city: n.city,
       state: n.cityState,
       geo: n.geo,
-      areas: [{ name: `${n.name}, ${n.city}`, deliveryTime: n.deliveryTime }],
+      address: napAddress,
+      areas: [
+        { name: `${n.name}, ${n.city}`, deliveryTime: n.deliveryTime },
+        ...nearbyAreas,
+      ],
+    }),
+    serviceLd({
+      url: canonical,
+      serviceName: `Entrega e instalação de bateria automotiva em ${n.name}`,
+      description: `Entrega e instalação de bateria automotiva em ${n.name}, ${n.city} (${n.cityState}) em ${n.deliveryTime}, todos os dias das 8h às 22h. Marcas Moura, Heliar, Zetta e Excell com garantia de fábrica.`,
+      areaName: `${n.name}, ${n.city}`,
+      city: n.city,
+      state: n.cityState,
+      geo: n.geo,
+      alsoServes: nearbyAreas,
     }),
     faqLd(faq),
   ];
-
-  const otherInZone = getNeighborhoodsByCity(citySlug).filter((x) => x.slug !== n.slug);
 
   return (
     <CartProvider>
