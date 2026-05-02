@@ -166,9 +166,9 @@ export default function Neighborhood() {
               </p>
               <div className="mt-4">
                 <CityMap
-                  query={`${n.name}, ${n.city}, ${n.cityState}`}
-                  title={`Mapa de ${n.name}, ${n.city}`}
-                  height={320}
+                  city={n.city}
+                  title={`Lojas AWR Baterias atendendo ${n.name}`}
+                  height={300}
                 />
               </div>
             </div>
