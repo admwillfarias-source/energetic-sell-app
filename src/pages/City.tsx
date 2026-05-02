@@ -16,11 +16,16 @@ import {
 } from "@/components/ui/accordion";
 import { getCityBySlug, cityPages } from "@/data/cityContent";
 import { brandPages } from "@/data/brandContent";
+import { getNeighborhoodsByCity } from "@/data/neighborhoodContent";
+import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import {
-  MapPin, Clock, ShieldCheck, Truck, Wrench, Phone, ChevronRight,
+  breadcrumbLd, faqLd, localBusinessLd, SITE_URL,
+} from "@/lib/seoSchemas";
+import {
+  MapPin, Clock, ShieldCheck, Truck, Wrench, Phone, ChevronRight, Zap,
 } from "lucide-react";
 
-const SITE = "https://awrbaterias.com.br";
+const SITE = SITE_URL;
 const PHONE_E164 = "+5551985419143";
 const PHONE_DISPLAY = "(51) 98541-9143";
 
