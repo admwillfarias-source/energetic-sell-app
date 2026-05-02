@@ -26,8 +26,8 @@ import {
 } from "lucide-react";
 
 const SITE = SITE_URL;
-const PHONE_E164 = "+5551985419143";
-const PHONE_DISPLAY = "(51) 98541-9143";
+const PHONE_E164 = "+5551993199486";
+const PHONE_DISPLAY = "(51) 99319-9486";
 
 export default function City() {
   const { slug } = useParams<{ slug: string }>();

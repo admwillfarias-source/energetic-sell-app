@@ -7,7 +7,7 @@
 export const SITE_URL = "https://awrbaterias.com.br";
 export const SITE_NAME = "AWR Baterias";
 export const SITE_LOGO = `${SITE_URL}/og-image.jpg`;
-export const PHONE_E164 = "+5551985419143";
+export const PHONE_E164 = "+5551993199486";
 
 export type Crumb = { name: string; url: string };
 
