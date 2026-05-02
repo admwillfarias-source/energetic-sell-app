@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/accordion";
 import { getCityBySlug, cityPages } from "@/data/cityContent";
 import { brandPages } from "@/data/brandContent";
+import { amperagePages } from "@/data/amperageContent";
 import { getNeighborhoodsByCity } from "@/data/neighborhoodContent";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 import CityMap from "@/components/CityMap";
