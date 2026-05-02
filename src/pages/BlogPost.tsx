@@ -48,6 +48,7 @@ export default function BlogPost() {
     }),
     faqLd(post.faq),
     organizationLd(),
+    localBusinessLd({ url: canonical }),
   ];
 
   const related = getRelatedPosts(post.slug, 3);
