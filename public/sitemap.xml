@@ -13,67 +13,67 @@
   <url>
     <loc>https://awrbaterias.com.br/baterias/canoas</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/gravatai</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/cachoeirinha</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/esteio</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/novo-hamburgo</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/sao-leopoldo</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/sapucaia-do-sul</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/ivoti</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/campo-bom</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/estancia-velha</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/nova-santa-rita</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/alvorada</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/viamao</loc>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.9</priority>
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/porto-alegre/sarandi</loc>
@@ -182,6 +182,216 @@
   </url>
   <url>
     <loc>https://awrbaterias.com.br/baterias/porto-alegre/menino-deus</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/gravatai/centro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/gravatai/parque-dos-anjos</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/gravatai/morada-do-vale-i</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/gravatai/morada-do-vale-iii</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/gravatai/neopolis</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/gravatai/salgado-filho</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/gravatai/barnabe</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/gravatai/bom-sucesso</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/gravatai/sao-geraldo-gravatai</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/cachoeirinha/centro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/cachoeirinha/vila-vista-alegre</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/cachoeirinha/vila-cachoeirinha</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/cachoeirinha/parque-marechal-rondon</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/cachoeirinha/granja-esperanca</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/cachoeirinha/parque-brasilia</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/canoas/centro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/canoas/mathias-velho</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/canoas/niteroi</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/canoas/igara</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/canoas/marechal-rondon</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/canoas/sao-jose</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/canoas/guajuviras</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/alvorada/centro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/alvorada/americana</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/alvorada/sumare</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/alvorada/jardim-algarve</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/alvorada/bom-principio</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/viamao/centro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/viamao/taruma</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/viamao/vila-augusta</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/viamao/santa-isabel</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/viamao/jardim-krahe</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/esteio/centro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/esteio/primavera</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/esteio/olimpica</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/esteio/tamandare</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/esteio/tres-portos</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/sapucaia-do-sul/centro</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/sapucaia-do-sul/boa-vista-sapucaia</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/sapucaia-do-sul/piratini</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/sapucaia-do-sul/vargas</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://awrbaterias.com.br/baterias/sapucaia-do-sul/sao-jose-sapucaia</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
