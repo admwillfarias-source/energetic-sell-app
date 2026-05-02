@@ -43,58 +43,26 @@ export default function City() {
   const description = `Bateria de carro em ${city.name} com entrega e instalação ${city.deliveryTime}. Moura, Heliar, Zetta e Excell com garantia de fábrica. 10x sem juros. Atendimento 24h.`;
   const canonical = `${SITE}/baterias/${city.slug}`;
 
-  const localBusiness = {
-    "@context": "https://schema.org",
-    "@type": "AutomotiveBusiness",
-    name: `AWR Baterias - ${city.name}`,
-    image: `${SITE}/og-image.jpg`,
+  const featuredNeighborhoods = getNeighborhoodsByCity(city.slug); // já ordenado por tempo
+
+  const localBusiness = localBusinessLd({
     url: canonical,
-    telephone: PHONE_E164,
-    priceRange: "R$ 350 - R$ 2.500",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: city.name,
-      addressRegion: city.state,
-      addressCountry: "BR",
-    },
-    geo: {
-      "@type": "GeoCoordinates",
-      latitude: city.geo.lat,
-      longitude: city.geo.lng,
-    },
-    areaServed: city.neighborhoods.map((n) => ({
-      "@type": "Place",
+    name: `AWR Baterias - ${city.name}`,
+    city: city.name,
+    state: city.state,
+    geo: city.geo,
+    areas: city.neighborhoods.map((n) => ({
       name: `${n}, ${city.name}`,
+      deliveryTime: city.deliveryTime,
     })),
-    openingHoursSpecification: {
-      "@type": "OpeningHoursSpecification",
-      dayOfWeek: ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
-      opens: "08:00",
-      closes: "22:00",
-    },
-  };
+  });
 
-  const faqLd = {
-    "@context": "https://schema.org",
-    "@type": "FAQPage",
-    mainEntity: city.faq.map((f) => ({
-      "@type": "Question",
-      name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
-    })),
-  };
+  const faqLdObj = faqLd(city.faq);
 
-  const breadcrumb = {
-    "@context": "https://schema.org",
-    "@type": "BreadcrumbList",
-    itemListElement: [
-      { "@type": "ListItem", position: 1, name: "Início", item: SITE },
-      {
-        "@type": "ListItem", position: 2,
-        name: `Bateria em ${city.name}`, item: canonical,
-      },
-    ],
-  };
+  const breadcrumb = breadcrumbLd([
+    { name: "Início", url: SITE },
+    { name: `Bateria em ${city.name}`, url: canonical },
+  ]);
 
   return (
     <CartProvider>
