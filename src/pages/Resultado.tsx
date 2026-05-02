@@ -377,6 +377,7 @@ export default function Resultado() {
 
       <Footer />
       <CartDrawer />
+      <FloatingWhatsApp />
     </div>
     </CartProvider>
   );
