@@ -43,6 +43,13 @@ export function faqLd(faqs: Faq[]) {
 
 export type ServedArea = { name: string; deliveryTime?: string };
 
+export type PostalAddress = {
+  streetAddress?: string;
+  postalCode?: string;
+  city: string;
+  state: string;
+};
+
 /**
  * LocalBusiness com cidades atendidas e tempo de entrega.
  * areaServed inclui Place + description com tempo (Google aceita description).
@@ -55,6 +62,8 @@ export function localBusinessLd(opts: {
   geo?: { lat: number; lng: number };
   areas?: ServedArea[];
   priceRange?: string;
+  /** Endereço NAP completo (rua + CEP) — quando informado, sobrescreve city/state. */
+  address?: PostalAddress;
 }) {
   const {
     url,
@@ -64,7 +73,24 @@ export function localBusinessLd(opts: {
     geo,
     areas = [],
     priceRange = "R$ 350 - R$ 2.500",
+    address,
   } = opts;
+
+  const postal = address
+    ? {
+        "@type": "PostalAddress",
+        ...(address.streetAddress ? { streetAddress: address.streetAddress } : {}),
+        ...(address.postalCode ? { postalCode: address.postalCode } : {}),
+        addressLocality: address.city,
+        addressRegion: address.state,
+        addressCountry: "BR",
+      }
+    : {
+        "@type": "PostalAddress",
+        addressLocality: city,
+        addressRegion: state,
+        addressCountry: "BR",
+      };
 
   const ld: Record<string, unknown> = {
     "@context": "https://schema.org",
@@ -76,12 +102,7 @@ export function localBusinessLd(opts: {
     url,
     telephone: PHONE_E164,
     priceRange,
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: city,
-      addressRegion: state,
-      addressCountry: "BR",
-    },
+    address: postal,
     openingHoursSpecification: {
       "@type": "OpeningHoursSpecification",
       dayOfWeek: [
@@ -106,6 +127,87 @@ export function localBusinessLd(opts: {
     }));
   }
   return ld;
+}
+
+/**
+ * Service schema vinculado ao LocalBusiness, com áreas atendidas e NAP no provider.
+ * Reforça aparição em "Serviços perto de mim" e pacotes locais do Google.
+ */
+export function serviceLd(opts: {
+  url: string;
+  serviceName: string;
+  description: string;
+  areaName: string;
+  areaType?: "City" | "Place" | "AdministrativeArea";
+  city: string;
+  state: string;
+  geo?: { lat: number; lng: number };
+  alsoServes?: ServedArea[];
+}) {
+  const {
+    url,
+    serviceName,
+    description,
+    areaName,
+    areaType = "Place",
+    city,
+    state,
+    geo,
+    alsoServes = [],
+  } = opts;
+
+  const areaServed: unknown[] = [
+    {
+      "@type": areaType,
+      name: areaName,
+      ...(geo
+        ? { geo: { "@type": "GeoCoordinates", latitude: geo.lat, longitude: geo.lng } }
+        : {}),
+    },
+    ...alsoServes.map((a) => ({
+      "@type": "Place",
+      name: a.name,
+      ...(a.deliveryTime ? { description: `Entrega ${a.deliveryTime}` } : {}),
+    })),
+  ];
+
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "@id": `${url}#service`,
+    serviceType: "Entrega e instalação de bateria automotiva",
+    name: serviceName,
+    description,
+    areaServed,
+    provider: {
+      "@type": "AutomotiveBusiness",
+      "@id": `${url}#localbusiness`,
+      name: SITE_NAME,
+      telephone: PHONE_E164,
+      url,
+      image: SITE_LOGO,
+      address: {
+        "@type": "PostalAddress",
+        addressLocality: city,
+        addressRegion: state,
+        addressCountry: "BR",
+      },
+    },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "BRL",
+      availability: "https://schema.org/InStock",
+      areaServed: areaName,
+    },
+    hoursAvailable: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday",
+      ],
+      opens: "08:00",
+      closes: "22:00",
+    },
+  };
 }
 
 export function organizationLd() {
