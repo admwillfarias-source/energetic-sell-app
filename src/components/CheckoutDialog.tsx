@@ -645,9 +645,25 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   </p>
                 )}
 
+                {form.entregaTipo === "rapida" && rapidaAgora && (
+                  <p className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground">
+                    ⏱️ <strong>Atenção:</strong> a entrega rápida tem prazo estimado de até 35 min,
+                    mas <strong>o horário pode sofrer alterações</strong> conforme demanda, trânsito
+                    e disponibilidade da equipe.
+                  </p>
+                )}
+
+                {isDomingo && form.entregaTipo !== "retirada" && (
+                  <p className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
+                    📅 Entregas aos <strong>domingos</strong> têm <strong>taxa adicional de
+                    {" "}{formatBRL(TAXA_DOMINGO)}</strong>.
+                  </p>
+                )}
+
                 {form.entregaTipo === "rapida" && rapidaAgora && taxaEntrega > 0 && (
                   <div className="rounded-md bg-secondary/40 px-3 py-2 text-xs font-semibold text-foreground">
                     {descricaoFaixa(entregaMin ?? 0)}
+                    {isDomingo && ` + domingo ${formatBRL(TAXA_DOMINGO)}`}
                   </div>
                 )}
 
