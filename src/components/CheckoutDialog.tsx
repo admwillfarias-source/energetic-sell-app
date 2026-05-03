@@ -41,6 +41,7 @@ const FAIXA_GRATIS_FIM = 18 * 60; // 18:00 → grátis
 const FAIXA_NOITE_INICIO = 18 * 60 + 1; // 18:01
 const TAXA_MANHA = 40;
 const TAXA_NOITE = 50;
+const TAXA_DOMINGO = 40;
 
 function minutesFromHHMM(hhmm: string): number | null {
   const m = hhmm.match(/^(\d{1,2}):(\d{2})$/);
