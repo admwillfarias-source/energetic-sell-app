@@ -260,11 +260,23 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     return null; // retirada não tem taxa
   }, [form.entregaTipo, form.entregaHora]);
 
+  const isDomingo = useMemo(() => {
+    if (form.entregaTipo === "retirada") return false;
+    if (form.entregaTipo === "rapida") return new Date().getDay() === 0;
+    if (form.entregaTipo === "agendada" && form.entregaData) {
+      // entregaData é "YYYY-MM-DD" — interpreta como data local
+      const [y, m, d] = form.entregaData.split("-").map(Number);
+      if (y && m && d) return new Date(y, m - 1, d).getDay() === 0;
+    }
+    return false;
+  }, [form.entregaTipo, form.entregaData]);
+
   const taxaEntrega = useMemo(() => {
     if (form.entregaTipo === "retirada") return 0;
     if (entregaMin == null) return 0;
-    return taxaEntregaPorMinutos(entregaMin);
-  }, [form.entregaTipo, entregaMin]);
+    const base = taxaEntregaPorMinutos(entregaMin);
+    return base + (isDomingo ? TAXA_DOMINGO : 0);
+  }, [form.entregaTipo, entregaMin, isDomingo]);
 
   // Desconto à vista (PIX/Dinheiro): 3% sobre subtotal
   const pagamentoComDesconto =
