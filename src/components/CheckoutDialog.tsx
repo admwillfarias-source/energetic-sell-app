@@ -41,6 +41,7 @@ const FAIXA_GRATIS_FIM = 18 * 60; // 18:00 → grátis
 const FAIXA_NOITE_INICIO = 18 * 60 + 1; // 18:01
 const TAXA_MANHA = 40;
 const TAXA_NOITE = 50;
+const TAXA_DOMINGO = 40;
 
 function minutesFromHHMM(hhmm: string): number | null {
   const m = hhmm.match(/^(\d{1,2}):(\d{2})$/);
@@ -259,11 +260,23 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     return null; // retirada não tem taxa
   }, [form.entregaTipo, form.entregaHora]);
 
+  const isDomingo = useMemo(() => {
+    if (form.entregaTipo === "retirada") return false;
+    if (form.entregaTipo === "rapida") return new Date().getDay() === 0;
+    if (form.entregaTipo === "agendada" && form.entregaData) {
+      // entregaData é "YYYY-MM-DD" — interpreta como data local
+      const [y, m, d] = form.entregaData.split("-").map(Number);
+      if (y && m && d) return new Date(y, m - 1, d).getDay() === 0;
+    }
+    return false;
+  }, [form.entregaTipo, form.entregaData]);
+
   const taxaEntrega = useMemo(() => {
     if (form.entregaTipo === "retirada") return 0;
     if (entregaMin == null) return 0;
-    return taxaEntregaPorMinutos(entregaMin);
-  }, [form.entregaTipo, entregaMin]);
+    const base = taxaEntregaPorMinutos(entregaMin);
+    return base + (isDomingo ? TAXA_DOMINGO : 0);
+  }, [form.entregaTipo, entregaMin, isDomingo]);
 
   // Desconto à vista (PIX/Dinheiro): 3% sobre subtotal
   const pagamentoComDesconto =
@@ -632,9 +645,25 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   </p>
                 )}
 
+                {form.entregaTipo === "rapida" && rapidaAgora && (
+                  <p className="rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-xs text-foreground">
+                    ⏱️ <strong>Atenção:</strong> a entrega rápida tem prazo estimado de até 35 min,
+                    mas <strong>o horário pode sofrer alterações</strong> conforme demanda, trânsito
+                    e disponibilidade da equipe.
+                  </p>
+                )}
+
+                {isDomingo && form.entregaTipo !== "retirada" && (
+                  <p className="rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs text-foreground">
+                    📅 Entregas aos <strong>domingos</strong> têm <strong>taxa adicional de
+                    {" "}{formatBRL(TAXA_DOMINGO)}</strong>.
+                  </p>
+                )}
+
                 {form.entregaTipo === "rapida" && rapidaAgora && taxaEntrega > 0 && (
                   <div className="rounded-md bg-secondary/40 px-3 py-2 text-xs font-semibold text-foreground">
                     {descricaoFaixa(entregaMin ?? 0)}
+                    {isDomingo && ` + domingo ${formatBRL(TAXA_DOMINGO)}`}
                   </div>
                 )}
 
