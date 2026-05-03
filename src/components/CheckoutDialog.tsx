@@ -646,7 +646,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                 )}
 
                 {form.entregaTipo === "rapida" && rapidaAgora && (
-                  <p className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-xs text-foreground">
+                  <p className="rounded-md border border-accent/40 bg-accent/10 px-3 py-2 text-xs text-foreground">
                     ⏱️ <strong>Atenção:</strong> a entrega rápida tem prazo estimado de até 35 min,
                     mas <strong>o horário pode sofrer alterações</strong> conforme demanda, trânsito
                     e disponibilidade da equipe.
