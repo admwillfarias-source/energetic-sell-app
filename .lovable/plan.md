@@ -1,35 +1,53 @@
-Plano para corrigir o `awr-baterias_v3.zip` e gerar uma versão nova instalável:
+Vou corrigir o pacote do tema WordPress para atacar as causas mais prováveis da página em branco após ativar.
 
-1. Tornar o PHP do tema mais compatível
-   - Reescrever `functions.php` sem closures/funções anônimas, usando funções nomeadas.
-   - Remover dependência de `wp_parse_url`, usando `parse_url` com fallback para compatibilidade.
-   - Evitar qualquer chamada que possa gerar erro fatal em WordPress antigo.
-   - Manter `Requires PHP: 7.0` e compatibilidade prática com WP 5.x.
+Plano:
 
-2. Corrigir carregamento do site após ativar
-   - Ajustar o enqueue do Vite para WordPress usando `script_loader_tag` compatível com assinaturas antigas.
-   - Garantir `type="module"` no `app.js` e no widget sem quebrar filtros de instalações antigas.
-   - Revisar o `template_include` para não capturar admin, login, REST, uploads, arquivos físicos, `robots.txt`, `sitemap.xml` e assets do tema.
-   - Adicionar/confirmar flush seguro das rewrite rules na ativação do tema para as rotas `/baterias/*` e `/blog/` funcionarem sem precisar salvar permalinks manualmente.
+1. Corrigir carregamento dos assets no WordPress
+   - Ajustar o build do Vite para não depender de caminho fixo `/wp-content/themes/awr-baterias/assets/` nos chunks dinâmicos.
+   - Isso evita tela branca quando o WordPress está instalado em subpasta, usa URL diferente, staging, HTTPS/proxy ou caminho personalizado.
+   - O JavaScript passará a carregar chunks relativos ao próprio `app.js`.
 
-3. Fortalecer o pacote do tema
-   - Ajustar `scripts/build-wp-theme.sh` para empacotar sempre com a estrutura exata:
-     ```text
-     awr-baterias/
-       style.css
-       functions.php
-       index.php
-       inc/
-       assets/
-       widget/
-     ```
-   - Excluir arquivos desnecessários ou potencialmente problemáticos no ZIP: `.DS_Store`, `__MACOSX`, `_headers`, `robots.txt`/`sitemap.xml` duplicados dentro de `assets/` e `widget/`, se não forem necessários para WordPress.
-   - Gerar um novo artifact `awr-baterias_v4.zip` em `/mnt/documents/`.
+2. Tornar o template mais compatível com temas WordPress reais
+   - Manter `index.php` como template catch-all, mas garantindo que `wp_head()` e `wp_footer()` carreguem corretamente CSS/JS.
+   - Evitar que a rota SPA capture URLs administrativas, REST, arquivos do WordPress e assets.
 
-4. Validação antes de entregar
-   - Validar integridade do ZIP com `unzip -t`.
-   - Conferir se `style.css`, `functions.php`, `index.php`, `inc/seo.php`, `inc/seo-routes.php`, `assets/app.js`, `assets/app.css`, `widget/awr-busca.js` e `widget/awr-busca.css` existem dentro da pasta raiz `awr-baterias/`.
-   - Rodar uma checagem estática de compatibilidade PHP para detectar sintaxe incompatível.
-   - Inspecionar o build para confirmar que os imports dos chunks JS apontam para `assets/chunks/...` corretamente.
+3. Melhorar compatibilidade PHP/WordPress
+   - Remover qualquer ponto restante que possa quebrar em hospedagens antigas.
+   - Substituir flags JSON modernas por fallbacks seguros se necessário.
+   - Garantir que `functions.php`, `inc/seo.php` e `inc/seo-routes.php` funcionem em PHP 7.0+.
 
-Observação: eu não consigo publicar diretamente no seu WordPress sem acesso ao painel/FTP, mas vou entregar o ZIP corrigido e validado para upload em `Aparência > Temas > Adicionar novo > Enviar tema`. Se ainda houver erro após essa versão, o próximo passo será usar a mensagem exata do WordPress ou o `wp-content/debug.log`, porque o ZIP atual está estruturalmente íntegro e o problema provavelmente é compatibilidade/erro fatal do PHP no ambiente da hospedagem.
+4. Corrigir script de empacotamento
+   - Atualizar `scripts/build-wp-theme.sh` para gerar sempre um ZIP final com a estrutura correta:
+
+```text
+awr-baterias/
+  style.css
+  functions.php
+  index.php
+  inc/
+  assets/
+  widget/
+```
+
+   - Excluir arquivos desnecessários como `_headers`, `public/_headers`, `.DS_Store` e pastas inválidas.
+
+5. Gerar novo arquivo `awr-baterias_v5.zip`
+   - Rebuild do app React para WordPress.
+   - Rebuild do widget `[awr_busca_bateria]`.
+   - Regenerar rotas SEO server-side.
+   - Empacotar em `/mnt/documents/awr-baterias_v5.zip` para download.
+
+6. Validar antes de entregar
+   - Testar integridade do ZIP.
+   - Conferir se `style.css` está dentro de `awr-baterias/`.
+   - Conferir se `functions.php` não tem erro de sintaxe PHP.
+   - Conferir se `app.js` referencia chunks de forma relativa, não por caminho absoluto fixo.
+   - Conferir se todos os chunks e assets referenciados existem no ZIP.
+
+Depois disso, você deverá instalar o novo `awr-baterias_v5.zip` em:
+
+```text
+WordPress > Aparência > Temas > Adicionar novo > Enviar tema
+```
+
+Se o site ainda ficar branco após essa versão, o próximo passo será analisar o erro exato do navegador ou do log do WordPress, mas primeiro vou gerar uma versão mais robusta porque o pacote atual ainda tem risco claro de falha no carregamento dos assets.
