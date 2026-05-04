@@ -8,8 +8,10 @@
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 function awr_current_path() {
-    $p = isset( $_SERVER['REQUEST_URI'] ) ? wp_parse_url( $_SERVER['REQUEST_URI'], PHP_URL_PATH ) : '/';
-    $p = '/' . trim( (string) $p, '/' );
+    $uri = isset( $_SERVER['REQUEST_URI'] ) ? $_SERVER['REQUEST_URI'] : '/';
+    $p   = parse_url( $uri, PHP_URL_PATH );
+    if ( ! is_string( $p ) ) { $p = '/'; }
+    $p   = '/' . trim( $p, '/' );
     return $p === '' ? '/' : $p;
 }
 
