@@ -1,7 +1,6 @@
 // Entry específica do build WordPress.
-// Idêntica ao src/main.tsx do Vite normal — apenas isolada para permitir
-// configuração de build distinta (base path, nomes de arquivo, etc).
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
@@ -11,7 +10,11 @@ const mount = () => {
     console.warn("[awr-baterias] #root não encontrado");
     return;
   }
-  createRoot(el).render(<App />);
+  createRoot(el).render(
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>,
+  );
 };
 
 if (document.readyState === "loading") {
