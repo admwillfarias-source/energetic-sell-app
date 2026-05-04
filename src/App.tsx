@@ -12,6 +12,7 @@ import WhatsappDiagnose from "./pages/WhatsappDiagnose.tsx";
 import BatterySku from "./pages/BatterySku.tsx";
 import Resultado from "./pages/Resultado.tsx";
 import CheckoutTest from "./pages/CheckoutTest.tsx";
+import PedidoConfirmado from "./pages/PedidoConfirmado.tsx";
 
 // Lazy: páginas de cidade são acessadas via deep-link e não precisam estar no bundle inicial.
 const City = lazy(() => import("./pages/City.tsx"));
