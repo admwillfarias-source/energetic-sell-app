@@ -129,6 +129,7 @@ const STEPS = [
 
 export function CheckoutDialog({ open, onOpenChange }: Props) {
   const { items, subtotal, clear, setOpen: setCartOpen } = useCart();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submittingWC, setSubmittingWC] = useState(false);
