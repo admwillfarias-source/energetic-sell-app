@@ -20,6 +20,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { searchVehicles, type VehicleSuggestion } from "@/lib/fitments";
