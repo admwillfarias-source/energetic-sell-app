@@ -1246,47 +1246,38 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     <span className="hidden xs:inline">Voltar</span>
                   </Button>
                   <Button
-                    type="submit"
-                    className="h-11 min-w-0 flex-1 bg-[#25D366] px-2 text-sm text-white hover:bg-[#20bd5a] sm:px-4"
+                    type="button"
+                    onClick={handleWooCommerce}
+                    disabled={submittingWC}
+                    className="h-11 min-w-0 flex-1 px-3 text-sm sm:px-4"
                   >
-                    <MessageCircle className="h-4 w-4 shrink-0" />
+                    {submittingWC ? (
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    ) : (
+                      <ShoppingCart className="h-4 w-4 shrink-0" />
+                    )}
                     <span className="truncate">
-                      <span className="sm:hidden">Enviar no WhatsApp</span>
-                      <span className="hidden sm:inline">Enviar pelo WhatsApp</span>
+                      {submittingWC ? "Enviando pedido..." : "Finalizar pedido"}
                     </span>
                   </Button>
                 </div>
                 <p className="text-center text-[11px] text-muted-foreground sm:text-xs">
-                  Seu pedido será aberto no WhatsApp com a mensagem pronta — basta enviar
+                  Seu pedido será registrado e você verá a tela de acompanhamento
                 </p>
 
-                {!isMobile && (
-                  <>
-                    <div className="flex items-center gap-3 py-1">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="text-xs text-muted-foreground">ou</span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      className="w-full"
-                      onClick={handleWooCommerce}
-                      disabled={submittingWC}
-                    >
-                      {submittingWC ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <ShoppingCart className="h-4 w-4" />
-                      )}
-                      {submittingWC ? "Criando pedido..." : "Finalizar na loja online"}
-                    </Button>
-                    <p className="text-center text-xs text-muted-foreground">
-                      Cria o pedido em awrbaterias.com.br e abre a página de pagamento
-                    </p>
-                  </>
-                )}
+                <div className="flex items-center gap-3 py-1">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">ou</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  className="h-11 w-full bg-[#25D366]/10 text-[#1a8a44] border-[#25D366]/40 hover:bg-[#25D366]/20"
+                >
+                  <MessageCircle className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Enviar pelo WhatsApp</span>
+                </Button>
               </div>
             )}
           </div>
