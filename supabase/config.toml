@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.whatsapp-diagnose]
 verify_jwt = false
+
+[functions.wc-create-order]
+verify_jwt = false
+
+[functions.wc-get-order]
+verify_jwt = false
