@@ -157,8 +157,8 @@ add_action( 'after_switch_theme', 'awr_after_switch_theme' );
 function awr_shortcode_busca( $atts ) {
     $atts = shortcode_atts( array( 'site_url' => '' ), $atts, 'awr_busca_bateria' );
 
-    wp_enqueue_style( 'awr-busca', AWR_THEME_URI . '/widget/awr-busca.css', array(), AWR_THEME_VERSION );
-    wp_enqueue_script( 'awr-busca', AWR_THEME_URI . '/widget/awr-busca.js', array(), AWR_THEME_VERSION, true );
+    wp_enqueue_style( 'awr-busca', AWR_THEME_URI . '/widget/awr-busca.css', array(), awr_asset_ver( 'widget/awr-busca.css' ) );
+    wp_enqueue_script( 'awr-busca', AWR_THEME_URI . '/widget/awr-busca.js', array(), awr_asset_ver( 'widget/awr-busca.js' ), true );
 
     if ( ! empty( $atts['site_url'] ) ) {
         wp_add_inline_script( 'awr-busca',
