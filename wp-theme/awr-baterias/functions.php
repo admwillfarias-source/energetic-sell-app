@@ -26,22 +26,88 @@ function awr_setup() {
 add_action( 'after_setup_theme', 'awr_setup' );
 
 /* 2. Enqueue do bundle React ---------------------------------------------- */
+/**
+ * Versão única por arquivo (filemtime) — força navegador/CDN a baixar
+ * o asset novo sempre que o build é regenerado, mesmo sem bump manual de
+ * AWR_THEME_VERSION. Fallback para AWR_THEME_VERSION se filemtime falhar.
+ */
+function awr_asset_ver( $relative_path ) {
+    $full = AWR_THEME_DIR . '/' . ltrim( $relative_path, '/' );
+    if ( file_exists( $full ) ) {
+        $mt = @filemtime( $full );
+        if ( $mt ) { return AWR_THEME_VERSION . '.' . $mt; }
+    }
+    return AWR_THEME_VERSION;
+}
+
+/**
+ * Remove handles antigos de versões anteriores que possam ter ficado
+ * registrados por plugins de cache ou page-builders.
+ */
+function awr_dequeue_legacy() {
+    $legacy = array(
+        'awr-baterias', 'awr-baterias-app', 'awr-react', 'awr-bundle',
+        'awr-app-v1', 'awr-app-v2', 'awr-app-v3', 'awr-app-v4',
+        'awr-app-v5', 'awr-app-v6',
+    );
+    foreach ( $legacy as $h ) {
+        if ( wp_script_is( $h, 'enqueued' ) || wp_script_is( $h, 'registered' ) ) {
+            wp_dequeue_script( $h ); wp_deregister_script( $h );
+        }
+        if ( wp_style_is( $h, 'enqueued' ) || wp_style_is( $h, 'registered' ) ) {
+            wp_dequeue_style( $h ); wp_deregister_style( $h );
+        }
+    }
+}
+
 function awr_enqueue_assets() {
-    $css = AWR_THEME_DIR . '/assets/app.css';
-    $js  = AWR_THEME_DIR . '/assets/app.js';
+    awr_dequeue_legacy();
+
+    $css_rel = 'assets/app.css';
+    $js_rel  = 'assets/app.js';
+    $css     = AWR_THEME_DIR . '/' . $css_rel;
+    $js      = AWR_THEME_DIR . '/' . $js_rel;
 
     if ( file_exists( $css ) ) {
-        wp_enqueue_style( 'awr-app', AWR_THEME_URI . '/assets/app.css', array(), AWR_THEME_VERSION );
+        wp_enqueue_style( 'awr-app', AWR_THEME_URI . '/' . $css_rel, array(), awr_asset_ver( $css_rel ) );
     }
     if ( file_exists( $js ) ) {
-        wp_enqueue_script( 'awr-app', AWR_THEME_URI . '/assets/app.js', array(), AWR_THEME_VERSION, true );
+        wp_enqueue_script( 'awr-app', AWR_THEME_URI . '/' . $js_rel, array(), awr_asset_ver( $js_rel ), true );
         wp_add_inline_script( 'awr-app',
-            'window.__AWR_WP__=true;window.AWR_WP_HOME=' . wp_json_encode( home_url( '/' ) ) . ';',
+            'window.__AWR_WP__=true;window.AWR_WP_HOME=' . wp_json_encode( home_url( '/' ) ) . ';' .
+            // Stub mínimo para evitar "elementorFrontendConfig is not defined" quando
+            // scripts órfãos do Elementor sobrevivem em caches/banco sem o plugin ativo.
+            'window.elementorFrontendConfig=window.elementorFrontendConfig||{environmentMode:{edit:false,wpPreview:false,isScriptDebug:false},i18n:{},is_rtl:false,breakpoints:{xs:0,sm:480,md:768,lg:1025,xl:1440,xxl:1600},version:"0",urls:{assets:""},settings:{page:{},editorPreferences:{}},kit:{},post:{id:0,title:"",excerpt:"",featuredImage:false}};' .
+            'window.elementorFrontend=window.elementorFrontend||{config:window.elementorFrontendConfig,hooks:{addAction:function(){},addFilter:function(){},doAction:function(){},applyFilters:function(a,b){return b;}},elements:{},isEditMode:function(){return false;}};',
             'before'
         );
     }
 }
 add_action( 'wp_enqueue_scripts', 'awr_enqueue_assets', 20 );
+
+/**
+ * Remove scripts/estilos do Elementor (e variantes) quando o plugin
+ * não estiver ativo. Resolve "elementorFrontendConfig is not defined"
+ * causado por handles órfãos.
+ */
+function awr_remove_elementor_if_inactive() {
+    if ( did_action( 'elementor/loaded' ) || class_exists( 'Elementor\\Plugin' ) ) { return; }
+    $orphans = array(
+        'elementor-frontend', 'elementor-frontend-modules', 'elementor-pro-frontend',
+        'elementor-common', 'elementor-webpack-runtime', 'elementor-app-loader',
+        'elementor-icons', 'elementor-animations', 'elementor-pro',
+    );
+    foreach ( $orphans as $h ) {
+        if ( wp_script_is( $h, 'enqueued' ) || wp_script_is( $h, 'registered' ) ) {
+            wp_dequeue_script( $h ); wp_deregister_script( $h );
+        }
+        if ( wp_style_is( $h, 'enqueued' ) || wp_style_is( $h, 'registered' ) ) {
+            wp_dequeue_style( $h ); wp_deregister_style( $h );
+        }
+    }
+}
+add_action( 'wp_enqueue_scripts', 'awr_remove_elementor_if_inactive', 9999 );
+add_action( 'wp_print_scripts',   'awr_remove_elementor_if_inactive', 9999 );
 
 /* Adiciona type="module" ao bundle (necessário para ESM gerado pelo Vite). */
 function awr_module_script_tag( $tag, $handle ) {
