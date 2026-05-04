@@ -8,7 +8,7 @@
 
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
-if ( ! defined( 'AWR_THEME_VERSION' ) ) { define( 'AWR_THEME_VERSION', '1.0.1' ); }
+if ( ! defined( 'AWR_THEME_VERSION' ) ) { define( 'AWR_THEME_VERSION', '1.0.2' ); }
 if ( ! defined( 'AWR_THEME_DIR' ) )     { define( 'AWR_THEME_DIR', get_template_directory() ); }
 if ( ! defined( 'AWR_THEME_URI' ) )     { define( 'AWR_THEME_URI', get_template_directory_uri() ); }
 
