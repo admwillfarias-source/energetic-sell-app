@@ -436,16 +436,16 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
       toast({
         title: `Pedido #${data.number ?? data.id} criado!`,
-        description: "Você será redirecionado para o pagamento.",
+        description: "Acompanhe seu pedido na próxima tela.",
       });
 
-      if (data?.payment_url) {
-        window.open(data.payment_url, "_blank", "noopener,noreferrer");
-      }
-
+      const orderId = data?.id ?? data?.number;
       clear();
       onOpenChange(false);
       setCartOpen(false);
+      if (orderId) {
+        navigate(`/pedido-confirmado?id=${orderId}`);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Tente novamente em instantes.";
       toast({ title: "Erro ao criar pedido", description: msg });
