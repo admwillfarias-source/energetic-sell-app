@@ -20,6 +20,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { z } from "zod";
+import { useNavigate } from "react-router-dom";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
 import { searchVehicles, type VehicleSuggestion } from "@/lib/fitments";
@@ -128,6 +129,7 @@ const STEPS = [
 
 export function CheckoutDialog({ open, onOpenChange }: Props) {
   const { items, subtotal, clear, setOpen: setCartOpen } = useCart();
+  const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submittingWC, setSubmittingWC] = useState(false);
@@ -434,16 +436,16 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
       toast({
         title: `Pedido #${data.number ?? data.id} criado!`,
-        description: "Você será redirecionado para o pagamento.",
+        description: "Acompanhe seu pedido na próxima tela.",
       });
 
-      if (data?.payment_url) {
-        window.open(data.payment_url, "_blank", "noopener,noreferrer");
-      }
-
+      const orderId = data?.id ?? data?.number;
       clear();
       onOpenChange(false);
       setCartOpen(false);
+      if (orderId) {
+        navigate(`/pedido-confirmado?id=${orderId}`);
+      }
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Tente novamente em instantes.";
       toast({ title: "Erro ao criar pedido", description: msg });
@@ -1244,47 +1246,38 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     <span className="hidden xs:inline">Voltar</span>
                   </Button>
                   <Button
-                    type="submit"
-                    className="h-11 min-w-0 flex-1 bg-[#25D366] px-2 text-sm text-white hover:bg-[#20bd5a] sm:px-4"
+                    type="button"
+                    onClick={handleWooCommerce}
+                    disabled={submittingWC}
+                    className="h-11 min-w-0 flex-1 px-3 text-sm sm:px-4"
                   >
-                    <MessageCircle className="h-4 w-4 shrink-0" />
+                    {submittingWC ? (
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    ) : (
+                      <ShoppingCart className="h-4 w-4 shrink-0" />
+                    )}
                     <span className="truncate">
-                      <span className="sm:hidden">Enviar no WhatsApp</span>
-                      <span className="hidden sm:inline">Enviar pelo WhatsApp</span>
+                      {submittingWC ? "Enviando pedido..." : "Finalizar pedido"}
                     </span>
                   </Button>
                 </div>
                 <p className="text-center text-[11px] text-muted-foreground sm:text-xs">
-                  Seu pedido será aberto no WhatsApp com a mensagem pronta — basta enviar
+                  Seu pedido será registrado e você verá a tela de acompanhamento
                 </p>
 
-                {!isMobile && (
-                  <>
-                    <div className="flex items-center gap-3 py-1">
-                      <div className="h-px flex-1 bg-border" />
-                      <span className="text-xs text-muted-foreground">ou</span>
-                      <div className="h-px flex-1 bg-border" />
-                    </div>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="lg"
-                      className="w-full"
-                      onClick={handleWooCommerce}
-                      disabled={submittingWC}
-                    >
-                      {submittingWC ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                      ) : (
-                        <ShoppingCart className="h-4 w-4" />
-                      )}
-                      {submittingWC ? "Criando pedido..." : "Finalizar na loja online"}
-                    </Button>
-                    <p className="text-center text-xs text-muted-foreground">
-                      Cria o pedido em awrbaterias.com.br e abre a página de pagamento
-                    </p>
-                  </>
-                )}
+                <div className="flex items-center gap-3 py-1">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs text-muted-foreground">ou</span>
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                <Button
+                  type="submit"
+                  variant="outline"
+                  className="h-11 w-full bg-[#25D366]/10 text-[#1a8a44] border-[#25D366]/40 hover:bg-[#25D366]/20"
+                >
+                  <MessageCircle className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Enviar pelo WhatsApp</span>
+                </Button>
               </div>
             )}
           </div>
