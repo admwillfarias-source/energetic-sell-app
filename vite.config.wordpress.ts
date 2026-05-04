@@ -11,7 +11,9 @@ export default defineConfig({
     alias: { "@": path.resolve(__dirname, "./src") },
     dedupe: ["react", "react-dom", "react/jsx-runtime", "@tanstack/react-query"],
   },
-  base: "/wp-content/themes/awr-baterias/assets/",
+  // base relativa: chunks resolvem a partir do próprio app.js,
+  // funcionando em qualquer instalação WP (subpasta, HTTPS, proxy, etc).
+  base: "./",
   build: {
     outDir: "wp-theme/awr-baterias/assets",
     emptyOutDir: true,
