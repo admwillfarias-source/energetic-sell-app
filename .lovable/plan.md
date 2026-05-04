@@ -1,96 +1,103 @@
-## Plano de execução — SEO local AWR Baterias
+# Plano: Tema WordPress "awr-baterias" (headless + widget de busca)
 
-Decisões confirmadas:
-- Domínio canônico: **awrbaterias.com.br** (mantido em todos os schemas/sitemap)
-- NAP unificado: WhatsApp/telefone oficial **(51) 99319-9486** — substituirá `(51) 98541-9143` em `cityContent.ts`, FAQs, schemas e CTAs
-- Ordem de execução: **(1) bairros multi-cidade → (2) expansão de conteúdo → (3) blog topo de funil → (4) fundações técnicas**
+## Objetivo
+Gerar um pacote `.zip` instalável no WordPress que:
+1. Serve o site React atual (Vite build) como tema (Home, Bairros, Cidades, Marcas, Amperagens, Blog, Checkout WhatsApp, SEO).
+2. Expõe a busca de bateria por veículo como **shortcode `[awr_busca_bateria]`** para usar em qualquer página/post do WP.
+3. Mantém o backend atual (Supabase Edge Functions + WooCommerce Store API) — zero migração de dados.
 
-Fora de escopo (operacional, não-código): Google Meu Negócio, link building, diretórios (Apontador/Kekanto), assessoria de imprensa, automação de pedido de avaliação.
-
----
-
-### Fase 1 — Páginas de bairro para outras cidades
-
-Hoje só Porto Alegre tem bairros (`neighborhoodPages` em `src/data/neighborhoodContent.ts`, rota `/baterias/porto-alegre/:slug`). Vou replicar o padrão para **Gravataí, Cachoeirinha, Canoas, Alvorada, Viamão, Esteio e Sapucaia do Sul**.
-
-- Estender o tipo `NeighborhoodPageData` para aceitar qualquer cidade (campo `citySlug`) e agrupar por cidade.
-- Adicionar ~6–10 bairros relevantes por cidade, com `deliveryMinutes`, vias de referência e geo aproximada (centro do bairro).
-  - Gravataí: Centro, Parque dos Anjos, Morada do Vale I/II/III, Neópolis, Salgado Filho, Barnabé, Bom Sucesso, São Geraldo
-  - Cachoeirinha: Vila Vista Alegre, Vila Cachoeirinha, Parque Marechal Rondon, Granja Esperança, Parque Brasília
-  - Canoas: Centro, Mathias Velho, Niterói, Igara, Marechal Rondon, São José, Guajuviras
-  - Alvorada/Viamão/Esteio/Sapucaia: 5–6 principais cada
-- `Neighborhood.tsx`: já lê por slug — ajustar para resolver via `citySlug + slug` e listar “outros bairros próximos” ordenados por `deliveryMinutes`.
-- Página de cidade (`City.tsx`): a seção “entrega mais rápida por bairro” passa a usar a nova base e fica habilitada para todas as cidades, não só POA.
-- Atualizar `public/sitemap.xml` com todas as novas URLs (`/baterias/{cidade}/{bairro}`).
-- JSON-LD `LocalBusiness` + `BreadcrumbList` por bairro, reaproveitando `src/lib/seoSchemas.ts`.
-
-### Fase 2 — Expansão de conteúdo
-
-**2.1 Páginas de marca** (`/baterias/marca/:slug` para Moura, Heliar, Zetta, Excell, Freedom, Eletran, Global)
-- Nova `src/pages/Brand.tsx` + expansão de `brandContent.ts` com: descrição, garantia, linhas de produto (EFB/AGM/comum), faixa de preço derivada de `batteries.ts`, FAQ específica e ItemList JSON-LD dos SKUs daquela marca.
-
-**2.2 Páginas por amperagem** (`/baterias/amperagem/:ah` — 45, 50, 60, 70, 75, 100, 150, 220Ah)
-- Nova `src/pages/Amperage.tsx` que filtra `batteries.ts` pela amperagem, mostra carros compatíveis (via `fitments.json`), faixa de preço, marcas disponíveis.
-
-**2.3 Depoimentos localizados**
-- Adicionar `testimonials: { name, neighborhood, text, rating }[]` em cada `CityPageData` (3–5 por cidade) e renderizar bloco com `Review` schema.
-
-**2.4 Mapa Google embed**
-- Componente `<CityMap city geo />` usando `<iframe src="https://www.google.com/maps/embed/v1/place...">` com `loading="lazy"` em cada `City.tsx` e `Neighborhood.tsx`. Sem API key (modo place público) ou usando a chave de Maps que já estiver disponível.
-
-**2.5 Footer e navegação interna**
-- Atualizar `Footer.tsx` para listar marcas, amperagens populares e top-bairros, adensando o link interno.
-
-### Fase 3 — Blog / topo de funil
-
-- Nova rota `/blog` (índice) + `/blog/:slug` (artigo), página estática alimentada por `src/data/blogPosts.ts` (TS, sem CMS).
-- 6 artigos iniciais focados nas KWs do plano:
-  1. “Carro não liga e faz tec tec: o que é e como resolver”
-  2. “Quanto tempo dura uma bateria Moura?”
-  3. “Como saber se a bateria do carro pifou — 7 sinais”
-  4. “Bateria 60Ah ou 70Ah: qual escolher?”
-  5. “Bateria descarregou no frio: por que acontece em Porto Alegre/Gravataí”
-  6. “EFB vs AGM vs comum: diferenças para start-stop”
-- Cada artigo com `Article` JSON-LD, breadcrumb, CTA WhatsApp inline e bloco “atendemos sua cidade” linkando às landing pages.
-- Inclusão no sitemap.
-
-### Fase 4 — Fundações técnicas (Core Web Vitals + NAP)
-
-- **NAP unificado**: substituir `(51) 98541-9143` por `(51) 99319-9486` em `cityContent.ts`, FAQs e qualquer schema. Garantir mesmo número em `FloatingWhatsApp`, header e footer.
-- **Imagens**: auditar `src/assets/`, converter para WebP (mantendo fallback) e adicionar `width`/`height` + `loading="lazy"` (exceto LCP) para reduzir CLS.
-- **LCP**: marcar imagem hero da home/cidade como `fetchpriority="high"` e `loading="eager"`; pré-carregar fonte principal em `index.html`.
-- **JS**: garantir `lazy()` em rotas pesadas (já parcial em `App.tsx`); revisar imports do Index para code-splitting de componentes abaixo da dobra.
-- **Mobile CRO**: revisar tamanho de toque dos CTAs (mín. 48px), espaçamento e contraste do `FloatingWhatsApp`.
-- **Robots/Sitemap**: regenerar `sitemap.xml` ao final de cada fase incluindo todas as URLs novas; revisar `robots.txt`.
-- **Validação**: revisar manualmente os JSON-LD gerados (LocalBusiness, FAQPage, BreadcrumbList, Product, Article, Review) com base em `src/lib/seoSchemas.ts` para 100% de conformidade Rich Results.
-
----
-
-### Detalhes técnicos
-
-Arquivos novos:
-- `src/data/blogPosts.ts`, `src/pages/Blog.tsx`, `src/pages/BlogPost.tsx`
-- `src/pages/Brand.tsx`, `src/pages/Amperage.tsx`
-- `src/components/CityMap.tsx`
-
-Arquivos editados:
-- `src/data/neighborhoodContent.ts` (multi-cidade), `src/data/cityContent.ts` (telefone + depoimentos), `src/data/brandContent.ts` (conteúdo rico)
-- `src/pages/Neighborhood.tsx`, `src/pages/City.tsx`, `src/components/Footer.tsx`, `src/App.tsx` (novas rotas)
-- `src/lib/seoSchemas.ts` (helpers para `Article` e `Review`)
-- `public/sitemap.xml`, `public/robots.txt`
-
-Estrutura de rotas resultante:
+## Arquitetura
 
 ```text
-/                                    Home
-/baterias/:cidade                    City (7 cidades)
-/baterias/:cidade/:bairro            Neighborhood (~50 URLs)
-/baterias/marca/:slug                Brand (7 URLs)
-/baterias/amperagem/:ah              Amperage (~8 URLs)
-/baterias-para/:slug[/:year]         VehicleSeo (já existe)
-/blog, /blog/:slug                   Conteúdo topo de funil (6+ URLs)
+WordPress (PHP)
+ ├─ wp-content/themes/awr-baterias/
+ │   ├─ style.css                  (cabeçalho do tema)
+ │   ├─ functions.php              (enqueue do bundle, shortcode, rewrite)
+ │   ├─ index.php                  (catch-all → renderiza <div id="root">)
+ │   ├─ front-page.php             (home)
+ │   ├─ 404.php
+ │   ├─ header.php / footer.php    (mínimos: <head> + container)
+ │   ├─ assets/                    (output do `vite build`)
+ │   │   ├─ index-[hash].js
+ │   │   ├─ index-[hash].css
+ │   │   └─ ...imagens, fonts
+ │   └─ widget/
+ │       └─ awr-busca.js           (bundle isolado só da busca)
+ └─ Backend (inalterado): Supabase + WooCommerce Store API
 ```
 
-### Como vou entregar
+## Entregáveis
 
-Por ser bastante código, executarei em **4 entregas separadas** (uma por fase), começando pela Fase 1. Após cada fase você revisa antes de eu seguir para a próxima.
+1. **`/wp-theme/awr-baterias/`** — código-fonte do tema (PHP + assets do build).
+2. **`/wp-theme/awr-baterias.zip`** — pacote pronto pra instalar via *Aparência → Temas → Adicionar*.
+3. **`/wp-theme/README-INSTALACAO.md`** — passo a passo (instalar tema, criar página "Início" e definir como estática, configurar permalinks como "Nome do post", instalar Yoast opcional).
+
+## Passos de implementação
+
+### 1. Configurar Vite para gerar bundle compatível com WP
+- Criar `vite.config.wordpress.ts` com:
+  - `base: '/wp-content/themes/awr-baterias/assets/'`
+  - `build.outDir: 'wp-theme/awr-baterias/assets'`
+  - `build.rollupOptions.output` com nomes determinísticos pra functions.php encontrar.
+- Adicionar script `npm run build:wp`.
+
+### 2. Resolver roteamento SPA dentro do WP
+- `functions.php` registra um rewrite catch-all que manda **todas** as URLs não-admin/não-wp para `index.php`.
+- `index.php` imprime `<div id="root"></div>` + enqueue do bundle. React Router assume controle no client (mantém `/bateria/:sku`, `/bairro/:slug`, etc).
+- Flag de ambiente: bundle detecta `window.__AWR_WP__` pra ajustar base URL se necessário.
+
+### 3. Shortcode `[awr_busca_bateria]`
+- Build separado (`vite build --config vite.config.widget.ts`) que exporta só `<VehicleAutocomplete>` montando em `[data-awr-busca]`.
+- `functions.php`:
+  ```php
+  add_shortcode('awr_busca_bateria', function($atts) {
+    wp_enqueue_script('awr-busca', get_template_directory_uri().'/widget/awr-busca.js', [], null, true);
+    wp_enqueue_style('awr-busca-css', get_template_directory_uri().'/widget/awr-busca.css');
+    return '<div data-awr-busca></div>';
+  });
+  ```
+- Ao escolher veículo, redireciona pra `/resultado?...` (mesma rota do React, ou domínio externo se configurado).
+
+### 4. Variáveis de ambiente no WP
+- Bundle do React precisa de `VITE_SUPABASE_URL` + `VITE_SUPABASE_PUBLISHABLE_KEY`. Como já estão embutidos no build atual (públicos), vão direto no JS minificado — sem ação extra.
+- WooCommerce continua sendo consultado via Edge Function `wc-products` (não muda).
+
+### 5. SEO
+- Como é SPA, **Helmet renderiza tags no client** — bom pro Google moderno mas não pra todos os crawlers.
+- Solução incluída no plano:
+  - **Página inicial**: `header.php` injeta `<title>`, `<meta description>`, OG tags e JSON-LD `LocalBusiness` direto em PHP (server-side), usando os mesmos dados de `src/lib/seoSchemas.ts` portados pra um `inc/seo.php`.
+  - **Bairros/Cidades/Marcas/Amperagens**: gerar em build-time um arquivo `inc/seo-routes.php` com mapa `slug → {title, description, jsonLd}` extraído de `src/data/neighborhoodContent.ts`, `cityContent.ts`, `brandContent.ts`, `amperageContent.ts`. `header.php` consulta esse mapa pela URL atual e imprime as tags antes do React montar.
+  - **Blog**: idem, mapa gerado de `src/data/blogPosts.ts`.
+  - `sitemap.xml` e `robots.txt` atuais ficam em `public/` e são copiados pra raiz do tema; functions.php expõe via rewrite.
+
+### 6. Checkout WhatsApp
+- Componente `CheckoutDialog` já chama Edge Functions Supabase (`send-whatsapp-order`, `wc-create-order`). Continua funcionando dentro do bundle React — nenhuma adaptação necessária.
+
+### 7. Empacotamento
+- Script `scripts/build-wp-theme.sh`:
+  1. `npm run build:wp`
+  2. `npm run build:widget`
+  3. Copia `public/_headers`, `robots.txt`, `sitemap.xml`, `placeholder.svg`, OG image.
+  4. Gera `inc/seo-routes.php` lendo os arquivos de `src/data/*`.
+  5. `zip -r wp-theme/awr-baterias.zip wp-theme/awr-baterias`.
+
+## Limitações conhecidas (avisar o usuário)
+- **Não é um tema PHP "nativo"**: editar conteúdo de bairros/cidades pelo painel do WP **não** funciona — esses textos vivem em `src/data/*.ts` e exigem novo build do tema.
+- **WooCommerce do WP destino não é usado** pra produtos da busca: o bundle continua consumindo a loja WooCommerce atual via Edge Function. Se o WP destino for a própria loja, dá pra apontar a Edge Function pra ela (mesma API).
+- **Renderização server-side parcial**: SEO tags principais são server-side (PHP), mas conteúdo HTML completo continua client-side. Suficiente pro Google, limitado pra crawlers antigos.
+- Requer WordPress ≥ 6.0, PHP ≥ 8.0, permalinks "Nome do post".
+
+## Arquivos novos (no repositório atual)
+- `vite.config.wordpress.ts`
+- `vite.config.widget.ts`
+- `src/widget/main.tsx` (entry só do `<VehicleAutocomplete>`)
+- `wp-theme/awr-baterias/{style.css, functions.php, index.php, front-page.php, header.php, footer.php, 404.php}`
+- `wp-theme/awr-baterias/inc/{seo.php, seo-routes.php (gerado)}`
+- `scripts/build-wp-theme.sh`
+- `scripts/generate-seo-routes.mjs` (lê `src/data/*` e emite PHP)
+- `wp-theme/README-INSTALACAO.md`
+
+## Arquivos alterados
+- `package.json` — adicionar scripts `build:wp`, `build:widget`, `build:wp-theme`.
+
+Nenhum arquivo do app React atual é modificado — o site no Lovable continua funcionando igual.
