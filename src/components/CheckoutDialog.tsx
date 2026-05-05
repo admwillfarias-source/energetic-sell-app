@@ -788,15 +788,56 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="numero">Número (Casa/Apto)</Label>
-                      <Input
-                        id="numero"
-                        value={form.numero}
-                        onChange={update("numero")}
-                        placeholder="123 / Apto 45"
-                      />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="numero">Número (Casa/Apto)</Label>
+                        <Input
+                          id="numero"
+                          value={form.numero}
+                          onChange={update("numero")}
+                          placeholder="123 / Apto 45"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="bairro">Bairro</Label>
+                        <Input
+                          id="bairro"
+                          value={form.bairro}
+                          onChange={update("bairro")}
+                          placeholder="Ex: Menino Deus"
+                          list="bairros-rapida"
+                        />
+                        <datalist id="bairros-rapida">
+                          {BAIRROS_RAPIDA.map((b) => (
+                            <option key={b} value={b} />
+                          ))}
+                        </datalist>
+                      </div>
                     </div>
+
+                    {form.bairro.trim().length >= 2 && (
+                      bairroAtendeRapido(form.bairro) ? (
+                        <div className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-xs text-success">
+                          ✅ <strong>{form.bairro}</strong> atende entrega rápida (06:30–08:30 e até 21:30).
+                        </div>
+                      ) : (
+                        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                          ⚠️ <strong>{form.bairro}</strong> está fora da zona de entrega rápida. Agende para o próximo dia útil em horário comercial (08:35–18:00).
+                        </div>
+                      )
+                    )}
+
+                    <details className="rounded-md border border-border bg-secondary/30 px-3 py-2 text-xs">
+                      <summary className="cursor-pointer font-semibold text-foreground">
+                        Bairros atendidos com entrega rápida (06:30–08:30 e até 21:30)
+                      </summary>
+                      <p className="mt-2 text-muted-foreground">
+                        {BAIRROS_RAPIDA.join(" · ")}
+                      </p>
+                      <p className="mt-2 text-muted-foreground">
+                        Demais bairros: agendar para o dia seguinte em horário comercial (08:35–18:00).
+                      </p>
+                    </details>
                   </div>
                 )}
 
