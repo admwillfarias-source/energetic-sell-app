@@ -829,17 +829,6 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                       )
                     )}
 
-                    <details className="rounded-md border border-border bg-secondary/30 px-3 py-2 text-xs">
-                      <summary className="cursor-pointer font-semibold text-foreground">
-                        Bairros atendidos com entrega rápida (06:30–08:30 e até 21:30)
-                      </summary>
-                      <p className="mt-2 text-muted-foreground">
-                        {BAIRROS_RAPIDA.join(" · ")}
-                      </p>
-                      <p className="mt-2 text-muted-foreground">
-                        Demais bairros: agendar para o dia seguinte em horário comercial (08:35–18:00).
-                      </p>
-                    </details>
                   </div>
                 )}
 
