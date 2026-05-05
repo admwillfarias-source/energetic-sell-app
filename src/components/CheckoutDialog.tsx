@@ -34,6 +34,60 @@ const WHATSAPP_NUMBER = "5551993199486";
 const ATEND_INICIO_MIN = 6 * 60 + 30; // 06:30
 const ATEND_FIM_MIN = 21 * 60 + 30; // 21:30
 
+// Bairros com atendimento rápido (06:30–08:30 e até 21:30)
+const BAIRROS_RAPIDA = [
+  "Nonoai",
+  "Medianeira",
+  "Menino Deus",
+  "Cidade Baixa",
+  "Centro Histórico",
+  "Cavalhada",
+  "Petrópolis",
+  "Cristal",
+  "Bom Fim",
+  "Jardim Botânico",
+  "Tristeza",
+  "Praia de Belas",
+  "Moinhos de Vento",
+  "Mont Serrat",
+  "Bela Vista",
+  "Higienópolis",
+  "Azenha",
+  "Auxiliadora",
+  "Camaquã",
+  "Farroupilha",
+  "Santa Tereza",
+  "Santana",
+  "Santo Antônio",
+  "Teresópolis",
+  "Três Figueiras",
+  "Vila Assunção",
+];
+
+function normalizeBairro(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const BAIRROS_RAPIDA_NORM = new Set(BAIRROS_RAPIDA.map(normalizeBairro));
+
+function bairroAtendeRapido(bairro: string): boolean {
+  if (!bairro) return false;
+  return BAIRROS_RAPIDA_NORM.has(normalizeBairro(bairro));
+}
+
+// Janela de manhã cedo do atendimento rápido (06:30–08:30)
+const RAPIDA_MANHA_FIM = 8 * 60 + 30; // 08:30
+function rapidaJanelaValida(min: number): boolean {
+  // 06:30–08:30 ou até 21:30 (sempre dentro do atendimento)
+  if (min < ATEND_INICIO_MIN || min > ATEND_FIM_MIN) return false;
+  return true;
+}
+
 // Faixas de tarifa de entrega
 const FAIXA_MANHA_INICIO = 6 * 60 + 30; // 06:30
 const FAIXA_MANHA_FIM = 8 * 60; // 08:00 → +R$ 40
@@ -140,6 +194,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     endereco: "",
     numero: "",
     cep: "",
+    bairro: "",
     telefone: "",
     pagamento: "",
     carroAno: "",
@@ -225,7 +280,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
         .filter(Boolean)
         .join(", ");
       if (linha) {
-        setForm((p) => ({ ...p, endereco: linha }));
+        setForm((p) => ({ ...p, endereco: linha, bairro: data.bairro || p.bairro }));
         toast({ title: "Endereço preenchido", description: linha });
       }
     } catch {
@@ -330,16 +385,31 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       const first = Object.values(parsed.error.flatten().fieldErrors)[0]?.[0];
       return { ok: false, msg: first ?? "Verifique o formulário." };
     }
-    if (form.entregaTipo === "rapida" && !rapidaDisponivelAgora()) {
-      return {
-        ok: false,
-        msg: "Entrega rápida disponível das 06h30 às 21h30. Selecione 'Agendar entrega' para outro horário.",
-      };
+    if (form.entregaTipo === "rapida") {
+      if (!rapidaDisponivelAgora()) {
+        return {
+          ok: false,
+          msg: "Entrega rápida disponível das 06h30 às 21h30. Selecione 'Agendar entrega' para outro horário.",
+        };
+      }
+      if (!bairroAtendeRapido(form.bairro)) {
+        return {
+          ok: false,
+          msg: "Seu bairro não tem entrega rápida. Agende para o próximo dia útil.",
+        };
+      }
     }
     if (form.entregaTipo === "agendada") {
       const m = minutesFromHHMM(form.entregaHora);
       if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
         return { ok: false, msg: "Horário de agendamento entre 06:30 e 21:30." };
+      }
+      // Janela 06:30–08:30 só para bairros atendidos
+      if (m <= RAPIDA_MANHA_FIM && !bairroAtendeRapido(form.bairro)) {
+        return {
+          ok: false,
+          msg: "Janela 06:30–08:30 disponível apenas para bairros atendidos. Escolha horário comercial.",
+        };
       }
     }
     return { ok: true };
@@ -353,14 +423,28 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       }
       if (form.endereco.trim().length < 5) return { ok: false, msg: "Informe o endereço." };
       if (form.numero.trim().length < 1) return { ok: false, msg: "Informe o número." };
+      if (form.bairro.trim().length < 2) return { ok: false, msg: "Informe o bairro." };
+      if (!bairroAtendeRapido(form.bairro)) {
+        return {
+          ok: false,
+          msg: "Bairro fora da área de entrega rápida. Agende para o próximo dia útil em horário comercial.",
+        };
+      }
     } else if (form.entregaTipo === "agendada") {
       if (form.endereco.trim().length < 5) return { ok: false, msg: "Informe o endereço." };
       if (form.numero.trim().length < 1) return { ok: false, msg: "Informe o número." };
+      if (form.bairro.trim().length < 2) return { ok: false, msg: "Informe o bairro." };
       if (!form.entregaData) return { ok: false, msg: "Selecione a data." };
       if (!form.entregaHora) return { ok: false, msg: "Selecione o horário." };
       const m = minutesFromHHMM(form.entregaHora);
       if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
         return { ok: false, msg: "Horário de agendamento entre 06:30 e 21:30." };
+      }
+      if (m <= RAPIDA_MANHA_FIM && !bairroAtendeRapido(form.bairro)) {
+        return {
+          ok: false,
+          msg: "Janela 06:30–08:30 atende apenas bairros listados. Escolha horário comercial (08:35–18:00).",
+        };
       }
     } else if (form.entregaTipo === "retirada") {
       if (form.lojaRetirada.trim().length < 2) return { ok: false, msg: "Selecione a loja." };
@@ -413,6 +497,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           endereco: form.endereco,
           numero: form.numero,
           cep: form.cep || "",
+          bairro: form.bairro || "",
           pagamento: form.pagamento,
           carroAno: form.carroAno,
           entrega: entregaResumo(),
@@ -470,6 +555,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `*Entrega*\n` +
       `Endereço: ${form.endereco}\n` +
       `Número: ${form.numero}\n` +
+      (form.bairro ? `Bairro: ${form.bairro}\n` : "") +
       (form.cep ? `CEP: ${form.cep}\n` : "") +
       `Modalidade: ${entregaResumo()}\n\n` +
       `*Veículo*\n${form.carroAno}\n\n` +
@@ -704,15 +790,56 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label htmlFor="numero">Número (Casa/Apto)</Label>
-                      <Input
-                        id="numero"
-                        value={form.numero}
-                        onChange={update("numero")}
-                        placeholder="123 / Apto 45"
-                      />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="numero">Número (Casa/Apto)</Label>
+                        <Input
+                          id="numero"
+                          value={form.numero}
+                          onChange={update("numero")}
+                          placeholder="123 / Apto 45"
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="bairro">Bairro</Label>
+                        <Input
+                          id="bairro"
+                          value={form.bairro}
+                          onChange={update("bairro")}
+                          placeholder="Ex: Menino Deus"
+                          list="bairros-rapida"
+                        />
+                        <datalist id="bairros-rapida">
+                          {BAIRROS_RAPIDA.map((b) => (
+                            <option key={b} value={b} />
+                          ))}
+                        </datalist>
+                      </div>
                     </div>
+
+                    {form.bairro.trim().length >= 2 && (
+                      bairroAtendeRapido(form.bairro) ? (
+                        <div className="rounded-md border border-success/30 bg-success/10 px-3 py-2 text-xs text-success">
+                          ✅ <strong>{form.bairro}</strong> atende entrega rápida (06:30–08:30 e até 21:30).
+                        </div>
+                      ) : (
+                        <div className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-xs text-destructive">
+                          ⚠️ <strong>{form.bairro}</strong> está fora da zona de entrega rápida. Agende para o próximo dia útil em horário comercial (08:35–18:00).
+                        </div>
+                      )
+                    )}
+
+                    <details className="rounded-md border border-border bg-secondary/30 px-3 py-2 text-xs">
+                      <summary className="cursor-pointer font-semibold text-foreground">
+                        Bairros atendidos com entrega rápida (06:30–08:30 e até 21:30)
+                      </summary>
+                      <p className="mt-2 text-muted-foreground">
+                        {BAIRROS_RAPIDA.join(" · ")}
+                      </p>
+                      <p className="mt-2 text-muted-foreground">
+                        Demais bairros: agendar para o dia seguinte em horário comercial (08:35–18:00).
+                      </p>
+                    </details>
                   </div>
                 )}
 
