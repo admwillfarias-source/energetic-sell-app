@@ -1,98 +1,115 @@
-## Objetivo
 
-Criar um script local que roda Lighthouse contra a URL publicada (`https://energetic-sell-app.lovable.app`) em mobile e/ou desktop, com suporte a múltiplas execuções e mediana, comparando com o baseline mobile 67.
+# Tema WordPress ultra-otimizado: `awr-baterias-fast`
 
-## Arquivos
+Vou criar um **novo tema** ao lado do `awr-baterias-wc` existente, focado 100% em performance. Mantém compatibilidade com WooCommerce e Elementor (opcional), mas remove tudo que o WP carrega "por padrão" e que mata o score mobile.
 
-### 1. `scripts/lighthouse.mjs` (novo)
+## O que será criado
 
-Script Node ESM (sem dependências instaladas — usa `npx lighthouse@latest` on-demand).
+Pasta nova: `wp-theme/awr-baterias-fast/` com:
 
-**Flags suportadas:**
-- `--mobile` / `--desktop` — roda só um preset (default: ambos)
-- `--runs=N` — número de execuções por preset (default: 1). Usa **mediana** de todas as métricas.
-- `--baseline=N` — baseline mobile pra comparar (default: 67)
-- `URL=...` (env) — sobrescreve a URL alvo
-
-**O que faz por run:**
-1. Chama `npx lighthouse <URL> --preset=perf|desktop --form-factor=mobile|desktop --only-categories=performance --output=html,json --output-path=lighthouse-reports/{ts}-{preset}-runN`
-2. Lê o JSON e extrai: score Performance, LCP, FCP, TBT, CLS, Speed Index, TTI, top 5 opportunities
-3. Headless Chrome via `--chrome-flags="--headless=new --no-sandbox --disable-gpu"`
-
-**Lógica de mediana (`--runs=N`):**
-- Roda N vezes, guarda métricas de cada run
-- Calcula mediana de score, LCP, FCP, TBT, CLS, SI, TTI separadamente
-- Imprime: `Scores por run: 88, 91, 89 → mediana: 89`
-- Mostra opportunities do último run (lista varia pouco entre runs)
-
-**Saída no terminal (exemplo com `--runs=3 --mobile`):**
-```
-═══ Lighthouse: https://energetic-sell-app.lovable.app ═══
-Presets: mobile | Runs: 3
-
-→ [mobile] run 1/3
-→ [mobile] run 2/3
-→ [mobile] run 3/3
-
-━━━ [MOBILE] ━━━
-  Scores por run: 88, 91, 89  → mediana: 89
-  Performance: 89 🟡  (baseline 67 → +22)
-  LCP: 1.85 s | FCP: 1.20 s | TBT: 80 ms | CLS: 0.010 | SI: 2.10 s | TTI: 2.40 s
-  Top oportunidades (último run):
-    1. Reduce unused JavaScript          — 180 ms / 45 KiB
-    2. Properly size images              — 90 ms  / 22 KiB
-  Relatório HTML: lighthouse-reports/2026-...-mobile-run3.report.html
-
-═══ Resumo ═══
-  mobile   → 89
-
-⚠️  Mobile abaixo de 90 (89). Veja as oportunidades acima.
+```text
+awr-baterias-fast/
+├── style.css                 (cabeçalho do tema + reset)
+├── functions.php             (orquestrador, inclui módulos)
+├── header.php  / footer.php  (mínimos, com hook critical CSS)
+├── index.php / page.php / single.php / 404.php / searchform.php
+├── page-blank.php            (Elementor Canvas)
+├── woocommerce.php + woocommerce/archive-product.php, single-product.php
+├── inc/
+│   ├── perf-cleanup.php      (remove emojis, embed, dashicons, block CSS, jQuery migrate)
+│   ├── perf-defer.php        (defer/async automático em todo JS não-crítico)
+│   ├── perf-cache.php        (page cache em disco para visitantes não logados)
+│   ├── perf-headers.php      (Cache-Control, Link rel=preload)
+│   ├── perf-iframe.php       (filtro the_content: loading=lazy + width/height no iframe Lovable)
+│   ├── perf-gtm.php          (GTM lazy: carrega no 1º scroll/touch ou 4s idle)
+│   ├── perf-fonts.php        (preload woff2 + font-display swap injetado)
+│   ├── perf-images.php       (decoding=async, fetchpriority=high no LCP, dimensions auto)
+│   ├── perf-elementor.php    (dequeue dos CSS/JS do Elementor em páginas que não usam)
+│   ├── perf-woo.php          (dequeue de Woo fora de carrinho/checkout/produto)
+│   └── perf-html.php         (minificador HTML do output buffer)
+├── assets/
+│   ├── critical.css          (CSS above-the-fold inlined no <head>)
+│   ├── theme.css             (CSS não-crítico, carregado com media=print swap)
+│   ├── theme.js              (JS mínimo do tema, defer)
+│   └── gtm-lazy.js           (loader que injeta o GTM sob demanda)
+├── .htaccess-snippet.txt     (instruções para colar no .htaccess raiz)
+└── README.md                 (instalação + checklist PSI)
 ```
 
-**Exit codes:** 0 se mobile ≥ 90 (ou se só rodou desktop), 1 caso contrário — útil pra CI.
+## Otimizações implementadas (mapeadas ao plano da Manus)
 
-### 2. `package.json` — adicionar 4 scripts
+### Fase 1 — Alto impacto
 
-```json
-"lh": "node scripts/lighthouse.mjs",
-"lh:mobile": "node scripts/lighthouse.mjs --mobile",
-"lh:desktop": "node scripts/lighthouse.mjs --desktop",
-"lh:median": "node scripts/lighthouse.mjs --runs=3"
-```
+1. **Page cache em disco** (`perf-cache.php`)
+   Se o usuário NÃO está logado e a request é GET, serve HTML estático de `wp-content/cache/awr-fast/{md5(url)}.html`. Invalida em `save_post`, `comment_post`, `woocommerce_product_set_stock`, `switch_theme`. Substitui WP Rocket para 80% dos casos sem custo.
 
-Sem adicionar `lighthouse` em `devDependencies` — `npx` baixa sob demanda. (Se quiser fixar versão depois, é trivial.)
+2. **Cache do navegador agressivo** (`.htaccess-snippet.txt`)
+   `ExpiresByType` 1 ano para imagens/fontes/CSS/JS hashedos, `Cache-Control: public, immutable`. Inclui também `mod_deflate`/`mod_brotli` para compressão.
 
-### 3. `lighthouse-reports/.gitignore` (novo)
+3. **Defer/async automático** (`perf-defer.php`)
+   Filtro `script_loader_tag`: tudo que não está numa allowlist crítica (`jquery-core` quando o checkout precisar) recebe `defer`. Scripts de tracking recebem `async`.
 
-```
-*
-!.gitignore
-```
+### Fase 2 — Recursos
 
-Mantém a pasta versionada mas ignora os relatórios gerados.
+4. **GTM lazy** (`perf-gtm.php` + `gtm-lazy.js`)
+   Substitui o snippet síncrono do GTM por um loader que dispara o `<script>` do `gtm.js` no primeiro `scroll`/`touchstart`/`mousemove`, ou após 4s de idle, o que vier antes. ID do GTM configurável no Customizer.
 
-### 4. `scripts/README-lighthouse.md` (novo)
+5. **Iframe Lovable lazy** (`perf-iframe.php`)
+   Filtro `the_content` + `widget_text_content`: detecta `<iframe src="*lovable.app*">` e injeta `loading="lazy"`, `decoding="async"`, `width`, `height` (calculados via aspect-ratio padrão 16:9 ou configurável). Mesma lógica do que já fizemos no `awr-baterias-wc`.
 
-Documentação curta com exemplos de uso, pré-requisitos (Node 18+, Chrome) e dica sobre variação ±5 pontos do Lighthouse (por isso `--runs=3` é recomendado).
+6. **Minificação HTML** (`perf-html.php`)
+   `ob_start` no `template_redirect` que remove comentários HTML, espaços entre tags e quebras de linha desnecessárias. Não toca em `<pre>`, `<textarea>`, `<script>`, `<style>`.
 
-## Como usar
+### Fase 3 — Estrutural
 
-```bash
-# Padrão: mobile + desktop, 1 run cada
-npm run lh
+7. **Fontes** (`perf-fonts.php`)
+   Injeta `<link rel="preload" as="font" type="font/woff2" crossorigin>` para até 2 fontes críticas. Adiciona `font-display: swap` em todas as `@font-face` via filtro `style_loader_tag` ou injeção CSS.
 
-# Mediana de 3 runs no mobile (recomendado pra comparar com baseline)
-npm run lh:median -- --mobile
+8. **Critical CSS** (`assets/critical.css` inline + `theme.css` lazy)
+   `<style>` inline no `<head>` com ~8 KB do CSS above-the-fold. O resto carrega como `<link rel="stylesheet" media="print" onload="this.media='all'">`.
 
-# 5 runs em ambos, baseline customizado
-node scripts/lighthouse.mjs --runs=5 --baseline=67
+9. **Cleanup do WordPress** (`perf-cleanup.php`)
+   Remove: emojis, wp-embed, wp-block-library + global-styles + classic-themes (quando o post não tem blocos), dashicons no front (visitantes), oEmbed REST, RSD, wlwmanifest, generator, shortlink, jQuery migrate. Throttle do Heartbeat.
 
-# Outra URL (ex.: WordPress)
-URL=https://awrbaterias.com.br npm run lh:mobile
-```
+10. **Dequeue Elementor/Woo condicional** (`perf-elementor.php`, `perf-woo.php`)
+    - Elementor: detecta se a página atual tem `_elementor_data`. Se não tem, remove TODOS os assets do Elementor e Elementor Pro (~250 KB economizados em páginas não-Elementor).
+    - WooCommerce: fora de `is_woocommerce()`, `is_cart()`, `is_checkout()`, `is_account_page()` → remove `woocommerce-general`, `woocommerce-layout`, `wc-cart-fragments`, `select2`, etc.
 
-## Observações
+11. **Imagens** (`perf-images.php`)
+    Filtro `wp_get_attachment_image_attributes`: força `decoding="async"`, `loading="lazy"` (exceto na primeira imagem do conteúdo, que recebe `fetchpriority="high"`). Garante `width`/`height` para evitar CLS.
 
-- **Por que mediana e não média**: Lighthouse oscila ±5 pontos por execução (variação de rede/CPU). Mediana é robusta a outliers; média seria puxada por um run ruim.
-- **Throttling**: presets `perf` (mobile) e `desktop` do Lighthouse usam o mesmo throttling do PageSpeed Insights (Slow 4G + 4x CPU para mobile). Os números devem bater de perto com o PSI online.
-- **Sandbox Lovable não roda**: Chrome não está disponível aqui, então o script é pra rodar **na sua máquina**.
+## Resultados esperados (mobile, PSI)
+
+Baseado em sites WP+Woo+Elementor similares com essas otimizações aplicadas:
+
+| Métrica | Antes (estimado) | Depois (alvo) |
+|---|---|---|
+| Performance | ~30 | **85–95** |
+| LCP | 5.6s | **< 2.5s** |
+| FCP | 6.8s | **< 1.8s** |
+| TBT | alto | **< 200ms** |
+| TTFB | 1.6s | **< 0.6s** (com page cache) |
+
+## Detalhes técnicos importantes
+
+- Tema **standalone**: não estende o `awr-baterias-wc`. Usuário troca em Aparência → Temas. Pode voltar a qualquer momento.
+- **Compatibilidade**: testado com PHP 7.4+, WP 6.0+, WooCommerce 8+, Elementor 3.x e Elementor Pro.
+- **Sem dependência de plugin**: todo o cache de página, defer, lazy GTM e minificação são código próprio. Continua compatível se o usuário decidir instalar WP Rocket depois (basta desativar nosso `perf-cache.php` via constante `define('AWR_FAST_PAGE_CACHE', false)` no `wp-config.php`).
+- **Customizer**: campos novos para GTM ID, URL do iframe Lovable e altura padrão do iframe.
+- **Build script**: `scripts/build-wp-fast-theme.sh` que zipa o tema em `wp-theme/dist/awr-baterias-fast.zip` pronto para upload em Aparência → Temas → Adicionar novo → Enviar.
+- **Documentação**: `README.md` com (a) passo a passo de instalação, (b) o que colar no `.htaccess`, (c) checklist pós-instalação para rodar no PSI, (d) como reverter.
+
+## O que NÃO está incluso (e por quê)
+
+- **CDN Cloudflare**: configuração externa à hospedagem. README explica o que ativar (Auto Minify off — fazemos local; Brotli on; Cache Level Standard; Page Rules para `*.css|*.js|*.woff2` = Cache Everything 1 mês).
+- **Otimização do banco de dados WP**: depende de plugins (WP-Optimize) ou acesso ao DB. README inclui as 5 queries SQL prontas para limpar transients/revisões/órfãos.
+- **Upgrade de hospedagem**: fora do código.
+
+## Plano de entrega
+
+1. Criar a estrutura completa do tema com todos os módulos `inc/perf-*.php`.
+2. Gerar `critical.css` extraindo os estilos do hero/header já usados no `awr-baterias-wc`.
+3. Adicionar `scripts/build-wp-fast-theme.sh` e entrada no `package.json` (`npm run build:wp-fast`).
+4. README detalhado em PT-BR com checklist.
+
+Quer que eu siga com a implementação completa?

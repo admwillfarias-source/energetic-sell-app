@@ -1,0 +1,71 @@
+###############################################################################
+# AWR Baterias Fast — snippet para colar no .htaccess da raiz do WordPress.
+# Cole o bloco abaixo ANTES do bloco "# BEGIN WordPress".
+#
+# Requer mod_expires, mod_headers, mod_deflate (ou mod_brotli) no Apache.
+# Em servidor Nginx, peça ao admin para traduzir as diretivas.
+###############################################################################
+
+# === Compressão ===
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript
+    AddOutputFilterByType DEFLATE application/javascript application/json application/xml
+    AddOutputFilterByType DEFLATE application/x-javascript application/xhtml+xml
+    AddOutputFilterByType DEFLATE image/svg+xml font/woff2 font/woff font/ttf
+</IfModule>
+
+<IfModule mod_brotli.c>
+    AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css application/javascript application/json image/svg+xml
+</IfModule>
+
+# === Cache do navegador ===
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresDefault                              "access plus 1 month"
+
+    # HTML — sempre revalida (deploys reaching users)
+    ExpiresByType text/html                     "access plus 0 seconds"
+
+    # CSS / JS — 1 ano (versionados via filemtime)
+    ExpiresByType text/css                      "access plus 1 year"
+    ExpiresByType application/javascript        "access plus 1 year"
+    ExpiresByType application/x-javascript      "access plus 1 year"
+
+    # Imagens — 6 meses
+    ExpiresByType image/jpg                     "access plus 6 months"
+    ExpiresByType image/jpeg                    "access plus 6 months"
+    ExpiresByType image/png                     "access plus 6 months"
+    ExpiresByType image/webp                    "access plus 6 months"
+    ExpiresByType image/avif                    "access plus 6 months"
+    ExpiresByType image/svg+xml                 "access plus 6 months"
+    ExpiresByType image/x-icon                  "access plus 1 year"
+
+    # Fontes — 1 ano
+    ExpiresByType font/woff                     "access plus 1 year"
+    ExpiresByType font/woff2                    "access plus 1 year"
+    ExpiresByType application/font-woff         "access plus 1 year"
+    ExpiresByType application/font-woff2        "access plus 1 year"
+    ExpiresByType application/x-font-ttf        "access plus 1 year"
+</IfModule>
+
+# === Cache-Control headers ===
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff2|woff|ttf|otf|svg|webp|avif|jpg|jpeg|png|gif|ico)$">
+        Header set Cache-Control "public, max-age=31536000, immutable"
+        Header unset ETag
+    </FilesMatch>
+    <FilesMatch "\.(html|htm)$">
+        Header set Cache-Control "public, max-age=0, must-revalidate"
+    </FilesMatch>
+    Header unset X-Powered-By
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+
+# === Bloqueia hotlink básico ===
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{HTTP_REFERER} !^$
+    RewriteCond %{HTTP_REFERER} !^https?://(www\.)?awrbaterias\.com\.br/.*$ [NC]
+    RewriteRule \.(jpg|jpeg|png|webp|avif)$ - [F,NC,L]
+</IfModule>
