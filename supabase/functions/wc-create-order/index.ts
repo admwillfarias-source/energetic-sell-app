@@ -22,6 +22,7 @@ type Payload = {
     endereco: string;
     numero: string;
     cep: string;
+    bairro?: string;
     pagamento: string;
     carroAno: string;
     entrega?: string;
