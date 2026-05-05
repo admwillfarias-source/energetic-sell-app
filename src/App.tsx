@@ -4,17 +4,17 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import Auth from "./pages/Auth.tsx";
-import Admin from "./pages/Admin.tsx";
-import WhatsappLogs from "./pages/WhatsappLogs.tsx";
-import WhatsappTest from "./pages/WhatsappTest.tsx";
-import WhatsappDiagnose from "./pages/WhatsappDiagnose.tsx";
-import BatterySku from "./pages/BatterySku.tsx";
-import Resultado from "./pages/Resultado.tsx";
-import CheckoutTest from "./pages/CheckoutTest.tsx";
-import PedidoConfirmado from "./pages/PedidoConfirmado.tsx";
 
-// Lazy: páginas de cidade são acessadas via deep-link e não precisam estar no bundle inicial.
+// Todas as outras páginas: lazy. Não viajam no bundle inicial da home.
+const Auth = lazy(() => import("./pages/Auth.tsx"));
+const Admin = lazy(() => import("./pages/Admin.tsx"));
+const WhatsappLogs = lazy(() => import("./pages/WhatsappLogs.tsx"));
+const WhatsappTest = lazy(() => import("./pages/WhatsappTest.tsx"));
+const WhatsappDiagnose = lazy(() => import("./pages/WhatsappDiagnose.tsx"));
+const BatterySku = lazy(() => import("./pages/BatterySku.tsx"));
+const Resultado = lazy(() => import("./pages/Resultado.tsx"));
+const CheckoutTest = lazy(() => import("./pages/CheckoutTest.tsx"));
+const PedidoConfirmado = lazy(() => import("./pages/PedidoConfirmado.tsx"));
 const City = lazy(() => import("./pages/City.tsx"));
 const Neighborhood = lazy(() => import("./pages/Neighborhood.tsx"));
 const VehicleSeo = lazy(() => import("./pages/VehicleSeo.tsx"));
@@ -29,6 +29,9 @@ const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ defaul
 
 const queryClient = new QueryClient();
 
+const Fallback = () => <div className="min-h-screen" />;
+const wrap = (el: React.ReactNode) => <Suspense fallback={<Fallback />}>{el}</Suspense>;
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -39,87 +42,24 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
-          <Route path="/resultado" element={<Resultado />} />
-          <Route
-            path="/baterias/:slug"
-            element={
-              <Suspense fallback={<div className="min-h-screen" />}>
-                <City />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/baterias/:citySlug/:slug"
-            element={
-              <Suspense fallback={<div className="min-h-screen" />}>
-                <Neighborhood />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/baterias-para/:slug"
-            element={
-              <Suspense fallback={<div className="min-h-screen" />}>
-                <VehicleSeo />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/baterias-para/:slug/:year"
-            element={
-              <Suspense fallback={<div className="min-h-screen" />}>
-                <VehicleSeo />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/baterias/marca/:slug"
-            element={
-              <Suspense fallback={<div className="min-h-screen" />}>
-                <Brand />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/baterias/amperagem/:ah"
-            element={
-              <Suspense fallback={<div className="min-h-screen" />}>
-                <Amperage />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/blog"
-            element={
-              <Suspense fallback={<div className="min-h-screen" />}>
-                <Blog />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/blog/tag/:slug"
-            element={
-              <Suspense fallback={<div className="min-h-screen" />}>
-                <BlogTag />
-              </Suspense>
-            }
-          />
-          <Route
-            path="/blog/:slug"
-            element={
-              <Suspense fallback={<div className="min-h-screen" />}>
-                <BlogPost />
-              </Suspense>
-            }
-          />
-          <Route path="/bateria/:sku" element={<BatterySku />} />
-          <Route path="/auth" element={<Auth />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/admin/whatsapp-logs" element={<WhatsappLogs />} />
-          <Route path="/admin/whatsapp-test" element={<WhatsappTest />} />
-          <Route path="/admin/whatsapp-diagnostico" element={<WhatsappDiagnose />} />
-          <Route path="/checkout-test" element={<CheckoutTest />} />
-          <Route path="/pedido-confirmado" element={<PedidoConfirmado />} />
+          <Route path="/resultado" element={wrap(<Resultado />)} />
+          <Route path="/baterias/:slug" element={wrap(<City />)} />
+          <Route path="/baterias/:citySlug/:slug" element={wrap(<Neighborhood />)} />
+          <Route path="/baterias-para/:slug" element={wrap(<VehicleSeo />)} />
+          <Route path="/baterias-para/:slug/:year" element={wrap(<VehicleSeo />)} />
+          <Route path="/baterias/marca/:slug" element={wrap(<Brand />)} />
+          <Route path="/baterias/amperagem/:ah" element={wrap(<Amperage />)} />
+          <Route path="/blog" element={wrap(<Blog />)} />
+          <Route path="/blog/tag/:slug" element={wrap(<BlogTag />)} />
+          <Route path="/blog/:slug" element={wrap(<BlogPost />)} />
+          <Route path="/bateria/:sku" element={wrap(<BatterySku />)} />
+          <Route path="/auth" element={wrap(<Auth />)} />
+          <Route path="/admin" element={wrap(<Admin />)} />
+          <Route path="/admin/whatsapp-logs" element={wrap(<WhatsappLogs />)} />
+          <Route path="/admin/whatsapp-test" element={wrap(<WhatsappTest />)} />
+          <Route path="/admin/whatsapp-diagnostico" element={wrap(<WhatsappDiagnose />)} />
+          <Route path="/checkout-test" element={wrap(<CheckoutTest />)} />
+          <Route path="/pedido-confirmado" element={wrap(<PedidoConfirmado />)} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

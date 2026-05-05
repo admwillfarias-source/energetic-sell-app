@@ -1,68 +1,48 @@
+## Problemas identificados (perfil real)
 
-# Plano: Otimização de Performance (Mobile-first)
+- **FCP 8.6s / DCL 8.4s** — muito acima do ideal (alvo <2.5s)
+- **CLS 0.137** no h1 do Hero (alvo <0.05)
+- **102 scripts no load inicial**, ~1.1MB JS
+- `CheckoutDialog` (50KB) é importado eagerly dentro do `CartDrawer`
+- `App.tsx` importa eagerly `Admin`, `WhatsappLogs/Test/Diagnose`, `BatterySku`, `CheckoutTest`, `PedidoConfirmado`, `Auth`, `Resultado`, `NotFound` — todas viajam no bundle da home
+- `lucide-react` aparece como 156KB — não está sendo tree-shaken (provavelmente por algum `import * as`)
+- Preloads de imagem usam `/src/assets/hero-bg*.webp` (caminho de dev) — em produção o Vite renomeia com hash, então o preload falha silenciosamente
 
-O site já tem boa base (lazy routes, Suspense, hero WebP responsivo). As maiores oportunidades restantes são: imagens pesadas, carregamento de fontes, animações pesadas e simplificação de componentes acima da dobra.
+## Mudanças
 
-## 1. Imagens (maior ganho)
+### 1. App.tsx — lazy em todas as rotas exceto `/`
+Manter eager apenas `Index` e `NotFound`. Lazy: `Auth`, `Admin`, `WhatsappLogs`, `WhatsappTest`, `WhatsappDiagnose`, `BatterySku`, `Resultado`, `CheckoutTest`, `PedidoConfirmado`. Estimativa: −150 a −250KB do bundle inicial.
 
-- `src/assets/mascot-popup.png` (439 KB) → converter para WebP (~50–80 KB) e servir só quando o popup abrir.
-- `src/assets/battery-product.png` (207 KB) → WebP + tamanhos `sm/md` via `imageSrcset`.
-- `src/assets/hero-battery.jpg` (116 KB) → remover (não usado pelo Hero atual) ou converter.
-- Adicionar `loading="lazy"` e `decoding="async"` em todas as `<img>` fora da dobra (Benefits, HowItWorks, Testimonials, ManufacturerLogos, BatteryCard).
-- Garantir `width`/`height` explícitos para evitar CLS.
+### 2. CartDrawer — lazy em CheckoutDialog
+Trocar `import { CheckoutDialog }` por `lazy(() => import(...))` + `Suspense`. Só carrega quando o usuário abre o carrinho/checkout. Economia: ~50KB + dependências (zod, viacep, fitments).
 
-## 2. Fontes
+### 3. Hero — eliminar CLS
+Reservar altura mínima no container do h1/subtítulo/badge para que o reflow após a fonte carregar não empurre o layout. Adicionar `min-h` no bloco do título e usar `font-display: swap` com fallback métrico (`size-adjust` no @font-face local, ou simplesmente reservar `min-height` no h1).
 
-- Hoje carregam **2 famílias × 7 pesos** do Google Fonts → substituir por **Inter 400/600** + **Plus Jakarta 700** apenas (3 pesos no total).
-- Remover o `<noscript>` duplicado do CSS de fontes (o `media=print/onload` já cobre).
-- Usar `font-display: swap` (já vem do Google) e `&text=` para subset se possível.
+### 4. index.html — remover preloads quebrados
+Remover os dois `<link rel="preload" as="image" href="/src/assets/...">` que apontam para caminhos não-buildados. Em vez disso, deixar o `HeroSection` importar normalmente (Vite gera o hash e injeta na ordem certa) e marcar o `<img>`/CSS background com `fetchpriority="high"`.
 
-## 3. CSS / Animações
+### 5. lucide-react — auditar imports
+Rodar `rg "from \"lucide-react\"" src/ -l` e garantir que todos os imports sejam nomeados (`import { X } from "lucide-react"`). Se algum arquivo usar `import * as Icons`, refatorar.
 
-- Remover keyframes não usados em `src/index.css` (`fadeInUp`, `pulseGlow` não referenciados).
-- Reduzir uso de `backdrop-blur` (caro em mobile) no Hero e CartDrawer → trocar por `bg-card/95` sólido.
-- Manter apenas transições simples (opacity/transform). Remover hover-scale em listas longas.
+### 6. Vite config — chunk de forms/checkout
+Adicionar regra `manualChunks` para `react-hook-form`, `@hookform/resolvers`, `zod` e `date-fns` num chunk `forms` separado, que só baixa quando CheckoutDialog é aberto.
 
-## 4. Lazy loading de componentes
+### 7. Remover dependências não usadas (verificar primeiro)
+Auditar `recharts`, `embla-carousel-react`, `vaul`, `react-resizable-panels`, `input-otp`, `react-day-picker` — se não há uso real fora de `components/ui`, remover para reduzir o grafo do Vite.
 
-- `BatteryGrid` é eager no `Index.tsx` → manter eager (acima da dobra) mas garantir que `BatteryDetailDialog` e `CheckoutDialog` sejam `lazy()` (verificar e ajustar).
-- `EngagementPopup` e `MobileDebugOverlay` → garantir `lazy` + carregar somente após interação/idle.
-- `HeroSection` importa estaticamente `ManufacturerLogos` e `HeroWhatsButton`/`VehicleAutocomplete` (já lazy) — revisar import não usado de `ManufacturerLogos` no Hero.
+## Arquivos a editar
 
-## 5. Bibliotecas de terceiros
+- `src/App.tsx` — lazy em rotas extras
+- `src/components/CartDrawer.tsx` — lazy CheckoutDialog
+- `src/components/HeroSection.tsx` — `min-h` no bloco do título
+- `index.html` — remover preloads `/src/assets/*`
+- `vite.config.ts` — novo chunk `forms`
+- `package.json` — remover libs não usadas (após auditoria)
 
-- Auditar `package.json` para libs pesadas não usadas (ex.: recharts, embla, vaul) — remover do bundle inicial via dynamic import onde aplicável.
-- `react-helmet-async` → manter (leve), mas garantir SEO só no Index/páginas SEO.
+## Métricas alvo após as mudanças
 
-## 6. Cache / Headers
-
-- `public/_headers` já cobre estáticos; adicionar `Cache-Control: immutable` para `.webp` com hash do Vite.
-
-## 7. Mobile
-
-- Reduzir `min-h-[90vh]` do Hero para `min-h-[80vh]` (menos repaint).
-- Garantir `MobileActionBar` com `content-visibility: auto` em seções fora da viewport (`LazySection` já faz parecido).
-- Revisar `MobileActionBar` para evitar listeners de scroll caros.
-
-## 8. Métricas-alvo
-
-- LCP < 2.5s em 4G mobile
-- CLS < 0.05
-- JS inicial < 180 KB gzip
-- PageSpeed mobile ≥ 90
-
-## Arquivos a alterar (estimativa)
-
-- `index.html` (fontes, preloads)
-- `src/index.css` (remover keyframes)
-- `src/assets/*` (substituir PNGs por WebP otimizados)
-- `src/components/EngagementPopup.tsx`, `HeroSection.tsx`, `BatteryCard.tsx`, `Benefits.tsx`, `Testimonials.tsx`, `ManufacturerLogos.tsx`, `HowItWorks.tsx`, `MobileActionBar.tsx`
-- `src/pages/Index.tsx` (revisar Suspense boundaries)
-- `package.json` (remover libs não usadas, se houver)
-
-## Fora de escopo
-
-- Reescrever o roteamento (já está bom).
-- Migrar para SSR/SSG.
-
-Aprove para eu aplicar as mudanças. Posso começar pelas imagens + fontes (maior impacto) e seguir incrementalmente.
+- FCP < 2.5s (de 8.6s)
+- CLS < 0.05 (de 0.137)
+- JS inicial < 400KB (de ~1.1MB)
+- Scripts no load: < 30 (de 102)

@@ -35,6 +35,13 @@ export default defineConfig(({ mode }) => ({
           if (id.includes("@radix-ui")) return "ui-radix";
           if (id.includes("@supabase")) return "supabase";
           if (id.includes("lucide-react")) return "icons";
+          if (
+            id.includes("react-hook-form") ||
+            id.includes("@hookform") ||
+            id.includes("/zod/") ||
+            id.includes("date-fns")
+          )
+            return "forms";
           if (id.includes("sonner") || id.includes("react-helmet")) return "ui-extras";
         },
       },
