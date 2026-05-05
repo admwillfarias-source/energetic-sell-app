@@ -397,10 +397,11 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           msg: "Entrega rápida disponível das 06h30 às 21h30. Selecione 'Agendar entrega' para outro horário.",
         };
       }
-      if (!bairroAtendeRapido(form.bairro)) {
+      const agora = minutosAgora();
+      if (!janelaComercial(agora) && !bairroAtendeRapido(form.bairro)) {
         return {
           ok: false,
-          msg: "Seu bairro não tem entrega rápida. Agende para o próximo dia útil.",
+          msg: "Fora do horário comercial (08:35–18:00) atendemos apenas os bairros listados. Agende para o próximo dia útil.",
         };
       }
     }
@@ -409,10 +410,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
         return { ok: false, msg: "Horário de agendamento entre 06:30 e 21:30." };
       }
-      if (!bairroAtendeRapido(form.bairro)) {
+      if (!janelaComercial(m) && !bairroAtendeRapido(form.bairro)) {
         return {
           ok: false,
-          msg: "Agendamento disponível apenas para bairros atendidos.",
+          msg: "Fora do horário comercial (08:35–18:00), agendamento disponível apenas para bairros atendidos.",
         };
       }
     }
