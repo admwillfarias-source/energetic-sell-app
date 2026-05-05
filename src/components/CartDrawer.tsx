@@ -1,10 +1,13 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import batteryImg from "@/assets/battery-product.webp";
-import { CheckoutDialog } from "@/components/CheckoutDialog";
+
+const CheckoutDialog = lazy(() =>
+  import("@/components/CheckoutDialog").then((m) => ({ default: m.CheckoutDialog })),
+);
 
 export function CartDrawer() {
   const { items, isOpen, setOpen, setQuantity, remove, subtotal } = useCart();
