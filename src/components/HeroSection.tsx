@@ -179,7 +179,7 @@ export default function HeroSection() {
             </span>
           </div>
 
-          <div className="mb-6 rounded-2xl bg-card/95 p-4 shadow-lg backdrop-blur md:p-5">
+          <div className="mb-6 rounded-2xl bg-card p-4 shadow-lg md:p-5">
             {searchActive ? (
               <Suspense
                 fallback={
