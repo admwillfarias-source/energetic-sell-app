@@ -34,6 +34,60 @@ const WHATSAPP_NUMBER = "5551993199486";
 const ATEND_INICIO_MIN = 6 * 60 + 30; // 06:30
 const ATEND_FIM_MIN = 21 * 60 + 30; // 21:30
 
+// Bairros com atendimento rápido (06:30–08:30 e até 21:30)
+const BAIRROS_RAPIDA = [
+  "Nonoai",
+  "Medianeira",
+  "Menino Deus",
+  "Cidade Baixa",
+  "Centro Histórico",
+  "Cavalhada",
+  "Petrópolis",
+  "Cristal",
+  "Bom Fim",
+  "Jardim Botânico",
+  "Tristeza",
+  "Praia de Belas",
+  "Moinhos de Vento",
+  "Mont Serrat",
+  "Bela Vista",
+  "Higienópolis",
+  "Azenha",
+  "Auxiliadora",
+  "Camaquã",
+  "Farroupilha",
+  "Santa Tereza",
+  "Santana",
+  "Santo Antônio",
+  "Teresópolis",
+  "Três Figueiras",
+  "Vila Assunção",
+];
+
+function normalizeBairro(s: string): string {
+  return s
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const BAIRROS_RAPIDA_NORM = new Set(BAIRROS_RAPIDA.map(normalizeBairro));
+
+function bairroAtendeRapido(bairro: string): boolean {
+  if (!bairro) return false;
+  return BAIRROS_RAPIDA_NORM.has(normalizeBairro(bairro));
+}
+
+// Janela de manhã cedo do atendimento rápido (06:30–08:30)
+const RAPIDA_MANHA_FIM = 8 * 60 + 30; // 08:30
+function rapidaJanelaValida(min: number): boolean {
+  // 06:30–08:30 ou até 21:30 (sempre dentro do atendimento)
+  if (min < ATEND_INICIO_MIN || min > ATEND_FIM_MIN) return false;
+  return true;
+}
+
 // Faixas de tarifa de entrega
 const FAIXA_MANHA_INICIO = 6 * 60 + 30; // 06:30
 const FAIXA_MANHA_FIM = 8 * 60; // 08:00 → +R$ 40
