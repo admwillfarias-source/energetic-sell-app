@@ -1,74 +1,68 @@
-Você quer mudar a abordagem: em vez do tema headless React atual (que está dando conflito com Elementor e cache), gerar um **tema WordPress nativo, compatível com WooCommerce e Elementor**. Isso resolve definitivamente os erros de `elementorFrontendConfig`, React duplicado e bundles v5/v6 — porque deixamos de injetar um app React e passamos a usar o pipeline padrão do WordPress.
 
-## O que vou gerar
+# Plano: Otimização de Performance (Mobile-first)
 
-Um novo tema chamado `awr-baterias-wc` em `wp-theme/awr-baterias-wc/`, empacotado como `awr-baterias-wc.zip` para você instalar.
+O site já tem boa base (lazy routes, Suspense, hero WebP responsivo). As maiores oportunidades restantes são: imagens pesadas, carregamento de fontes, animações pesadas e simplificação de componentes acima da dobra.
 
-### 1. Base do tema (clássico, compatível Elementor + Woo)
+## 1. Imagens (maior ganho)
 
-- `style.css` com cabeçalho do tema (Name, Version, Tags: `elementor`, `woocommerce`, `full-width-template`, `custom-colors`, `custom-logo`).
-- `functions.php` com:
-  - `add_theme_support` para: `title-tag`, `post-thumbnails`, `html5`, `custom-logo`, `responsive-embeds`, `align-wide`, `editor-styles`, `woocommerce`, `wc-product-gallery-zoom`, `wc-product-gallery-lightbox`, `wc-product-gallery-slider`, `elementor`.
-  - Registro de menus (`primary`, `footer`).
-  - Registro de áreas de widget (sidebar, footer-1..3).
-  - Enqueue limpo: apenas `style.css` + `assets/theme.css` + `assets/theme.js` com cache-busting via `filemtime` (sem dependências de React/Vite).
-  - `after_setup_theme` carregando suporte a Elementor Pro Locations (`register_elementor_locations`) para header/footer/single/archive.
-- `screenshot.png` gerado simples (cores da marca AWR).
+- `src/assets/mascot-popup.png` (439 KB) → converter para WebP (~50–80 KB) e servir só quando o popup abrir.
+- `src/assets/battery-product.png` (207 KB) → WebP + tamanhos `sm/md` via `imageSrcset`.
+- `src/assets/hero-battery.jpg` (116 KB) → remover (não usado pelo Hero atual) ou converter.
+- Adicionar `loading="lazy"` e `decoding="async"` em todas as `<img>` fora da dobra (Benefits, HowItWorks, Testimonials, ManufacturerLogos, BatteryCard).
+- Garantir `width`/`height` explícitos para evitar CLS.
 
-### 2. Templates obrigatórios
+## 2. Fontes
 
-- `index.php`, `header.php`, `footer.php`, `sidebar.php`, `searchform.php`, `404.php`, `page.php`, `single.php`, `archive.php`, `comments.php`.
-- Todos com `wp_head()`/`wp_footer()`, suporte a `body_class()`, e wrappers compatíveis com Elementor (sem markup que conflite com builders).
-- `page-blank.php` (template em branco para Elementor "Canvas/Full Width").
+- Hoje carregam **2 famílias × 7 pesos** do Google Fonts → substituir por **Inter 400/600** + **Plus Jakarta 700** apenas (3 pesos no total).
+- Remover o `<noscript>` duplicado do CSS de fontes (o `media=print/onload` já cobre).
+- Usar `font-display: swap` (já vem do Google) e `&text=` para subset se possível.
 
-### 3. WooCommerce
+## 3. CSS / Animações
 
-- `woocommerce.php` declarando suporte e usando `do_action('woocommerce_before_main_content')` / `after_main_content`.
-- Pasta `woocommerce/` com overrides mínimos: `archive-product.php`, `single-product.php`, `content-product.php`, `cart/cart.php`, `checkout/form-checkout.php` — apenas estrutura básica que herda os templates do plugin (sem reimplementar).
-- Hook removendo wrappers padrão e adicionando os do tema:
-  ```php
-  remove_action('woocommerce_before_main_content','woocommerce_output_content_wrapper',10);
-  remove_action('woocommerce_after_main_content','woocommerce_output_content_wrapper_end',10);
-  add_action('woocommerce_before_main_content','awr_wc_wrapper_start',10);
-  add_action('woocommerce_after_main_content','awr_wc_wrapper_end',10);
-  ```
-- Suporte a `wc-product-gallery-*` já no `add_theme_support`.
+- Remover keyframes não usados em `src/index.css` (`fadeInUp`, `pulseGlow` não referenciados).
+- Reduzir uso de `backdrop-blur` (caro em mobile) no Hero e CartDrawer → trocar por `bg-card/95` sólido.
+- Manter apenas transições simples (opacity/transform). Remover hover-scale em listas longas.
 
-### 4. Elementor
+## 4. Lazy loading de componentes
 
-- Registro de Elementor Locations (header, footer, single, archive, single-product, archive-product) via hook `elementor/theme/register_locations` — assim Elementor Pro pode sobrepor templates do tema sem quebrar.
-- `add_theme_support('elementor')`.
-- Nenhum stub manual de `elementorFrontendConfig`: agora o próprio Elementor cuida disso porque o tema é clássico.
-- CSS mínimo no `theme.css` para tipografia/cores base, sem competir com Elementor.
+- `BatteryGrid` é eager no `Index.tsx` → manter eager (acima da dobra) mas garantir que `BatteryDetailDialog` e `CheckoutDialog` sejam `lazy()` (verificar e ajustar).
+- `EngagementPopup` e `MobileDebugOverlay` → garantir `lazy` + carregar somente após interação/idle.
+- `HeroSection` importa estaticamente `ManufacturerLogos` e `HeroWhatsButton`/`VehicleAutocomplete` (já lazy) — revisar import não usado de `ManufacturerLogos` no Hero.
 
-### 5. Customizer / opções
+## 5. Bibliotecas de terceiros
 
-- Suporte básico de Customizer: cor primária, logo (via `custom-logo`), telefone/WhatsApp para o header.
-- Header simples imprimindo logo + menu + CTA WhatsApp quando o usuário não montar header pelo Elementor.
+- Auditar `package.json` para libs pesadas não usadas (ex.: recharts, embla, vaul) — remover do bundle inicial via dynamic import onde aplicável.
+- `react-helmet-async` → manter (leve), mas garantir SEO só no Index/páginas SEO.
 
-### 6. Limpeza e segurança
+## 6. Cache / Headers
 
-- Remover emojis WP, `wp-embed`, `dashicons` no front para visitantes não logados (boa prática + performance).
-- Remover handles antigos do tema React (`awr-app`, `awr-busca`, etc.) caso ele ainda esteja registrado em algum cache, com `wp_dequeue_script`/`wp_deregister_script` em `wp_enqueue_scripts` prioridade alta.
+- `public/_headers` já cobre estáticos; adicionar `Cache-Control: immutable` para `.webp` com hash do Vite.
 
-### 7. Build/empacotamento
+## 7. Mobile
 
-- Script `scripts/build-wc-theme.sh`:
-  - Valida sintaxe PHP de todos os `.php`.
-  - Gera `wp-theme/awr-baterias-wc.zip` pronto para upload em **Aparência → Temas → Adicionar → Enviar**.
-- Sem build de Vite — é um tema puro PHP/CSS/JS.
+- Reduzir `min-h-[90vh]` do Hero para `min-h-[80vh]` (menos repaint).
+- Garantir `MobileActionBar` com `content-visibility: auto` em seções fora da viewport (`LazySection` já faz parecido).
+- Revisar `MobileActionBar` para evitar listeners de scroll caros.
 
-### 8. README de instalação
+## 8. Métricas-alvo
 
-`wp-theme/README-WC.md` com:
-- Pré-requisitos (WordPress 6.x, PHP 7.4+, plugins WooCommerce e Elementor; Elementor Pro opcional).
-- Passo a passo: instalar Woo → instalar Elementor → ativar tema → configurar páginas Woo (`Loja`, `Carrinho`, `Finalizar compra`, `Minha conta`) em **WooCommerce → Definições → Avançado**.
-- Como usar Elementor Theme Builder para header/footer/single/archive.
+- LCP < 2.5s em 4G mobile
+- CLS < 0.05
+- JS inicial < 180 KB gzip
+- PageSpeed mobile ≥ 90
 
-## Pontos a confirmar antes de começar
+## Arquivos a alterar (estimativa)
 
-1. **Posso descontinuar o tema React atual** (`wp-theme/awr-baterias`) ou você quer manter os dois lado a lado e só adicionar o novo `awr-baterias-wc`?
-2. Quer que eu **migre o conteúdo do app React** (catálogo, blog, busca por veículo) para shortcodes/blocos Elementor neste novo tema, ou começamos só com o tema base e depois portamos as features?
-3. Algum **plugin extra obrigatório** (ex.: Elementor Pro, WPML, Yoast SEO)? Isso muda o que registramos como Locations/integrações.
+- `index.html` (fontes, preloads)
+- `src/index.css` (remover keyframes)
+- `src/assets/*` (substituir PNGs por WebP otimizados)
+- `src/components/EngagementPopup.tsx`, `HeroSection.tsx`, `BatteryCard.tsx`, `Benefits.tsx`, `Testimonials.tsx`, `ManufacturerLogos.tsx`, `HowItWorks.tsx`, `MobileActionBar.tsx`
+- `src/pages/Index.tsx` (revisar Suspense boundaries)
+- `package.json` (remover libs não usadas, se houver)
 
-Se você só responder "pode seguir", eu começo pelo tema base (itens 1–8) sem migrar nada do React e mantenho o tema antigo intacto.
+## Fora de escopo
+
+- Reescrever o roteamento (já está bom).
+- Migrar para SSR/SSG.
+
+Aprove para eu aplicar as mudanças. Posso começar pelas imagens + fontes (maior impacto) e seguir incrementalmente.
