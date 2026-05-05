@@ -3,7 +3,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
-import batteryImg from "@/assets/battery-product.png";
+import batteryImg from "@/assets/battery-product.webp";
 import { CheckoutDialog } from "@/components/CheckoutDialog";
 
 export function CartDrawer() {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import batteryImg from "@/assets/battery-product.png";
+import batteryImg from "@/assets/battery-product.webp";
 import { buildWordpressSrcset, supportsWordpressSrcset } from "@/lib/imageSrcset";
 
 const isRemote = (s: string) => /^https?:\/\//.test(s);
