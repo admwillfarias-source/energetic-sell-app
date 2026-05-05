@@ -80,10 +80,15 @@ function bairroAtendeRapido(bairro: string): boolean {
   return BAIRROS_RAPIDA_NORM.has(normalizeBairro(bairro));
 }
 
-// Janela de manhã cedo do atendimento rápido (06:30–08:30)
-const RAPIDA_MANHA_FIM = 8 * 60 + 30; // 08:30
+// Janela comercial: 08:35–18:00 — atende todos os bairros de Porto Alegre
+const COMERCIAL_INICIO = 8 * 60 + 35; // 08:35
+const COMERCIAL_FIM = 18 * 60; // 18:00
+
+function janelaComercial(min: number): boolean {
+  return min >= COMERCIAL_INICIO && min <= COMERCIAL_FIM;
+}
+
 function rapidaJanelaValida(min: number): boolean {
-  // 06:30–08:30 ou até 21:30 (sempre dentro do atendimento)
   if (min < ATEND_INICIO_MIN || min > ATEND_FIM_MIN) return false;
   return true;
 }
@@ -392,10 +397,11 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           msg: "Entrega rápida disponível das 06h30 às 21h30. Selecione 'Agendar entrega' para outro horário.",
         };
       }
-      if (!bairroAtendeRapido(form.bairro)) {
+      const agora = minutosAgora();
+      if (!janelaComercial(agora) && !bairroAtendeRapido(form.bairro)) {
         return {
           ok: false,
-          msg: "Seu bairro não tem entrega rápida. Agende para o próximo dia útil.",
+          msg: "Fora do horário comercial (08:35–18:00) atendemos apenas os bairros listados. Agende para o próximo dia útil.",
         };
       }
     }
@@ -404,10 +410,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
         return { ok: false, msg: "Horário de agendamento entre 06:30 e 21:30." };
       }
-      if (!bairroAtendeRapido(form.bairro)) {
+      if (!janelaComercial(m) && !bairroAtendeRapido(form.bairro)) {
         return {
           ok: false,
-          msg: "Agendamento disponível apenas para bairros atendidos.",
+          msg: "Fora do horário comercial (08:35–18:00), agendamento disponível apenas para bairros atendidos.",
         };
       }
     }
@@ -423,10 +429,11 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       if (form.endereco.trim().length < 5) return { ok: false, msg: "Informe o endereço." };
       if (form.numero.trim().length < 1) return { ok: false, msg: "Informe o número." };
       if (form.bairro.trim().length < 2) return { ok: false, msg: "Informe o bairro." };
-      if (!bairroAtendeRapido(form.bairro)) {
+      const agora = minutosAgora();
+      if (!janelaComercial(agora) && !bairroAtendeRapido(form.bairro)) {
         return {
           ok: false,
-          msg: "Bairro fora da área de entrega rápida. Agende para o próximo dia útil em horário comercial.",
+          msg: "Fora do horário comercial (08:35–18:00) atendemos apenas os bairros listados. Agende para o próximo dia útil.",
         };
       }
     } else if (form.entregaTipo === "agendada") {
@@ -439,10 +446,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
         return { ok: false, msg: "Horário de agendamento entre 06:30 e 21:30." };
       }
-      if (!bairroAtendeRapido(form.bairro)) {
+      if (!janelaComercial(m) && !bairroAtendeRapido(form.bairro)) {
         return {
           ok: false,
-          msg: "Agendamento disponível apenas para bairros atendidos.",
+          msg: "Fora do horário comercial (08:35–18:00), agendamento disponível apenas para bairros atendidos.",
         };
       }
     } else if (form.entregaTipo === "retirada") {
