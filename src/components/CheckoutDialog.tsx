@@ -194,6 +194,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     endereco: "",
     numero: "",
     cep: "",
+    bairro: "",
     telefone: "",
     pagamento: "",
     carroAno: "",
