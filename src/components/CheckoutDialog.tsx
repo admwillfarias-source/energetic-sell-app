@@ -497,6 +497,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           endereco: form.endereco,
           numero: form.numero,
           cep: form.cep || "",
+          bairro: form.bairro || "",
           pagamento: form.pagamento,
           carroAno: form.carroAno,
           entrega: entregaResumo(),
