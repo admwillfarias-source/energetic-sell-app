@@ -130,7 +130,11 @@ export function CartDrawer() {
         )}
       </SheetContent>
     </Sheet>
-    <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
+    {checkoutOpen && (
+      <Suspense fallback={null}>
+        <CheckoutDialog open={checkoutOpen} onOpenChange={setCheckoutOpen} />
+      </Suspense>
+    )}
     </>
   );
 }
