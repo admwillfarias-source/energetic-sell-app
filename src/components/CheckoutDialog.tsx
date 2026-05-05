@@ -80,10 +80,15 @@ function bairroAtendeRapido(bairro: string): boolean {
   return BAIRROS_RAPIDA_NORM.has(normalizeBairro(bairro));
 }
 
-// Janela de manhã cedo do atendimento rápido (06:30–08:30)
-const RAPIDA_MANHA_FIM = 8 * 60 + 30; // 08:30
+// Janela comercial: 08:35–18:00 — atende todos os bairros de Porto Alegre
+const COMERCIAL_INICIO = 8 * 60 + 35; // 08:35
+const COMERCIAL_FIM = 18 * 60; // 18:00
+
+function janelaComercial(min: number): boolean {
+  return min >= COMERCIAL_INICIO && min <= COMERCIAL_FIM;
+}
+
 function rapidaJanelaValida(min: number): boolean {
-  // 06:30–08:30 ou até 21:30 (sempre dentro do atendimento)
   if (min < ATEND_INICIO_MIN || min > ATEND_FIM_MIN) return false;
   return true;
 }
