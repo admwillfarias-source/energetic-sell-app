@@ -14,7 +14,8 @@
     "lh": "node scripts/lighthouse.mjs",
     "lh:mobile": "node scripts/lighthouse.mjs --mobile",
     "lh:desktop": "node scripts/lighthouse.mjs --desktop",
-    "lh:median": "node scripts/lighthouse.mjs --runs=3"
+    "lh:median": "node scripts/lighthouse.mjs --runs=3",
+    "build:wp-fast": "bash scripts/build-wp-fast-theme.sh"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",

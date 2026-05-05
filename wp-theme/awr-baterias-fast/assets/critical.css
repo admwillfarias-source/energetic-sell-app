@@ -1,0 +1,21 @@
+/* Critical CSS — inlined no <head> para acelerar FCP/LCP.
+   Mantém apenas o necessário para a primeira dobra. */
+:root{--awrf-primary:#d92121;--awrf-fg:#111;--awrf-bg:#fff;--awrf-muted:#666}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--awrf-fg);background:var(--awrf-bg);text-rendering:optimizeSpeed}
+img,svg,iframe,video{max-width:100%;height:auto;display:block}
+a{color:inherit;text-decoration:none}
+.awrf-container{width:100%;max-width:1200px;margin:0 auto;padding:0 16px}
+.awrf-header{position:relative;background:#fff;border-bottom:1px solid #eee}
+.awrf-header__inner{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:12px 0;min-height:64px}
+.awrf-header__title{font-weight:800;font-size:20px;color:var(--awrf-primary)}
+.awrf-btn{display:inline-block;padding:10px 16px;border-radius:8px;font-weight:600;background:var(--awrf-primary);color:#fff;line-height:1;text-align:center;border:0;cursor:pointer;font-size:14px}
+.awrf-btn--ghost{background:transparent;color:var(--awrf-primary);border:1px solid var(--awrf-primary)}
+h1{font-size:clamp(28px,4vw,44px);line-height:1.15;margin:.4em 0;font-weight:800}
+h2{font-size:clamp(22px,3vw,32px);line-height:1.2;margin:.6em 0 .3em;font-weight:700}
+p{margin:.6em 0}
+main{display:block;min-height:50vh}
+.skip-link{position:absolute;left:-9999px}
+.skip-link:focus{left:8px;top:8px;background:#000;color:#fff;padding:8px;z-index:9999}
+@media(max-width:640px){.awrf-header__nav{display:none}}
