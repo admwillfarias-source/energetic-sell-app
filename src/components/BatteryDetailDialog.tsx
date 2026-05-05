@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/compone
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
 import { ShoppingCart, ShieldCheck, Zap, Check, ExternalLink } from "lucide-react";
-import batteryImg from "@/assets/battery-product.png";
+import batteryImg from "@/assets/battery-product.webp";
 import { toast } from "@/hooks/use-toast";
 
 type Props = {
