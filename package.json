@@ -10,7 +10,11 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "lh": "node scripts/lighthouse.mjs",
+    "lh:mobile": "node scripts/lighthouse.mjs --mobile",
+    "lh:desktop": "node scripts/lighthouse.mjs --desktop",
+    "lh:median": "node scripts/lighthouse.mjs --runs=3"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
