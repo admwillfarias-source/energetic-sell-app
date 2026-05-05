@@ -24,8 +24,7 @@ const Blog = lazy(() => import("./pages/Blog.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
 const BlogTag = lazy(() => import("./pages/BlogTag.tsx"));
 
-const Toaster = lazy(() => import("@/components/ui/toaster").then((m) => ({ default: m.Toaster })));
-const Sonner = lazy(() => import("@/components/ui/sonner").then((m) => ({ default: m.Toaster })));
+const LazyToaster = lazy(() => import("@/components/LazyToaster"));
 
 const queryClient = new QueryClient();
 
@@ -36,8 +35,7 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Suspense fallback={null}>
-        <Toaster />
-        <Sonner />
+        <LazyToaster />
       </Suspense>
       <BrowserRouter>
         <Routes>

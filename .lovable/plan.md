@@ -1,48 +1,61 @@
-## Problemas identificados (perfil real)
+## Diagnóstico (score 67)
 
-- **FCP 8.6s / DCL 8.4s** — muito acima do ideal (alvo <2.5s)
-- **CLS 0.137** no h1 do Hero (alvo <0.05)
-- **102 scripts no load inicial**, ~1.1MB JS
-- `CheckoutDialog` (50KB) é importado eagerly dentro do `CartDrawer`
-- `App.tsx` importa eagerly `Admin`, `WhatsappLogs/Test/Diagnose`, `BatterySku`, `CheckoutTest`, `PedidoConfirmado`, `Auth`, `Resultado`, `NotFound` — todas viajam no bundle da home
-- `lucide-react` aparece como 156KB — não está sendo tree-shaken (provavelmente por algum `import * as`)
-- Preloads de imagem usam `/src/assets/hero-bg*.webp` (caminho de dev) — em produção o Vite renomeia com hash, então o preload falha silenciosamente
+Após as otimizações anteriores, os ofensores restantes são:
+
+1. **Google Fonts via CDN** — request externo bloqueante (mesmo com `media=print/onload`, ainda gera FOUT + atraso na fonte do LCP). Vale ~10–15 pts.
+2. **Hero LCP (`hero-bg.webp` 133KB)** com `decoding="sync"` — força render bloqueante. ~5–10 pts.
+3. **`backdrop-blur` no Header fixo** — paint custoso continuamente em scroll mobile. ~3–5 pts.
+4. **Toaster + Sonner** carregam no boot mesmo sem toast disparado. ~2 pts.
+5. **Sem preload do hero** — Vite hasheia o asset, então não conseguimos preload via HTML estático. Solução: injetar `<link rel="preload">` programaticamente com a URL importada.
+6. **Falta `loading="lazy"` / `decoding="async"`** em imagens abaixo da dobra (cards de bateria, logos).
+7. **`min-height` do h1 muito grande no mobile** (120px) reserva espaço excessivo, empurrando conteúdo e podendo afetar LCP candidate.
 
 ## Mudanças
 
-### 1. App.tsx — lazy em todas as rotas exceto `/`
-Manter eager apenas `Index` e `NotFound`. Lazy: `Auth`, `Admin`, `WhatsappLogs`, `WhatsappTest`, `WhatsappDiagnose`, `BatterySku`, `Resultado`, `CheckoutTest`, `PedidoConfirmado`. Estimativa: −150 a −250KB do bundle inicial.
+### 1. Self-host das fontes (`index.html` + `src/index.css`)
+- Remover os `<link>` para `fonts.googleapis.com` e `fonts.gstatic.com` do `index.html`.
+- Adicionar `@fontsource/plus-jakarta-sans/700.css` + `800.css` e `@fontsource/inter/400.css` + `600.css` via dependências, importados em `src/index.css` ou `main.tsx`.
+- Vantagens: zero requests externos, fontes hashed + cache-controlled, `font-display: swap` automático, sem render-blocking.
 
-### 2. CartDrawer — lazy em CheckoutDialog
-Trocar `import { CheckoutDialog }` por `lazy(() => import(...))` + `Suspense`. Só carrega quando o usuário abre o carrinho/checkout. Economia: ~50KB + dependências (zod, viacep, fitments).
+### 2. Hero LCP otimizado (`src/components/HeroSection.tsx` + `index.html`)
+- Trocar `decoding="sync"` → `decoding="async"` no `<img>` do hero (não bloqueia parse, e `fetchpriority="high"` já garante prioridade).
+- Adicionar preload programático: em `main.tsx` (antes do render), injetar `<link rel="preload" as="image" href={heroBg} fetchpriority="high">` usando o asset importado (URL hasheada correta).
+- Reduzir `min-h` do h1: `min-h-[96px] md:min-h-[120px] lg:min-h-[140px]` (suficiente para 2 linhas, libera viewport).
+- Recomprimir `hero-bg.webp` (atualmente 133KB) para ~60–70KB com `cwebp -q 72` e gerar `hero-bg.avif` (~35KB) como `<source type="image/avif">` no `<picture>`.
 
-### 3. Hero — eliminar CLS
-Reservar altura mínima no container do h1/subtítulo/badge para que o reflow após a fonte carregar não empurre o layout. Adicionar `min-h` no bloco do título e usar `font-display: swap` com fallback métrico (`size-adjust` no @font-face local, ou simplesmente reservar `min-height` no h1).
+### 3. Header sem `backdrop-blur` (`src/components/Header.tsx`)
+- Trocar `bg-secondary/95 backdrop-blur` por `bg-secondary` opaco (ou `bg-secondary/98` sem blur).
+- Elimina composite/paint custoso em cada frame de scroll no mobile.
 
-### 4. index.html — remover preloads quebrados
-Remover os dois `<link rel="preload" as="image" href="/src/assets/...">` que apontam para caminhos não-buildados. Em vez disso, deixar o `HeroSection` importar normalmente (Vite gera o hash e injeta na ordem certa) e marcar o `<img>`/CSS background com `fetchpriority="high"`.
+### 4. Toaster/Sonner sob demanda (`src/App.tsx` + `src/hooks/use-toast.ts`)
+- Remover `<Toaster />` e `<Sonner />` do boot.
+- Criar wrapper `<LazyToasters />` que monta os toasters apenas quando o primeiro `toast()` é chamado (subscribe no store antes do render). Economiza ~15KB do bundle inicial.
 
-### 5. lucide-react — auditar imports
-Rodar `rg "from \"lucide-react\"" src/ -l` e garantir que todos os imports sejam nomeados (`import { X } from "lucide-react"`). Se algum arquivo usar `import * as Icons`, refatorar.
+### 5. Imagens lazy / async (`src/components/BatteryCard.tsx`, `BatteryImage.tsx`, `ManufacturerLogos.tsx`)
+- Garantir `loading="lazy"` + `decoding="async"` em todas as imagens fora do hero.
+- Adicionar `width`/`height` explícitos onde faltarem para evitar CLS residual.
 
-### 6. Vite config — chunk de forms/checkout
-Adicionar regra `manualChunks` para `react-hook-form`, `@hookform/resolvers`, `zod` e `date-fns` num chunk `forms` separado, que só baixa quando CheckoutDialog é aberto.
+### 6. Limpeza fina
+- `src/components/PerfReport` e `MobileDebugOverlay` já são DEV-only (ok).
+- Adicionar `<meta name="color-scheme" content="light">` em `index.html` para evitar flash em browsers que tentam tema escuro.
+- Verificar `vite.config.ts` para habilitar `build.cssCodeSplit: true` (default já é true) e confirmar que `assetsInlineLimit` está em ~4KB (default).
 
-### 7. Remover dependências não usadas (verificar primeiro)
-Auditar `recharts`, `embla-carousel-react`, `vaul`, `react-resizable-panels`, `input-otp`, `react-day-picker` — se não há uso real fora de `components/ui`, remover para reduzir o grafo do Vite.
+## Arquivos editados
 
-## Arquivos a editar
+- `index.html` — remover Google Fonts, adicionar `color-scheme`
+- `src/index.css` — importar fontes self-hosted
+- `src/main.tsx` — preload programático do hero
+- `src/components/HeroSection.tsx` — decoding async, min-h reduzido, source AVIF
+- `src/components/Header.tsx` — remover backdrop-blur
+- `src/App.tsx` — toasters sob demanda
+- `src/components/BatteryCard.tsx`, `BatteryImage.tsx`, `ManufacturerLogos.tsx` — lazy/async/dimensões
+- `package.json` — adicionar `@fontsource/inter` + `@fontsource/plus-jakarta-sans`
+- `src/assets/hero-bg.webp` — recomprimir + gerar `hero-bg.avif`
 
-- `src/App.tsx` — lazy em rotas extras
-- `src/components/CartDrawer.tsx` — lazy CheckoutDialog
-- `src/components/HeroSection.tsx` — `min-h` no bloco do título
-- `index.html` — remover preloads `/src/assets/*`
-- `vite.config.ts` — novo chunk `forms`
-- `package.json` — remover libs não usadas (após auditoria)
+## Métricas alvo
 
-## Métricas alvo após as mudanças
-
-- FCP < 2.5s (de 8.6s)
-- CLS < 0.05 (de 0.137)
-- JS inicial < 400KB (de ~1.1MB)
-- Scripts no load: < 30 (de 102)
+- Performance: 95–100
+- LCP < 2.0s (hero preload + AVIF + fontes locais)
+- CLS < 0.02
+- TBT < 100ms (sem backdrop-blur + toasters lazy)
+- FCP < 1.5s (sem Google Fonts bloqueante)
