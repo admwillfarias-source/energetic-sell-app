@@ -1369,24 +1369,36 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                     <ChevronLeft className="h-4 w-4" />
                     <span className="hidden xs:inline">Voltar</span>
                   </Button>
-                  <Button
-                    type="button"
-                    onClick={handleWooCommerce}
-                    disabled={submittingWC}
-                    className="h-11 min-w-0 flex-1 px-3 text-sm sm:px-4"
-                  >
-                    {submittingWC ? (
-                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                    ) : (
-                      <ShoppingCart className="h-4 w-4 shrink-0" />
-                    )}
-                    <span className="truncate">
-                      {submittingWC ? "Enviando pedido..." : "Finalizar pedido"}
-                    </span>
-                  </Button>
+                  {isMobile ? (
+                    <Button
+                      type="submit"
+                      className="h-11 min-w-0 flex-1 bg-[#25D366] px-3 text-sm text-white hover:bg-[#1ebe5d] sm:px-4"
+                    >
+                      <MessageCircle className="h-4 w-4 shrink-0" />
+                      <span className="truncate">Enviar pelo WhatsApp</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={handleWooCommerce}
+                      disabled={submittingWC}
+                      className="h-11 min-w-0 flex-1 px-3 text-sm sm:px-4"
+                    >
+                      {submittingWC ? (
+                        <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                      ) : (
+                        <ShoppingCart className="h-4 w-4 shrink-0" />
+                      )}
+                      <span className="truncate">
+                        {submittingWC ? "Enviando pedido..." : "Finalizar pedido"}
+                      </span>
+                    </Button>
+                  )}
                 </div>
                 <p className="text-center text-[11px] text-muted-foreground sm:text-xs">
-                  Seu pedido será registrado e você verá a tela de acompanhamento
+                  {isMobile
+                    ? "Atendimento rápido pelo WhatsApp"
+                    : "Seu pedido será registrado e você verá a tela de acompanhamento"}
                 </p>
 
                 <div className="flex items-center gap-3 py-1">
@@ -1394,14 +1406,33 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                   <span className="text-xs text-muted-foreground">ou</span>
                   <div className="h-px flex-1 bg-border" />
                 </div>
-                <Button
-                  type="submit"
-                  variant="outline"
-                  className="h-11 w-full bg-[#25D366]/10 text-[#1a8a44] border-[#25D366]/40 hover:bg-[#25D366]/20"
-                >
-                  <MessageCircle className="h-4 w-4 shrink-0" />
-                  <span className="truncate">Enviar pelo WhatsApp</span>
-                </Button>
+                {isMobile ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleWooCommerce}
+                    disabled={submittingWC}
+                    className="h-11 w-full"
+                  >
+                    {submittingWC ? (
+                      <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                    ) : (
+                      <ShoppingCart className="h-4 w-4 shrink-0" />
+                    )}
+                    <span className="truncate">
+                      {submittingWC ? "Enviando pedido..." : "Finalizar pedido pelo site"}
+                    </span>
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    className="h-11 w-full bg-[#25D366]/10 text-[#1a8a44] border-[#25D366]/40 hover:bg-[#25D366]/20"
+                  >
+                    <MessageCircle className="h-4 w-4 shrink-0" />
+                    <span className="truncate">Enviar pelo WhatsApp</span>
+                  </Button>
+                )}
               </div>
             )}
           </div>
