@@ -1,61 +1,98 @@
-## Diagnóstico (score 67)
+## Objetivo
 
-Após as otimizações anteriores, os ofensores restantes são:
+Criar um script local que roda Lighthouse contra a URL publicada (`https://energetic-sell-app.lovable.app`) em mobile e/ou desktop, com suporte a múltiplas execuções e mediana, comparando com o baseline mobile 67.
 
-1. **Google Fonts via CDN** — request externo bloqueante (mesmo com `media=print/onload`, ainda gera FOUT + atraso na fonte do LCP). Vale ~10–15 pts.
-2. **Hero LCP (`hero-bg.webp` 133KB)** com `decoding="sync"` — força render bloqueante. ~5–10 pts.
-3. **`backdrop-blur` no Header fixo** — paint custoso continuamente em scroll mobile. ~3–5 pts.
-4. **Toaster + Sonner** carregam no boot mesmo sem toast disparado. ~2 pts.
-5. **Sem preload do hero** — Vite hasheia o asset, então não conseguimos preload via HTML estático. Solução: injetar `<link rel="preload">` programaticamente com a URL importada.
-6. **Falta `loading="lazy"` / `decoding="async"`** em imagens abaixo da dobra (cards de bateria, logos).
-7. **`min-height` do h1 muito grande no mobile** (120px) reserva espaço excessivo, empurrando conteúdo e podendo afetar LCP candidate.
+## Arquivos
 
-## Mudanças
+### 1. `scripts/lighthouse.mjs` (novo)
 
-### 1. Self-host das fontes (`index.html` + `src/index.css`)
-- Remover os `<link>` para `fonts.googleapis.com` e `fonts.gstatic.com` do `index.html`.
-- Adicionar `@fontsource/plus-jakarta-sans/700.css` + `800.css` e `@fontsource/inter/400.css` + `600.css` via dependências, importados em `src/index.css` ou `main.tsx`.
-- Vantagens: zero requests externos, fontes hashed + cache-controlled, `font-display: swap` automático, sem render-blocking.
+Script Node ESM (sem dependências instaladas — usa `npx lighthouse@latest` on-demand).
 
-### 2. Hero LCP otimizado (`src/components/HeroSection.tsx` + `index.html`)
-- Trocar `decoding="sync"` → `decoding="async"` no `<img>` do hero (não bloqueia parse, e `fetchpriority="high"` já garante prioridade).
-- Adicionar preload programático: em `main.tsx` (antes do render), injetar `<link rel="preload" as="image" href={heroBg} fetchpriority="high">` usando o asset importado (URL hasheada correta).
-- Reduzir `min-h` do h1: `min-h-[96px] md:min-h-[120px] lg:min-h-[140px]` (suficiente para 2 linhas, libera viewport).
-- Recomprimir `hero-bg.webp` (atualmente 133KB) para ~60–70KB com `cwebp -q 72` e gerar `hero-bg.avif` (~35KB) como `<source type="image/avif">` no `<picture>`.
+**Flags suportadas:**
+- `--mobile` / `--desktop` — roda só um preset (default: ambos)
+- `--runs=N` — número de execuções por preset (default: 1). Usa **mediana** de todas as métricas.
+- `--baseline=N` — baseline mobile pra comparar (default: 67)
+- `URL=...` (env) — sobrescreve a URL alvo
 
-### 3. Header sem `backdrop-blur` (`src/components/Header.tsx`)
-- Trocar `bg-secondary/95 backdrop-blur` por `bg-secondary` opaco (ou `bg-secondary/98` sem blur).
-- Elimina composite/paint custoso em cada frame de scroll no mobile.
+**O que faz por run:**
+1. Chama `npx lighthouse <URL> --preset=perf|desktop --form-factor=mobile|desktop --only-categories=performance --output=html,json --output-path=lighthouse-reports/{ts}-{preset}-runN`
+2. Lê o JSON e extrai: score Performance, LCP, FCP, TBT, CLS, Speed Index, TTI, top 5 opportunities
+3. Headless Chrome via `--chrome-flags="--headless=new --no-sandbox --disable-gpu"`
 
-### 4. Toaster/Sonner sob demanda (`src/App.tsx` + `src/hooks/use-toast.ts`)
-- Remover `<Toaster />` e `<Sonner />` do boot.
-- Criar wrapper `<LazyToasters />` que monta os toasters apenas quando o primeiro `toast()` é chamado (subscribe no store antes do render). Economiza ~15KB do bundle inicial.
+**Lógica de mediana (`--runs=N`):**
+- Roda N vezes, guarda métricas de cada run
+- Calcula mediana de score, LCP, FCP, TBT, CLS, SI, TTI separadamente
+- Imprime: `Scores por run: 88, 91, 89 → mediana: 89`
+- Mostra opportunities do último run (lista varia pouco entre runs)
 
-### 5. Imagens lazy / async (`src/components/BatteryCard.tsx`, `BatteryImage.tsx`, `ManufacturerLogos.tsx`)
-- Garantir `loading="lazy"` + `decoding="async"` em todas as imagens fora do hero.
-- Adicionar `width`/`height` explícitos onde faltarem para evitar CLS residual.
+**Saída no terminal (exemplo com `--runs=3 --mobile`):**
+```
+═══ Lighthouse: https://energetic-sell-app.lovable.app ═══
+Presets: mobile | Runs: 3
 
-### 6. Limpeza fina
-- `src/components/PerfReport` e `MobileDebugOverlay` já são DEV-only (ok).
-- Adicionar `<meta name="color-scheme" content="light">` em `index.html` para evitar flash em browsers que tentam tema escuro.
-- Verificar `vite.config.ts` para habilitar `build.cssCodeSplit: true` (default já é true) e confirmar que `assetsInlineLimit` está em ~4KB (default).
+→ [mobile] run 1/3
+→ [mobile] run 2/3
+→ [mobile] run 3/3
 
-## Arquivos editados
+━━━ [MOBILE] ━━━
+  Scores por run: 88, 91, 89  → mediana: 89
+  Performance: 89 🟡  (baseline 67 → +22)
+  LCP: 1.85 s | FCP: 1.20 s | TBT: 80 ms | CLS: 0.010 | SI: 2.10 s | TTI: 2.40 s
+  Top oportunidades (último run):
+    1. Reduce unused JavaScript          — 180 ms / 45 KiB
+    2. Properly size images              — 90 ms  / 22 KiB
+  Relatório HTML: lighthouse-reports/2026-...-mobile-run3.report.html
 
-- `index.html` — remover Google Fonts, adicionar `color-scheme`
-- `src/index.css` — importar fontes self-hosted
-- `src/main.tsx` — preload programático do hero
-- `src/components/HeroSection.tsx` — decoding async, min-h reduzido, source AVIF
-- `src/components/Header.tsx` — remover backdrop-blur
-- `src/App.tsx` — toasters sob demanda
-- `src/components/BatteryCard.tsx`, `BatteryImage.tsx`, `ManufacturerLogos.tsx` — lazy/async/dimensões
-- `package.json` — adicionar `@fontsource/inter` + `@fontsource/plus-jakarta-sans`
-- `src/assets/hero-bg.webp` — recomprimir + gerar `hero-bg.avif`
+═══ Resumo ═══
+  mobile   → 89
 
-## Métricas alvo
+⚠️  Mobile abaixo de 90 (89). Veja as oportunidades acima.
+```
 
-- Performance: 95–100
-- LCP < 2.0s (hero preload + AVIF + fontes locais)
-- CLS < 0.02
-- TBT < 100ms (sem backdrop-blur + toasters lazy)
-- FCP < 1.5s (sem Google Fonts bloqueante)
+**Exit codes:** 0 se mobile ≥ 90 (ou se só rodou desktop), 1 caso contrário — útil pra CI.
+
+### 2. `package.json` — adicionar 4 scripts
+
+```json
+"lh": "node scripts/lighthouse.mjs",
+"lh:mobile": "node scripts/lighthouse.mjs --mobile",
+"lh:desktop": "node scripts/lighthouse.mjs --desktop",
+"lh:median": "node scripts/lighthouse.mjs --runs=3"
+```
+
+Sem adicionar `lighthouse` em `devDependencies` — `npx` baixa sob demanda. (Se quiser fixar versão depois, é trivial.)
+
+### 3. `lighthouse-reports/.gitignore` (novo)
+
+```
+*
+!.gitignore
+```
+
+Mantém a pasta versionada mas ignora os relatórios gerados.
+
+### 4. `scripts/README-lighthouse.md` (novo)
+
+Documentação curta com exemplos de uso, pré-requisitos (Node 18+, Chrome) e dica sobre variação ±5 pontos do Lighthouse (por isso `--runs=3` é recomendado).
+
+## Como usar
+
+```bash
+# Padrão: mobile + desktop, 1 run cada
+npm run lh
+
+# Mediana de 3 runs no mobile (recomendado pra comparar com baseline)
+npm run lh:median -- --mobile
+
+# 5 runs em ambos, baseline customizado
+node scripts/lighthouse.mjs --runs=5 --baseline=67
+
+# Outra URL (ex.: WordPress)
+URL=https://awrbaterias.com.br npm run lh:mobile
+```
+
+## Observações
+
+- **Por que mediana e não média**: Lighthouse oscila ±5 pontos por execução (variação de rede/CPU). Mediana é robusta a outliers; média seria puxada por um run ruim.
+- **Throttling**: presets `perf` (mobile) e `desktop` do Lighthouse usam o mesmo throttling do PageSpeed Insights (Slow 4G + 4x CPU para mobile). Os números devem bater de perto com o PSI online.
+- **Sandbox Lovable não roda**: Chrome não está disponível aqui, então o script é pra rodar **na sua máquina**.
