@@ -131,7 +131,7 @@ function descricaoFaixa(min: number): string {
 
 const baseSchema = {
   nome: z.string().trim().min(2, "Informe seu nome").max(100),
-  documento: z.string().trim().min(11, "CPF/CNPJ inválido").max(20),
+  documento: z.string().trim().max(20).optional().or(z.literal("")),
   cep: z.string().trim().max(10).optional().or(z.literal("")),
   telefone: z.string().trim().min(10, "Telefone inválido").max(20),
   pagamento: z.string().trim().min(2, "Informe a forma de pagamento").max(60),
@@ -556,7 +556,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `*Novo pedido — BateriaJá*\n\n` +
       `*Cliente*\n` +
       `Nome: ${form.nome}\n` +
-      `CPF/CNPJ: ${form.documento}\n` +
+      (form.documento ? `CPF/CNPJ: ${form.documento}\n` : "") +
       `Telefone: ${form.telefone}\n\n` +
       `*Entrega*\n` +
       `Endereço: ${form.endereco}\n` +
@@ -1063,12 +1063,14 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1.5">
-                      <Label htmlFor="documento">CPF / CNPJ</Label>
+                      <Label htmlFor="documento" className="text-muted-foreground">
+                        CPF / CNPJ <span className="text-xs">(opcional)</span>
+                      </Label>
                       <Input
                         id="documento"
                         value={form.documento}
                         onChange={update("documento")}
-                        placeholder="000.000.000-00"
+                        placeholder="Apenas se for emitir nota"
                       />
                     </div>
                     <div className="space-y-1.5">
