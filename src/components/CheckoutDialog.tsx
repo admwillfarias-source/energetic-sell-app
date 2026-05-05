@@ -423,14 +423,28 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       }
       if (form.endereco.trim().length < 5) return { ok: false, msg: "Informe o endereço." };
       if (form.numero.trim().length < 1) return { ok: false, msg: "Informe o número." };
+      if (form.bairro.trim().length < 2) return { ok: false, msg: "Informe o bairro." };
+      if (!bairroAtendeRapido(form.bairro)) {
+        return {
+          ok: false,
+          msg: "Bairro fora da área de entrega rápida. Agende para o próximo dia útil em horário comercial.",
+        };
+      }
     } else if (form.entregaTipo === "agendada") {
       if (form.endereco.trim().length < 5) return { ok: false, msg: "Informe o endereço." };
       if (form.numero.trim().length < 1) return { ok: false, msg: "Informe o número." };
+      if (form.bairro.trim().length < 2) return { ok: false, msg: "Informe o bairro." };
       if (!form.entregaData) return { ok: false, msg: "Selecione a data." };
       if (!form.entregaHora) return { ok: false, msg: "Selecione o horário." };
       const m = minutesFromHHMM(form.entregaHora);
       if (m == null || m < ATEND_INICIO_MIN || m > ATEND_FIM_MIN) {
         return { ok: false, msg: "Horário de agendamento entre 06:30 e 21:30." };
+      }
+      if (m <= RAPIDA_MANHA_FIM && !bairroAtendeRapido(form.bairro)) {
+        return {
+          ok: false,
+          msg: "Janela 06:30–08:30 atende apenas bairros listados. Escolha horário comercial (08:35–18:00).",
+        };
       }
     } else if (form.entregaTipo === "retirada") {
       if (form.lojaRetirada.trim().length < 2) return { ok: false, msg: "Selecione a loja." };
