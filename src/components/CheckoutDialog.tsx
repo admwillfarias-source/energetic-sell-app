@@ -555,6 +555,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
       `*Entrega*\n` +
       `Endereço: ${form.endereco}\n` +
       `Número: ${form.numero}\n` +
+      (form.bairro ? `Bairro: ${form.bairro}\n` : "") +
       (form.cep ? `CEP: ${form.cep}\n` : "") +
       `Modalidade: ${entregaResumo()}\n\n` +
       `*Veículo*\n${form.carroAno}\n\n` +
