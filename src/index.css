@@ -1,4 +1,4 @@
-/* Fonts loaded via index.html (non-blocking preload + print/onload swap) */
+/* Fonts self-hosted via @fontsource (imported in main.tsx) */
 
 @tailwind base;
 @tailwind components;

@@ -117,7 +117,8 @@ export default function HeroSection() {
             width={1200}
             height={900}
             fetchPriority="high"
-            decoding="sync"
+            decoding="async"
+            loading="eager"
           />
         </picture>
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/80 to-secondary/40" />
@@ -157,7 +158,7 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4 min-h-[120px] md:min-h-[140px] lg:min-h-[160px]">
+          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4 min-h-[96px] md:min-h-[120px] lg:min-h-[140px]">
             Bateria entregue e instalada{" "}
             em até <span className="text-primary">35 minutos</span>
           </h1>

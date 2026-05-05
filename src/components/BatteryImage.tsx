@@ -80,7 +80,7 @@ export function BatteryImage({
         height={height}
         loading={priority ? "eager" : "lazy"}
         fetchPriority={priority ? "high" : "auto"}
-        decoding={priority ? "sync" : "async"}
+        decoding="async"
         onLoad={() => setLoaded(true)}
         onError={() => {
           setErrored(true);
