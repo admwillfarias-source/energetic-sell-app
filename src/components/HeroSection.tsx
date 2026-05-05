@@ -17,7 +17,7 @@ function getLiveDeliveries() {
 
 const VehicleAutocomplete = lazy(() => import("@/components/VehicleAutocomplete"));
 const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
-const ManufacturerLogos = lazy(() => import("@/components/ManufacturerLogos"));
+
 
 import heroBg from "@/assets/hero-bg.webp";
 import heroBgSm from "@/assets/hero-bg-sm.webp";
