@@ -280,7 +280,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
         .filter(Boolean)
         .join(", ");
       if (linha) {
-        setForm((p) => ({ ...p, endereco: linha }));
+        setForm((p) => ({ ...p, endereco: linha, bairro: data.bairro || p.bairro }));
         toast({ title: "Endereço preenchido", description: linha });
       }
     } catch {
