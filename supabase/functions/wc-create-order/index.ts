@@ -82,6 +82,7 @@ Deno.serve(async (req) => {
         last_name,
         address_1: c.endereco,
         address_2: c.numero,
+        city: c.bairro ?? "",
         postcode: c.cep,
         country: "BR",
         phone: phoneDigits,
@@ -91,6 +92,7 @@ Deno.serve(async (req) => {
         last_name,
         address_1: c.endereco,
         address_2: c.numero,
+        city: c.bairro ?? "",
         postcode: c.cep,
         country: "BR",
       },
@@ -98,10 +100,11 @@ Deno.serve(async (req) => {
       meta_data: [
         { key: "_cpf_cnpj", value: c.documento },
         { key: "_carro_ano", value: c.carroAno },
+        { key: "_bairro", value: c.bairro ?? "" },
         { key: "_entrega", value: c.entrega ?? "" },
         { key: "_origem", value: "BateriaJá - site" },
       ],
-      customer_note: `Veículo: ${c.carroAno}\nCPF/CNPJ: ${c.documento}\nPagamento: ${c.pagamento}${c.entrega ? `\nEntrega: ${c.entrega}` : ""}`,
+      customer_note: `Veículo: ${c.carroAno}\nCPF/CNPJ: ${c.documento}\nPagamento: ${c.pagamento}${c.bairro ? `\nBairro: ${c.bairro}` : ""}${c.entrega ? `\nEntrega: ${c.entrega}` : ""}`,
     };
 
     const auth = btoa(`${ck}:${cs}`);
