@@ -59,7 +59,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
     }
   }, [open]);
 
-  const close = () => onOpenChange(false);
+  
 
   const goWithYear = async (vehicle: TopVehicle, year: number) => {
     setResolving(true);
