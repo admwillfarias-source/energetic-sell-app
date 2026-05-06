@@ -14,6 +14,26 @@ const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 
 import { useIsMobile } from "@/hooks/use-mobile";
 
+// Ordem fixa dos modelos favoritos (definida pelo cliente)
+const TOP_SKUS = [
+  "M60GD","M50ED","MF72LD","Z60D","M75LD","MF60AD","EXF60DPD","MA70LD","60NPD","DF700",
+  "EXF150TD","MA80CD","Z50ED","H60DD","M48FD","EXF100LE","HE50GD","H60HD","DF2000","DF1000",
+  "M180BD","M100HE","HEFB72PD","M50JD","M95QD","AG60HD","EXF75ND","MF50ED","M150BD","12MN1000",
+  "60APD","H75PD","Z45D","HEFB60HD","MA60AD","M80RD","AG80KD","EXF80TCD","M40SD","12MVA7",
+  "M90TD","EXF180TD","EXF95MD","12MN700","M60GE","MA5D","EXF45BD","EXF95TPD","AG70PD","M70KD",
+  "H48BD","MBTX30UHD","H65HD","M80CD","MA92QD","MA6D","EV12-41","12MN2500","DF4100","M40SR",
+  "EV12-27","H70ND","H90LD","EXF70ND","MBTX20UHD","H40JD","MF80CD","H75LD","H95MD","M50JE",
+  "EXF80TCE","EXF180SE","EXP75PSD","EGM70PD","EV12-16","AG95MD","EXF60DPE","DURAN27","EFB72PD","H90LE",
+  "EXF50JD","H50JD","E100LE","EXF40JXD","E75PD","M180BE","M80RE","12MVA18","EFB60HD","EXP60DSD",
+  "M220PD","MA105DD","M220PE","102000192","50APD","Z50D","M100QD","EXF95TPE","EXF40JD","MTX5L",
+  "12MN3000","H180TD","12MN300","EGM60HD","MA8,6E","MTX9A","12MN1300","EGM80KD","EXF210OD","MS162",
+  "12MN4100","DF500","D-1240","12MVA9","E52JD","GB12-9","12MN2000","MA18D","MA8E","MA30D",
+  "MA12E","MBTZ10S","12MB105","MBTX16U","HS100LE","MTX7L","RT100LE","TERMINAL","H100LE","M48FE",
+  "MBT12B4","M78LE","EXP52GSD","12MVA26","E42JD","HFB50GD","MA12D","MBTX9U","MV14E","EXP75PD",
+  "12MVA12","EFB75PD","MBT9B4","MBTZ14S","Z70D","H45JE","MX10E","ERBS90E","ERPFL75D","H60DE",
+  "MA9E","12MVA5","EX60DD","MA6E","2","GB12-1,3","USADAMOTO",
+].map((s) => s.toUpperCase());
+
 export default function BestSellers() {
   const isMobile = useIsMobile();
   const PER_PAGE = isMobile ? 4 : 8;
@@ -22,8 +42,23 @@ export default function BestSellers() {
   const [page, setPage] = useState(1);
 
   const { data = [], isLoading } = useQuery({
-    queryKey: ["all-batteries"],
-    queryFn: () => fetchBatteries({ perPage: 100 }),
+    queryKey: ["best-sellers-top-skus"],
+    queryFn: async () => {
+      // Busca explícita pelos SKUs favoritos + um lote geral como fallback
+      const [byCodes, general] = await Promise.all([
+        fetchBatteries({ codes: TOP_SKUS, perPage: 100 }),
+        fetchBatteries({ perPage: 100 }),
+      ]);
+      const seen = new Set<string>();
+      const merged: Battery[] = [];
+      for (const b of [...byCodes, ...general]) {
+        if (!seen.has(b.id)) {
+          seen.add(b.id);
+          merged.push(b);
+        }
+      }
+      return merged;
+    },
     staleTime: 10 * 60 * 1000,
   });
 
@@ -50,25 +85,6 @@ export default function BestSellers() {
     return !NON_AUTOMOTIVE.some((kw) => text.includes(kw));
   };
 
-  // Ordem fixa dos modelos favoritos (definida pelo cliente)
-  const TOP_SKUS = [
-    "M60GD","M50ED","MF72LD","Z60D","M75LD","MF60AD","EXF60DPD","MA70LD","60NPD","DF700",
-    "EXF150TD","MA80CD","Z50ED","H60DD","M48FD","EXF100LE","HE50GD","H60HD","DF2000","DF1000",
-    "M180BD","M100HE","HEFB72PD","M50JD","M95QD","AG60HD","EXF75ND","MF50ED","M150BD","12MN1000",
-    "60APD","H75PD","Z45D","HEFB60HD","MA60AD","M80RD","AG80KD","EXF80TCD","M40SD","12MVA7",
-    "M90TD","EXF180TD","EXF95MD","12MN700","M60GE","MA5D","EXF45BD","EXF95TPD","AG70PD","M70KD",
-    "H48BD","MBTX30UHD","H65HD","M80CD","MA92QD","MA6D","EV12-41","12MN2500","DF4100","M40SR",
-    "EV12-27","H70ND","H90LD","EXF70ND","MBTX20UHD","H40JD","MF80CD","H75LD","H95MD","M50JE",
-    "EXF80TCE","EXF180SE","EXP75PSD","EGM70PD","EV12-16","AG95MD","EXF60DPE","DURAN27","EFB72PD","H90LE",
-    "EXF50JD","H50JD","E100LE","EXF40JXD","E75PD","M180BE","M80RE","12MVA18","EFB60HD","EXP60DSD",
-    "M220PD","MA105DD","M220PE","102000192","50APD","Z50D","M100QD","EXF95TPE","EXF40JD","MTX5L",
-    "12MN3000","H180TD","12MN300","EGM60HD","MA8,6E","MTX9A","12MN1300","EGM80KD","EXF210OD","MS162",
-    "12MN4100","DF500","D-1240","12MVA9","E52JD","GB12-9","12MN2000","MA18D","MA8E","MA30D",
-    "MA12E","MBTZ10S","12MB105","MBTX16U","HS100LE","MTX7L","RT100LE","TERMINAL","H100LE","M48FE",
-    "MBT12B4","M78LE","EXP52GSD","12MVA26","E42JD","HFB50GD","MA12D","MBTX9U","MV14E","EXP75PD",
-    "12MVA12","EFB75PD","MBT9B4","MBTZ14S","Z70D","H45JE","MX10E","ERBS90E","ERPFL75D","H60DE",
-    "MA9E","12MVA5","EX60DD","MA6E","2","GB12-1,3","USADAMOTO",
-  ].map((s) => s.toUpperCase());
 
   // Conjunto de SKUs realmente existentes no catálogo
   const catalogSkus = useMemo(
