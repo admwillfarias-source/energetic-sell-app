@@ -52,9 +52,9 @@ export function BatteryMouraCard({
         Agende ou receba em até 35 min
       </div>
 
-      {/* Bloco preço */}
-      <div className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center rounded-lg bg-white p-1 sm:h-24 sm:w-24">
+      {/* Bloco preço — centralizado */}
+      <div className="flex flex-col items-center gap-1 px-3 pt-3 pb-2 sm:pt-4">
+        <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-white p-1 sm:h-28 sm:w-28">
           <BatteryImage
             src={battery.image}
             alt={`Bateria ${battery.brand} ${battery.name} ${battery.amperage}Ah`}
@@ -64,22 +64,20 @@ export function BatteryMouraCard({
             sizes={COMPACT_SIZES}
           />
         </div>
-        <div className="min-w-0 flex-1 text-right">
-          <p className="text-xs leading-tight text-muted-foreground sm:text-sm">
-            Em <span className="font-bold text-accent">10x</span> sem juros de
-          </p>
-          <p className="font-display text-2xl font-extrabold leading-none text-primary sm:text-3xl">
-            {formatBRL(installment)}
-          </p>
-          <p className="mt-1 text-[11px] text-muted-foreground sm:text-xs">
-            à vista{" "}
-            <span className="font-bold text-primary">{formatBRL(battery.price)}</span>
-          </p>
-        </div>
+        <p className="text-xs leading-tight text-muted-foreground sm:text-sm">
+          Em <span className="font-bold text-accent">10x</span> sem juros de
+        </p>
+        <p className="font-display text-3xl font-extrabold leading-none text-primary sm:text-4xl">
+          {formatBRL(installment)}
+        </p>
+        <p className="text-[11px] text-muted-foreground sm:text-xs">
+          à vista{" "}
+          <span className="font-bold text-primary">{formatBRL(battery.price)}</span>
+        </p>
       </div>
 
-      {/* Faixa desconto PIX */}
-      <div className="flex items-center gap-2 bg-accent px-3 py-1.5 text-accent-foreground">
+      {/* Faixa desconto PIX — centralizada */}
+      <div className="flex items-center justify-center gap-2 bg-accent px-3 py-1.5 text-accent-foreground">
         <Tag className="h-3.5 w-3.5 shrink-0 -rotate-90" />
         <p className="text-[11px] font-semibold sm:text-xs">
           PIX/Dinheiro:{" "}
