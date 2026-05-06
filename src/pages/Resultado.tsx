@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { fetchBatteriesByVehicle, fetchBatteries, type VehicleBrand } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
-import { BatteryCompactCard } from "@/components/BatteryCompactCard";
+import { BatteryMouraCard } from "@/components/BatteryMouraCard";
 import { Battery } from "@/data/batteries";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
@@ -290,14 +290,14 @@ export default function Resultado() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
               {sorted.map((b, i) => (
-                <BatteryCompactCard
+                <BatteryMouraCard
                   key={b.id}
                   battery={b}
                   highlight={i === 0}
                   vehicleLabel={vehicle}
-                  priority={i < 4}
+                  priority={i < 2}
                 />
               ))}
             </div>
