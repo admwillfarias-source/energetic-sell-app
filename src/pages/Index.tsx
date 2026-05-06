@@ -24,9 +24,8 @@ const CartDrawer = lazy(() =>
   import("@/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
 );
 
-const PerfReport = import.meta.env.DEV
-  ? lazy(() => import("@/components/PerfReport"))
-  : null;
+// PerfReport disponível em DEV sempre, e em prod via ?perf=1
+const PerfReport = lazy(() => import("@/components/PerfReport"));
 const MobileDebugOverlay = import.meta.env.DEV
   ? lazy(() => import("@/components/MobileDebugOverlay"))
   : null;
