@@ -189,7 +189,11 @@ export default function VehicleAutocomplete({
       {open && suggestions.length > 0 && (
         <ul
           role="listbox"
-          className="absolute z-50 mt-1 max-h-80 w-full overflow-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg"
+          className={cn(
+            suggestionsMode === "list"
+              ? "mt-3 divide-y divide-border rounded-lg border border-border bg-card text-card-foreground shadow-sm"
+              : "absolute z-50 mt-1 max-h-80 w-full overflow-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg",
+          )}
         >
           {suggestions.map((s, i) => (
             <li
@@ -202,7 +206,8 @@ export default function VehicleAutocomplete({
                 choose(s);
               }}
               className={cn(
-                "flex cursor-pointer items-center gap-3 px-3 py-2 text-sm",
+                "flex cursor-pointer items-center gap-3 px-3 text-sm",
+                suggestionsMode === "list" ? "py-3" : "py-2",
                 i === highlight ? "bg-accent/15" : "hover:bg-muted",
               )}
             >
@@ -219,7 +224,13 @@ export default function VehicleAutocomplete({
         </ul>
       )}
       {open && !loading && query.trim().length >= 2 && suggestions.length === 0 && (
-        <div className="absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover px-3 py-2 text-sm text-muted-foreground shadow-lg">
+        <div
+          className={cn(
+            suggestionsMode === "list"
+              ? "mt-3 rounded-lg border border-border bg-card px-3 py-3 text-sm text-muted-foreground"
+              : "absolute z-50 mt-1 w-full rounded-lg border border-border bg-popover px-3 py-2 text-sm text-muted-foreground shadow-lg",
+          )}
+        >
           Nenhum veículo encontrado. Tente outra grafia ou inclua o ano.
         </div>
       )}
