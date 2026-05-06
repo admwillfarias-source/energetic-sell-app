@@ -290,14 +290,14 @@ export default function Resultado() {
               </Button>
             </div>
           ) : (
-            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-2">
               {sorted.map((b, i) => (
-                <BatteryCompactCard
+                <BatteryMouraCard
                   key={b.id}
                   battery={b}
                   highlight={i === 0}
                   vehicleLabel={vehicle}
-                  priority={i < 4}
+                  priority={i < 2}
                 />
               ))}
             </div>
