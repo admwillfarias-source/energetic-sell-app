@@ -31,15 +31,29 @@ const TRUCK_MODELS = new Set(["Strada", "Hilux"]);
 
 export default function SearchOverlay({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [picked, setPicked] = useState<TopVehicle | null>(null);
   const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
     if (open) {
-      markEvent("search_overlay_opened");
-      ensureCatalogLoaded().catch(() => {});
+      markEvent("search_overlay_open_start");
+      ensureCatalogLoaded()
+        .then(() => markEvent("search_overlay_catalog_ready"))
+        .catch(() => {});
+      requestAnimationFrame(() => {
+        markEvent("search_overlay_visible");
+        try {
+          measureBetween(
+            "overlay_open_ms",
+            "search_overlay_open_start",
+            "search_overlay_visible",
+          );
+        } catch {
+          // ignore
+        }
+      });
     } else {
-      // reset ao fechar
       setPicked(null);
       setResolving(false);
     }
@@ -49,6 +63,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
 
   const goWithYear = async (vehicle: TopVehicle, year: number) => {
     setResolving(true);
+    markEvent("result_navigate_start");
     try {
       await ensureCatalogLoaded();
       const query = `${vehicle.query} ${year}`;
@@ -62,14 +77,39 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
         setResolving(false);
         return;
       }
+
+      const codes = match.codes;
+      const vehicleLabel = match.label;
+
+      // Prefetch dispara em paralelo — a página /resultado consome o cache.
+      queryClient
+        .prefetchQuery({
+          queryKey: ["resultado", { codes, vehicle: vehicleLabel }],
+          queryFn: () => fetchBatteriesByVehicle(codes, {}),
+          staleTime: 5 * 60 * 1000,
+        })
+        .then(() => {
+          markEvent("result_prefetch_done");
+          try {
+            measureBetween(
+              "result_load_ms",
+              "result_navigate_start",
+              "result_prefetch_done",
+            );
+          } catch {
+            // ignore
+          }
+        })
+        .catch(() => {});
+
       try {
-        sessionStorage.setItem("lastVehicleSearch", match.label);
+        sessionStorage.setItem("lastVehicleSearch", vehicleLabel);
       } catch {
         // ignore
       }
       onOpenChange(false);
       navigate(
-        `/resultado?codes=${encodeURIComponent(match.codes.join(","))}&v=${encodeURIComponent(match.label)}`,
+        `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(vehicleLabel)}`,
       );
     } finally {
       setResolving(false);
