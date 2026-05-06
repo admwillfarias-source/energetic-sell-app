@@ -8,6 +8,11 @@ import "@fontsource/plus-jakarta-sans/800.css";
 import "./index.css";
 import heroBg from "@/assets/hero-bg.webp";
 import heroBgSm from "@/assets/hero-bg-sm.webp";
+import { startLcpTracking, markEvent } from "@/lib/perfMetrics";
+
+// Inicia o tracking de Web Vitals o quanto antes
+startLcpTracking();
+markEvent("app_boot");
 
 // Preload hero LCP com URL hasheada (Vite resolve em build)
 const preloadHero = () => {

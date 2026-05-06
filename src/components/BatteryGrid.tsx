@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SlidersHorizontal, AlertCircle, X, CarFront } from "lucide-react";
+import { markEvent } from "@/lib/perfMetrics";
 
 export function BatteryGrid() {
   const [searchParams] = useSearchParams();
@@ -51,6 +52,10 @@ export function BatteryGrid() {
     enabled: !isVehicleSearch || catalogReady,
     staleTime: 5 * 60 * 1000,
   });
+
+  useEffect(() => {
+    if (!isLoading && results.length > 0) markEvent("battery_grid_ready");
+  }, [isLoading, results.length]);
 
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedAmps, setSelectedAmps] = useState<number[]>([]);

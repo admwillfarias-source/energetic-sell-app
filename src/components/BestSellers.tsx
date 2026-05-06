@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBatteries } from "@/lib/api/batteries";
 import { BatteryCard } from "./BatteryCard";
@@ -6,6 +6,7 @@ import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Battery } from "@/data/batteries";
 import { Flame } from "lucide-react";
+import { markEvent } from "@/lib/perfMetrics";
 
 const BEST_SELLER_SKUS = [
   "M60AD", "M60GD", "M50ED", "MF72LD", "Z60D", "M75LD", "MF60AD",
@@ -20,6 +21,10 @@ export default function BestSellers() {
     queryFn: () => fetchBatteries({ codes: BEST_SELLER_SKUS, perPage: 30 }),
     staleTime: 10 * 60 * 1000,
   });
+
+  useEffect(() => {
+    if (!isLoading && data.length > 0) markEvent("best_sellers_ready");
+  }, [isLoading, data.length]);
 
   // Ordena conforme a ordem dos SKUs solicitados
   const ordered = [...data].sort((a, b) => {
