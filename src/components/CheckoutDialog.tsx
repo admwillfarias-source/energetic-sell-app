@@ -1283,23 +1283,24 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
           {/* RESUMO + NAVEGAÇÃO — sticky no rodapé */}
           <div
             data-debug-id="checkout-sticky-summary"
-            className="shrink-0 border-t border-border bg-muted/30 px-4 py-3 sm:px-6 sm:py-4"
-            style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
+            className="shrink-0 border-t border-border bg-muted/30 px-4 py-2.5 sm:px-6 sm:py-4"
+            style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
           >
-            <div className="mb-2.5 space-y-1 sm:mb-3 sm:space-y-1.5">
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
+            {/* Resumo compacto: linhas auxiliares só em sm+ */}
+            <div className="mb-2 space-y-0.5 sm:mb-3 sm:space-y-1.5">
+              <div className="hidden items-center justify-between text-xs text-muted-foreground sm:flex">
                 <span>
                   {items.reduce((s, i) => s + i.quantity, 0)} item
                   {items.reduce((s, i) => s + i.quantity, 0) !== 1 ? "s" : ""}
                 </span>
                 <span className="text-success font-medium">Instalação grátis</span>
               </div>
-              <div className="flex items-center justify-between text-xs">
+              <div className="hidden items-center justify-between text-xs sm:flex">
                 <span className="text-muted-foreground">Subtotal</span>
                 <span className="font-medium">{formatBRL(subtotal)}</span>
               </div>
               {form.entregaTipo !== "retirada" && (
-                <div className="flex items-center justify-between text-xs">
+                <div className="hidden items-center justify-between text-xs sm:flex">
                   <span className="text-muted-foreground">Taxa de entrega</span>
                   <span
                     className={cn(
@@ -1312,8 +1313,8 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                 </div>
               )}
               {descontoPagamento > 0 && (
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Desconto à vista (3%)</span>
+                <div className="flex items-center justify-between text-[11px] sm:text-xs">
+                  <span className="text-muted-foreground">Desconto (3%)</span>
                   <span className="font-medium text-success">
                     -{formatBRL(descontoPagamento)}
                   </span>
@@ -1321,12 +1322,12 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
               )}
               <div className="flex items-center justify-between">
                 <span className="font-display text-sm font-bold">Total</span>
-                <span className="font-display text-lg font-bold text-primary sm:text-xl">
+                <span className="font-display text-base font-bold text-primary sm:text-xl">
                   {formatBRL(totalComEntrega)}
                 </span>
               </div>
               {parcelasEfetivas > 1 && (
-                <div className="text-right text-[11px] text-muted-foreground">
+                <div className="text-right text-[10px] text-muted-foreground sm:text-[11px]">
                   ou {parcelasEfetivas}x de {formatBRL(valorParcela)} sem juros
                 </div>
               )}
