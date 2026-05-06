@@ -143,13 +143,8 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
                   : "Encontre a bateria do seu carro"}
               </DialogTitle>
             </div>
-            <button
-              onClick={close}
-              aria-label="Fechar busca"
-              className="rounded-full p-1.5 hover:bg-muted"
-            >
-              <X className="h-4 w-4" />
-            </button>
+          </div>
+
           </div>
           <DialogDescription className="text-left text-xs text-muted-foreground">
             {picked
