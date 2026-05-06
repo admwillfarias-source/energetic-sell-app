@@ -84,6 +84,11 @@ const Index = () => {
               <HowToOrder />
             </Suspense>
           </LazySection>
+          <LazySection minHeight="500px">
+            <Suspense fallback={null}>
+              <BestSellers />
+            </Suspense>
+          </LazySection>
           <LazySection minHeight="400px">
             <Suspense fallback={null}>
               <Benefits />
