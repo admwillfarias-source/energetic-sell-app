@@ -22,8 +22,23 @@ export default function BestSellers() {
   const [page, setPage] = useState(1);
 
   const { data = [], isLoading } = useQuery({
-    queryKey: ["all-batteries"],
-    queryFn: () => fetchBatteries({ perPage: 100 }),
+    queryKey: ["best-sellers-top-skus"],
+    queryFn: async () => {
+      // Busca explícita pelos SKUs favoritos + um lote geral como fallback
+      const [byCodes, general] = await Promise.all([
+        fetchBatteries({ codes: TOP_SKUS, perPage: 100 }),
+        fetchBatteries({ perPage: 100 }),
+      ]);
+      const seen = new Set<string>();
+      const merged: Battery[] = [];
+      for (const b of [...byCodes, ...general]) {
+        if (!seen.has(b.id)) {
+          seen.add(b.id);
+          merged.push(b);
+        }
+      }
+      return merged;
+    },
     staleTime: 10 * 60 * 1000,
   });
 
