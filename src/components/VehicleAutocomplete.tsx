@@ -191,36 +191,69 @@ export default function VehicleAutocomplete({
           role="listbox"
           className={cn(
             suggestionsMode === "list"
-              ? "mt-3 divide-y divide-border rounded-lg border border-border bg-card text-card-foreground shadow-sm"
+              ? "mt-3 divide-y divide-border rounded-lg border border-border bg-card text-card-foreground shadow-sm overflow-hidden"
               : "absolute z-50 mt-1 max-h-80 w-full overflow-auto rounded-lg border border-border bg-popover text-popover-foreground shadow-lg",
           )}
         >
-          {suggestions.map((s, i) => (
-            <li
-              key={`${s.brand}-${s.model}-${s.year}-${i}`}
-              role="option"
-              aria-selected={i === highlight}
-              onMouseEnter={() => setHighlight(i)}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                choose(s);
-              }}
-              className={cn(
-                "flex cursor-pointer items-center gap-3 px-3 text-sm",
-                suggestionsMode === "list" ? "py-3" : "py-2",
-                i === highlight ? "bg-accent/15" : "hover:bg-muted",
-              )}
-            >
-              <Car className="h-4 w-4 shrink-0 text-muted-foreground" />
-              <div className="flex-1">
-                <div className="font-medium">{s.label}</div>
-                <div className="text-xs text-muted-foreground">
-                  {s.codes.length} código{s.codes.length > 1 ? "s" : ""} compatível
-                  {s.codes.length > 1 ? "is" : ""}
+          {suggestions.map((s, i) => {
+            // Extrai período "(yStart-yEnd)" do label se existir
+            const periodMatch = s.label.match(/\((\d{4})(?:-(\d{4}))?\)/);
+            const period = periodMatch
+              ? periodMatch[2]
+                ? `${periodMatch[1]} a ${periodMatch[2]}`
+                : `${periodMatch[1]}`
+              : `${s.year}`;
+            const initial = (s.brand[0] ?? "?").toUpperCase();
+            return (
+              <li
+                key={`${s.brand}-${s.model}-${s.year}-${i}`}
+                role="option"
+                aria-selected={i === highlight}
+                onMouseEnter={() => setHighlight(i)}
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  choose(s);
+                }}
+                className={cn(
+                  "flex cursor-pointer items-center gap-3 text-sm transition-colors",
+                  suggestionsMode === "list" ? "px-4 py-3.5" : "px-3 py-2",
+                  i === highlight ? "bg-accent/15" : "hover:bg-muted",
+                )}
+              >
+                {suggestionsMode === "list" ? (
+                  <span
+                    aria-hidden
+                    className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary"
+                  >
+                    {initial}
+                  </span>
+                ) : (
+                  <Car className="h-4 w-4 shrink-0 text-muted-foreground" />
+                )}
+                <div className="flex-1 min-w-0">
+                  {suggestionsMode === "list" ? (
+                    <div className="font-semibold leading-tight text-foreground">
+                      <span className="uppercase">{s.model}</span>
+                      <span className="font-normal text-muted-foreground">
+                        {" "}Todos os modelos · {period}
+                      </span>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="font-medium">{s.label}</div>
+                      <div className="text-xs text-muted-foreground">
+                        {s.codes.length} código{s.codes.length > 1 ? "s" : ""} compatível
+                        {s.codes.length > 1 ? "is" : ""}
+                      </div>
+                    </>
+                  )}
+                  {suggestionsMode === "list" && (
+                    <div className="text-xs text-muted-foreground">{s.brand}</div>
+                  )}
                 </div>
-              </div>
-            </li>
-          ))}
+              </li>
+            );
+          })}
         </ul>
       )}
       {open && !loading && query.trim().length >= 2 && suggestions.length === 0 && (
