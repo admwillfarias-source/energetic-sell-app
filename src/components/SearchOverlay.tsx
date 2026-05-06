@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import VehicleAutocomplete from "@/components/VehicleAutocomplete";
 import { TOP_VEHICLES, type TopVehicle } from "@/data/topVehicles";
-import { searchVehicles } from "@/lib/fitments";
+import { getStrictVehicleCodes } from "@/lib/fitments";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { fetchBatteriesByVehicle } from "@/lib/api/batteries";
 import { toast } from "@/hooks/use-toast";
@@ -66,12 +66,11 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
     markEvent("result_navigate_start");
     try {
       await ensureCatalogLoaded();
-      const query = `${vehicle.query} ${year}`;
-      // Pega TODAS as variantes do modelo no ano (ex.: HB20 1.0, 1.6, S, X)
-      // e une seus SKUs — assim o cliente vê todas as baterias compatíveis
-      // independente da versão do veículo.
-      const results = searchVehicles(query, 30);
-      if (results.length === 0) {
+      const vehicleLabel = `${vehicle.brand} ${vehicle.model} ${year}`;
+      // Usa somente os códigos cadastrados na tabela de aplicação para este
+      // modelo/ano, sem ampliar por busca fuzzy, equivalência ou cruzamento.
+      const codes = getStrictVehicleCodes(vehicleLabel);
+      if (codes.length === 0) {
         toast({
           title: "Sem aplicação cadastrada",
           description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}. Tente outro ano ou digite o modelo do carro.`,
@@ -79,21 +78,6 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
         setResolving(false);
         return;
       }
-
-      const codeSet = new Set<string>();
-      for (const r of results) {
-        for (const c of r.codes) codeSet.add(c);
-      }
-      const codes = Array.from(codeSet);
-      if (codes.length === 0) {
-        toast({
-          title: "Sem aplicação cadastrada",
-          description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}.`,
-        });
-        setResolving(false);
-        return;
-      }
-      const vehicleLabel = `${vehicle.brand} ${vehicle.model} ${year}`;
 
       // Prefetch dispara em paralelo — a página /resultado consome o cache.
       queryClient
