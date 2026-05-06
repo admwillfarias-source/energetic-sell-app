@@ -52,8 +52,8 @@ export function BatteryMouraCard({
         Agende ou receba em até 35 min
       </div>
 
-      {/* Bloco preço — centralizado */}
-      <div className="flex flex-col items-center gap-1.5 px-3 pt-4 pb-3 sm:pt-5">
+      {/* Bloco preço + foto + PIX — centralizado verticalmente */}
+      <div className="flex flex-col items-center px-3 pt-3">
         <div className="flex h-28 w-28 items-center justify-center rounded-lg bg-white p-1 sm:h-32 sm:w-32">
           <BatteryImage
             src={battery.image}
@@ -64,20 +64,20 @@ export function BatteryMouraCard({
             sizes={COMPACT_SIZES}
           />
         </div>
-        <p className="mt-1 text-sm leading-tight text-muted-foreground">
+        <p className="mt-2 text-sm leading-tight text-muted-foreground">
           Em <span className="font-bold text-accent">10x</span> sem juros de
         </p>
         <p className="font-display text-4xl font-extrabold leading-none text-primary sm:text-5xl">
           {formatBRL(installment)}
         </p>
-        <p className="text-xs text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground">
           à vista{" "}
           <span className="font-bold text-primary">{formatBRL(battery.price)}</span>
         </p>
       </div>
 
-      {/* Faixa desconto PIX — centralizada */}
-      <div className="flex items-center justify-center gap-2 bg-accent px-3 py-1.5 text-accent-foreground">
+      {/* Faixa desconto PIX — centralizada, colada ao preço */}
+      <div className="mx-auto mt-2 mb-3 flex w-fit items-center justify-center gap-2 rounded-full bg-accent px-3 py-1 text-accent-foreground">
         <Tag className="h-3.5 w-3.5 shrink-0 -rotate-90" />
         <p className="text-[11px] font-semibold sm:text-xs">
           PIX/Dinheiro:{" "}
