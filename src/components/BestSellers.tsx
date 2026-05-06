@@ -30,10 +30,29 @@ export default function BestSellers() {
     if (!isLoading && data.length > 0) markEvent("best_sellers_ready");
   }, [isLoading, data.length]);
 
-  const withSku = useMemo(
-    () => data.filter((b) => !!b.sku && b.sku.trim() !== ""),
-    [data],
-  );
+  // Ordem de prioridade por amperagem solicitada pelo cliente
+  const AMP_ORDER = [
+    60, 40, 50, 45, 48, 72, 70, 75, 78, 80, 90, 95, 100, 150, 180, 200, 210, 220,
+  ];
+
+  const withSku = useMemo(() => {
+    const list = data.filter((b) => !!b.sku && b.sku.trim() !== "");
+    const rank = (amp: number) => {
+      const i = AMP_ORDER.indexOf(amp);
+      return i === -1 ? AMP_ORDER.length + amp : i;
+    };
+    return [...list].sort((a, b) => {
+      const ra = rank(a.amperage);
+      const rb = rank(b.amperage);
+      if (ra !== rb) return ra - rb;
+      return b.price - a.price;
+    });
+  }, [data]);
+
+  const vehicleLabel =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("lastVehicleSearch") ?? ""
+      : "";
 
   const visibleCount = Math.min(withSku.length, page * PER_PAGE);
   const pageItems = withSku.slice(0, visibleCount);
@@ -81,6 +100,36 @@ export default function BestSellers() {
           </button>
         </div>
 
+        {!isLoading && (
+          <div className="mx-auto mb-6 max-w-md text-center text-sm">
+            {vehicleLabel ? (
+              withSku.length > 0 ? (
+                <p className="text-foreground">
+                  <span className="font-bold text-primary">{withSku.length}</span>{" "}
+                  {withSku.length === 1 ? "bateria compatível" : "baterias compatíveis"} para{" "}
+                  <span className="font-bold">{vehicleLabel}</span>
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Nenhuma bateria compatível encontrada para{" "}
+                  <span className="font-bold text-foreground">{vehicleLabel}</span>.{" "}
+                  <button
+                    type="button"
+                    onClick={() => setOverlayOpen(true)}
+                    className="font-semibold text-primary underline-offset-2 hover:underline"
+                  >
+                    Buscar outro veículo
+                  </button>
+                </p>
+              )
+            ) : (
+              <p className="text-muted-foreground">
+                <span className="font-bold text-foreground">{withSku.length}</span> modelos
+                disponíveis · busque pelo seu carro acima
+              </p>
+            )}
+          </div>
+        )}
         {isLoading ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
