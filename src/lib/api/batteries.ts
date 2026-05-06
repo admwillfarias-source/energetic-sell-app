@@ -113,8 +113,55 @@ const WARRANTY_15_SKUS = new Set([
   "M220PD", "M220PE",
 ]);
 
+// Overrides explícitos de garantia (meses) por padrão de SKU/nome
+const WARRANTY_OVERRIDES: Array<[RegExp, number]> = [
+  // Motobatt
+  [/\bMBTX20U\s*HD\b/i, 12],
+  [/\bMBTX12U\s*HD\b/i, 12],
+  [/\bMBT\s*9B4\b/i, 12],
+  [/\bMBTZ10S\b/i, 12],
+  [/\bMTX9A\b/i, 6],
+  [/\bMTX7L\b/i, 6],
+  [/\bMTX5L\b/i, 6],
+  // Moura Moto série MV/MVA específicas — 12 meses
+  [/\b12MVA[-\s]?(?:5|7|9|12|18)\b/i, 12],
+  // Heliar específicos
+  [/\bHEFB225TE\b/i, 15],
+  [/\bHS200TD\b/i, 15],
+  [/\bHS180\b/i, 15],
+  [/\bH45JE\b/i, 24],
+  [/\bheliar\b.*\b90\s*ah\b/i, 18],
+  // Excell Evolution
+  [/\bEXF\s*150\b/i, 12],
+  [/\bEXF\s*180\b/i, 12],
+  [/\bEXF\s*220\b/i, 12],
+  [/\bEXF\s*210\b/i, 12],
+  // Excell Super Premium / Free
+  [/\bEXP[-\s]?75PSD\b/i, 24],
+  [/\bexcell?\s*free\b.*\b(?:40|45|60|70|80)\s*ah\b/i, 18],
+  [/\bexcell?\b.*\b(?:70|95)\s*ah\b/i, 18],
+];
+
+// Regras por marca (fallback antes do texto livre)
+const BRAND_DEFAULT_WARRANTY: Array<[RegExp, number]> = [
+  [/\bglobal\b/i, 3],
+  [/\beletr[aã]n\b/i, 12],
+  [/\bmoura\b.*\bnobreak\b|\bnobreak\b.*\bmoura\b/i, 24],
+  [/\bmoura\b.*\bboat\b|\bboat\b.*\bmoura\b/i, 12],
+  [/\bmoura\b.*\bmoto\b|\bmoto\b.*\bmoura\b/i, 6],
+  [/\bfreedom\b/i, 24],
+  [/\bzetta\b.*\b(?:100|150|180)\s*ah\b/i, 12],
+];
+
 function detectWarranty(text: string, sku?: string, name?: string): number {
-  // 1) Override por SKU/nome (Moura)
+  const haystack = `${sku ?? ""} ${name ?? ""} ${text}`;
+
+  // 1) Overrides explícitos por modelo (maior prioridade)
+  for (const [re, months] of WARRANTY_OVERRIDES) {
+    if (re.test(haystack)) return months;
+  }
+
+  // 2) Override Moura por SKU (linha automotiva)
   const candidates: string[] = [];
   if (sku) candidates.push(sku.toUpperCase());
   if (name) {
@@ -125,7 +172,13 @@ function detectWarranty(text: string, sku?: string, name?: string): number {
     if (WARRANTY_24_SKUS.has(c)) return 24;
     if (WARRANTY_15_SKUS.has(c)) return 15;
   }
-  // 2) Texto explícito
+
+  // 3) Defaults por marca/linha
+  for (const [re, months] of BRAND_DEFAULT_WARRANTY) {
+    if (re.test(haystack)) return months;
+  }
+
+  // 4) Texto explícito "X meses"
   const m = text.match(/(\d{1,2})\s*meses/i);
   return m ? Number(m[1]) : 18;
 }
@@ -138,7 +191,7 @@ function mapToBattery(p: WCProduct): Battery {
     id: String(p.id),
     name: p.name,
     brand: detectBrand(p.name, fullDesc),
-    amperage: detectAmperage(p.name, fullDesc),
+    amperage: detectAmperage(p.name, fullDesc, p.sku),
     warranty: detectWarranty(fullDesc, p.sku, p.name),
     price,
     oldPrice,
