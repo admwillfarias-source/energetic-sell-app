@@ -30,10 +30,29 @@ export default function BestSellers() {
     if (!isLoading && data.length > 0) markEvent("best_sellers_ready");
   }, [isLoading, data.length]);
 
-  const withSku = useMemo(
-    () => data.filter((b) => !!b.sku && b.sku.trim() !== ""),
-    [data],
-  );
+  // Ordem de prioridade por amperagem solicitada pelo cliente
+  const AMP_ORDER = [
+    60, 40, 50, 45, 48, 72, 70, 75, 78, 80, 90, 95, 100, 150, 180, 200, 210, 220,
+  ];
+
+  const withSku = useMemo(() => {
+    const list = data.filter((b) => !!b.sku && b.sku.trim() !== "");
+    const rank = (amp: number) => {
+      const i = AMP_ORDER.indexOf(amp);
+      return i === -1 ? AMP_ORDER.length + amp : i;
+    };
+    return [...list].sort((a, b) => {
+      const ra = rank(a.amperage);
+      const rb = rank(b.amperage);
+      if (ra !== rb) return ra - rb;
+      return b.price - a.price;
+    });
+  }, [data]);
+
+  const vehicleLabel =
+    typeof window !== "undefined"
+      ? sessionStorage.getItem("lastVehicleSearch") ?? ""
+      : "";
 
   const visibleCount = Math.min(withSku.length, page * PER_PAGE);
   const pageItems = withSku.slice(0, visibleCount);
