@@ -57,13 +57,17 @@ function detectBrand(name: string, desc: string): string {
 }
 
 function detectAmperage(name: string, desc: string): number {
-  const text = `${name} ${desc}`;
-  // Try patterns like "60Ah", "60 Ah", "60ah"
-  const m = text.match(/(\d{1,3})\s*ah\b/i);
-  if (m) return Number(m[1]);
-  // Patterns like "M60GD" -> 60, "M100QD" -> 100
-  const code = text.match(/\bm[a-z]?(\d{2,3})[a-z]{1,3}\b/i);
-  if (code) return Number(code[1]);
+  // Prioriza a descrição: "60Ah", "60 Ah", "60ah"
+  const fromDesc = desc.match(/(\d{1,3})\s*ah\b/i);
+  if (fromDesc) return Number(fromDesc[1]);
+  // Depois tenta no nome
+  const fromName = name.match(/(\d{1,3})\s*ah\b/i);
+  if (fromName) return Number(fromName[1]);
+  // Padrões de código tipo "M60GD" -> 60, "M100QD" -> 100
+  const codeDesc = desc.match(/\bm[a-z]?(\d{2,3})[a-z]{1,3}\b/i);
+  if (codeDesc) return Number(codeDesc[1]);
+  const codeName = name.match(/\bm[a-z]?(\d{2,3})[a-z]{1,3}\b/i);
+  if (codeName) return Number(codeName[1]);
   return 60;
 }
 

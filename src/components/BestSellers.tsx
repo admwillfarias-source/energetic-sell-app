@@ -44,17 +44,23 @@ export default function BestSellers() {
     };
   }, []);
 
+  const NON_AUTOMOTIVE = ["nobreak", "moto", "motobatt", "estaciona"];
+  const isAutomotive = (b: Battery) => {
+    const text = `${b.brand} ${b.name} ${b.description}`.toLowerCase();
+    return !NON_AUTOMOTIVE.some((kw) => text.includes(kw));
+  };
+
   const withSku = useMemo(() => {
     const list = data.filter((b) => !!b.sku && b.sku.trim() !== "");
     const isPriority = (brand: string) =>
       priorityBrands.some((p) => p.toLowerCase() === brand.toLowerCase());
-    const priority = list
-      .filter((b) => isPriority(b.brand))
-      .sort((a, b) => a.price - b.price);
-    const rest = list
-      .filter((b) => !isPriority(b.brand))
-      .sort((a, b) => a.price - b.price);
-    return [...priority, ...rest];
+    const sortByPrice = (a: Battery, b: Battery) => a.price - b.price;
+
+    // 1) Automotivas + marca priorizada  2) Automotivas demais  3) Não-automotivas
+    const autoPriority = list.filter((b) => isAutomotive(b) && isPriority(b.brand)).sort(sortByPrice);
+    const autoRest = list.filter((b) => isAutomotive(b) && !isPriority(b.brand)).sort(sortByPrice);
+    const nonAuto = list.filter((b) => !isAutomotive(b)).sort(sortByPrice);
+    return [...autoPriority, ...autoRest, ...nonAuto];
   }, [data, priorityBrands]);
 
   const vehicleLabel =
