@@ -56,14 +56,37 @@ function detectBrand(name: string, desc: string): string {
   return "Moura";
 }
 
-function detectAmperage(name: string, desc: string): number {
+// Overrides explícitos de amperagem por SKU/código (informados pelo cliente)
+const AMPERAGE_OVERRIDES: Array<[RegExp, number]> = [
+  // Moura Moto — linha MV
+  [/\bMV\s*5D\b/i, 5],
+  [/\bMV\s*7X[-\s]?E\b/i, 7],
+  [/\bMV\s*8E\b/i, 8],
+  [/\bMV\s*5[,.]5\b/i, 5.5],
+  [/\b12MVA[-\s]?5\b/i, 5],
+  [/\b12MVA[-\s]?7\b/i, 7],
+  [/\b12MVA[-\s]?9\b/i, 9],
+  [/\b12MVA[-\s]?12\b/i, 12],
+  [/\b12MVA[-\s]?18\b/i, 18],
+  [/\b12MVA[-\s]?26\b/i, 26],
+  // Moura Moto — linha MA
+  [/\bMA\s*8E\b/i, 8],
+  [/\bMA\s*9E\b/i, 9],
+  [/\bMA\s*8[,.]6\s*E\b/i, 8.6],
+  [/\bMA\s*8[,.]6\s*D\b/i, 12],
+  [/\bMA\s*12[ED]\b/i, 12],
+];
+
+function detectAmperage(name: string, desc: string, sku?: string): number {
+  const haystack = `${sku ?? ""} ${name} ${desc}`;
+  for (const [re, ah] of AMPERAGE_OVERRIDES) {
+    if (re.test(haystack)) return ah;
+  }
   // Prioriza a descrição: "60Ah", "60 Ah", "60ah"
   const fromDesc = desc.match(/(\d{1,3})\s*ah\b/i);
   if (fromDesc) return Number(fromDesc[1]);
-  // Depois tenta no nome
   const fromName = name.match(/(\d{1,3})\s*ah\b/i);
   if (fromName) return Number(fromName[1]);
-  // Padrões de código tipo "M60GD" -> 60, "M100QD" -> 100
   const codeDesc = desc.match(/\bm[a-z]?(\d{2,3})[a-z]{1,3}\b/i);
   if (codeDesc) return Number(codeDesc[1]);
   const codeName = name.match(/\bm[a-z]?(\d{2,3})[a-z]{1,3}\b/i);
