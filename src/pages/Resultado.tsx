@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { fetchBatteriesByVehicle, fetchBatteries, type VehicleBrand } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
-import { BatteryCompactCard } from "@/components/BatteryCompactCard";
+import { BatteryMouraCard } from "@/components/BatteryMouraCard";
 import { Battery } from "@/data/batteries";
 import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
