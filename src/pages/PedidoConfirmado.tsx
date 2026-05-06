@@ -1,9 +1,10 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle2, Loader2, RefreshCw, MessageCircle, Home, Package, Clock } from "lucide-react";
 import { SEO } from "@/components/SEO";
+import { pushEvent } from "@/lib/gtm";
 
 const WHATSAPP_NUMBER = "5551993199486";
 
@@ -68,6 +69,23 @@ export default function PedidoConfirmado() {
   useEffect(() => {
     fetchOrder();
   }, [fetchOrder]);
+
+  // Dispara evento de conversão "purchase" uma única vez quando o pedido carrega
+  const purchaseFired = useRef(false);
+  useEffect(() => {
+    if (!order || purchaseFired.current) return;
+    purchaseFired.current = true;
+    pushEvent("purchase", {
+      transaction_id: order.number,
+      value: Number(order.total) || 0,
+      currency: order.currency || "BRL",
+      items: order.line_items.map((li) => ({
+        item_name: li.name,
+        quantity: li.quantity,
+        price: Number(li.total) || 0,
+      })),
+    });
+  }, [order]);
 
   // Polling a cada 30s para refletir mudança de status
   useEffect(() => {

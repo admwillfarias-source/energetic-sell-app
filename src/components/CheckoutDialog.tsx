@@ -26,6 +26,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { searchVehicles, type VehicleSuggestion } from "@/lib/fitments";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { cn } from "@/lib/utils";
+import { pushEvent } from "@/lib/gtm";
 
 // Número da loja (formato internacional, só dígitos). Edite aqui.
 const WHATSAPP_NUMBER = "5551993199486";
@@ -220,11 +221,23 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
     ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
   }, []);
 
-  // Reset ao fechar
+  // Reset ao fechar + dispara begin_checkout ao abrir
   useEffect(() => {
     if (!open) {
       setStep(1);
+    } else {
+      pushEvent("begin_checkout", {
+        value: subtotal,
+        currency: "BRL",
+        items: items.map((it) => ({
+          item_id: it.battery.id,
+          item_name: it.battery.name,
+          quantity: it.quantity,
+          price: it.battery.price,
+        })),
+      });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Pré-preenche carro/ano
