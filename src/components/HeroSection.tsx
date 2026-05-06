@@ -183,26 +183,18 @@ export default function HeroSection() {
           </div>
 
           <div className="mb-6 rounded-2xl bg-card p-4 shadow-lg md:p-5">
-            {searchActive ? (
-              <Suspense
-                fallback={
-                  <SearchPlaceholder
-                    onActivate={() => {}}
-                    initialValue={initialQuery}
-                    onChange={() => {}}
-                  />
-                }
-              >
-                <VehicleAutocomplete variant="inline" initialQuery={initialQuery} />
-              </Suspense>
-            ) : (
-              <SearchPlaceholder
-                onActivate={() => setSearchActive(true)}
-                initialValue={initialQuery}
-                onChange={setInitialQuery}
-              />
-            )}
+            <SearchPlaceholder
+              onActivate={() => setOverlayOpen(true)}
+              initialValue={initialQuery}
+              onChange={setInitialQuery}
+            />
           </div>
+
+          {overlayOpen && (
+            <Suspense fallback={null}>
+              <SearchOverlay open={overlayOpen} onOpenChange={setOverlayOpen} />
+            </Suspense>
+          )}
 
           <div ref={whatsRef} className="hidden sm:flex flex-col sm:flex-row gap-3 mb-6 min-h-[56px]">
             {whatsVisible && (
