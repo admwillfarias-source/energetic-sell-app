@@ -178,9 +178,25 @@ function ahFromAny(text: string): number | null {
 }
 
 /**
+ * Equivalências de SKUs cadastrados na planilha que não existem (ou mudaram
+ * de nomenclatura) no catálogo do WooCommerce. Mapeia o SKU do fitment para
+ * o SKU real disponível na loja, garantindo que a marca apareça no resultado.
+ */
+const SKU_ALIASES: Record<string, string> = {
+  // Moura — códigos antigos/variações sem estoque mapeados para o equivalente
+  M40JD: "M40SD",
+  M48BD: "M48FD",
+  M48BE: "M48FE",
+  M80RE: "M80RD",
+  M180BD: "M180BE",
+  M180TD: "M180BE",
+  M180TE: "M180BE",
+};
+
+/**
  * Busca baterias APENAS pelos SKUs cadastrados na planilha para o veículo.
- * Filtra rigorosamente: só retorna produtos cujo SKU bate com algum dos
- * SKUs informados (case-insensitive). Sem inferência, sem equivalência.
+ * Aplica equivalências (aliases) para SKUs que não existem mais no catálogo
+ * — sem isso, marcas como Moura ficam ocultas em vários veículos (ex.: FIT 2008).
  */
 export async function fetchBatteriesByVehicle(
   codes: string[],
@@ -188,10 +204,16 @@ export async function fetchBatteriesByVehicle(
 ): Promise<Battery[]> {
   if (!codes.length) return [];
 
-  const wanted = new Set(codes.map((c) => c.trim().toUpperCase()).filter(Boolean));
-  const list = await fetchBatteries({ codes: Array.from(wanted), perPage: 30 });
+  const wanted = new Set<string>();
+  for (const raw of codes) {
+    const c = raw.trim().toUpperCase();
+    if (!c) continue;
+    wanted.add(c);
+    const alias = SKU_ALIASES[c];
+    if (alias) wanted.add(alias.toUpperCase());
+  }
 
-  // Mantém só produtos cujo SKU está exatamente na lista da planilha.
+  const list = await fetchBatteries({ codes: Array.from(wanted), perPage: 30 });
   const filtered = list.filter((p) => !!p.sku && wanted.has(p.sku.toUpperCase()));
 
   return filtered.sort((a, b) => b.price - a.price);
