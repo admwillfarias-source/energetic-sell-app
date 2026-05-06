@@ -50,17 +50,31 @@ export default function BestSellers() {
     return !NON_AUTOMOTIVE.some((kw) => text.includes(kw));
   };
 
+  // SKUs mais pesquisados no "Encontre a bateria do seu carro" — sempre na 1ª página
+  const TOP_SKUS = [
+    "M60AD", "M60GD", "H60DD", "H48FD", "M48FD", "MF60AD",
+    "HEFB60", "HEFB72", "MF72LD", "M75LD", "EXF60DPD", "60APD",
+  ].map((s) => s.toUpperCase());
+
   const withSku = useMemo(() => {
     const list = data.filter((b) => !!b.sku && b.sku.trim() !== "");
     const isPriority = (brand: string) =>
       priorityBrands.some((p) => p.toLowerCase() === brand.toLowerCase());
     const sortByPrice = (a: Battery, b: Battery) => a.price - b.price;
+    const topIndex = (sku?: string) =>
+      sku ? TOP_SKUS.indexOf(sku.toUpperCase()) : -1;
+
+    // 0) Mais pesquisadas (ordem da lista TOP_SKUS)
+    const topMatched = list
+      .filter((b) => topIndex(b.sku) >= 0)
+      .sort((a, b) => topIndex(a.sku) - topIndex(b.sku));
+    const rest = list.filter((b) => topIndex(b.sku) < 0);
 
     // 1) Automotivas + marca priorizada  2) Automotivas demais  3) Não-automotivas
-    const autoPriority = list.filter((b) => isAutomotive(b) && isPriority(b.brand)).sort(sortByPrice);
-    const autoRest = list.filter((b) => isAutomotive(b) && !isPriority(b.brand)).sort(sortByPrice);
-    const nonAuto = list.filter((b) => !isAutomotive(b)).sort(sortByPrice);
-    return [...autoPriority, ...autoRest, ...nonAuto];
+    const autoPriority = rest.filter((b) => isAutomotive(b) && isPriority(b.brand)).sort(sortByPrice);
+    const autoRest = rest.filter((b) => isAutomotive(b) && !isPriority(b.brand)).sort(sortByPrice);
+    const nonAuto = rest.filter((b) => !isAutomotive(b)).sort(sortByPrice);
+    return [...topMatched, ...autoPriority, ...autoRest, ...nonAuto];
   }, [data, priorityBrands]);
 
   const vehicleLabel =
