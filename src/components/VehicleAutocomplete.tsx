@@ -92,6 +92,17 @@ export default function VehicleAutocomplete({
 
   useEffect(() => setHighlight(0), [suggestions.length]);
 
+  const prefetchSuggestion = (s: VehicleSuggestion) => {
+    if (!s.codes.length) return;
+    queryClient
+      .prefetchQuery({
+        queryKey: ["resultado", { codes: s.codes, vehicle: s.label }],
+        queryFn: () => fetchBatteriesByVehicle(s.codes, {}),
+        staleTime: 5 * 60 * 1000,
+      })
+      .catch(() => {});
+  };
+
   const choose = (s: VehicleSuggestion) => {
     const codes = s.codes;
     if (codes.length === 0) {
@@ -108,7 +119,9 @@ export default function VehicleAutocomplete({
     } catch {
       // ignore
     }
-    toast({ title: "Buscando baterias compatíveis", description: s.label });
+    // Dispara o fetch ANTES de navegar — a página /resultado consome o cache.
+    prefetchSuggestion(s);
+    markEvent("result_navigate_start");
     onSelect?.();
     navigate(
       `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(s.label)}`,
