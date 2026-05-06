@@ -100,7 +100,36 @@ export default function BestSellers() {
           </button>
         </div>
 
-        {isLoading ? (
+        {!isLoading && (
+          <div className="mx-auto mb-6 max-w-md text-center text-sm">
+            {vehicleLabel ? (
+              withSku.length > 0 ? (
+                <p className="text-foreground">
+                  <span className="font-bold text-primary">{withSku.length}</span>{" "}
+                  {withSku.length === 1 ? "bateria compatível" : "baterias compatíveis"} para{" "}
+                  <span className="font-bold">{vehicleLabel}</span>
+                </p>
+              ) : (
+                <p className="text-muted-foreground">
+                  Nenhuma bateria compatível encontrada para{" "}
+                  <span className="font-bold text-foreground">{vehicleLabel}</span>.{" "}
+                  <button
+                    type="button"
+                    onClick={() => setOverlayOpen(true)}
+                    className="font-semibold text-primary underline-offset-2 hover:underline"
+                  >
+                    Buscar outro veículo
+                  </button>
+                </p>
+              )
+            ) : (
+              <p className="text-muted-foreground">
+                <span className="font-bold text-foreground">{withSku.length}</span> modelos
+                disponíveis · busque pelo seu carro acima
+              </p>
+            )}
+          </div>
+        )}
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-[420px] rounded-2xl" />
