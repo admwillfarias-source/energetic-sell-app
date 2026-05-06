@@ -11,6 +11,7 @@ import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SlidersHorizontal, AlertCircle, X, CarFront } from "lucide-react";
+import { markEvent } from "@/lib/perfMetrics";
 
 export function BatteryGrid() {
   const [searchParams] = useSearchParams();
