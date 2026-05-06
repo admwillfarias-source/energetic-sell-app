@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Car, Truck, X, ChevronLeft, Sparkles } from "lucide-react";
+import { Car, Truck, ChevronLeft, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
