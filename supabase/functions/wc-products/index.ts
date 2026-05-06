@@ -9,6 +9,25 @@ const WC_BASE = "https://awrbaterias.com.br/wp-json/wc/store/products";
 
 type WCProduct = { id: number; sku?: string; name?: string };
 
+// Cache em memória do isolate (TTL 5 min). Sobrevive entre invocações
+// enquanto o isolate estiver "quente" — corta latência da próxima busca
+// idêntica para ~5ms.
+const CACHE_TTL_MS = 5 * 60 * 1000;
+const memCache = new Map<string, { at: number; body: string }>();
+
+function cacheGet(key: string): string | null {
+  const hit = memCache.get(key);
+  if (!hit) return null;
+  if (Date.now() - hit.at > CACHE_TTL_MS) {
+    memCache.delete(key);
+    return null;
+  }
+  return hit.body;
+}
+function cacheSet(key: string, body: string): void {
+  memCache.set(key, { at: Date.now(), body });
+}
+
 async function fetchJson(url: string): Promise<unknown[]> {
   const res = await fetch(url, { headers: { Accept: "application/json" } });
   if (!res.ok) return [];
@@ -16,31 +35,24 @@ async function fetchJson(url: string): Promise<unknown[]> {
   return Array.isArray(data) ? data : [];
 }
 
-// Heurística: termos sem espaço e curtos (<=12) que não parecem nome são tratados como SKU.
-// Ex.: "M60GD", "H60DD", "EXF60DPD", "Z50ED" → SKU.
-//      "Heliar 60Ah", "Moura 60AD" → texto (search).
+// Heurística: termos sem espaço e curtos (<=14) que parecem código → SKU.
 function looksLikeSku(term: string): boolean {
   const t = term.trim();
   if (!t || t.includes(" ")) return false;
   if (t.length > 14) return false;
-  // ao menos 1 letra e 1 dígito, sem caracteres exóticos
   return /^[A-Za-z0-9-]+$/.test(t) && /[A-Za-z]/.test(t) && /\d/.test(t);
 }
 
 async function fetchByTerm(term: string, perPage: string): Promise<unknown[]> {
   const t = term.trim();
   if (!t) return [];
-
-  // 1) SKU exato — endpoint store/products aceita ?sku=
   if (looksLikeSku(t)) {
     const skuUrl = new URL(WC_BASE);
     skuUrl.searchParams.set("per_page", perPage);
     skuUrl.searchParams.set("sku", t);
     const bySku = await fetchJson(skuUrl.toString());
     if (bySku.length) return bySku;
-    // 2) fallback: search pelo SKU como texto (alguns SKUs aparecem no título)
   }
-
   const searchUrl = new URL(WC_BASE);
   searchUrl.searchParams.set("per_page", perPage);
   searchUrl.searchParams.set("search", t);
@@ -58,16 +70,38 @@ Deno.serve(async (req) => {
     const codesParam = url.searchParams.get("codes") ?? "";
     const perPage = url.searchParams.get("per_page") ?? "30";
 
+    const cacheKey = `c=${codesParam}|s=${search}|pp=${perPage}`;
+    const cached = cacheGet(cacheKey);
+    if (cached) {
+      return new Response(cached, {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "application/json",
+          "Cache-Control": "public, max-age=300, s-maxage=600, stale-while-revalidate=86400",
+          "X-Cache": "HIT",
+        },
+      });
+    }
+
     let body: string;
     let status = 200;
 
     if (codesParam) {
-      // Multi-termo: busca cada um (SKU exato ou search), dedupe por id
       const terms = codesParam.split(",").map((c) => c.trim()).filter(Boolean);
-      const results = await Promise.all(terms.map((c) => fetchByTerm(c, perPage)));
+
+      // Otimização: se TODOS os termos parecem SKU, faz UMA única chamada
+      // ao WC com sku=A,B,C (Store API aceita lista). Reduz N requests → 1.
+      const allSkus = terms.length > 0 && terms.every(looksLikeSku);
+
+      let merged: unknown[] = [];
       const seen = new Set<number>();
-      const merged: unknown[] = [];
-      for (const arr of results) {
+
+      if (allSkus) {
+        const skuUrl = new URL(WC_BASE);
+        skuUrl.searchParams.set("per_page", perPage);
+        skuUrl.searchParams.set("sku", terms.join(","));
+        const arr = await fetchJson(skuUrl.toString());
         for (const p of arr) {
           const id = (p as WCProduct).id;
           if (!seen.has(id)) {
@@ -75,7 +109,40 @@ Deno.serve(async (req) => {
             merged.push(p);
           }
         }
+        // Fallback: para SKUs não retornados, tenta search individual (paralelo)
+        const returnedSkus = new Set(
+          merged
+            .map((p) => ((p as WCProduct).sku ?? "").toUpperCase())
+            .filter(Boolean),
+        );
+        const missing = terms.filter((t) => !returnedSkus.has(t.toUpperCase()));
+        if (missing.length) {
+          const fallback = await Promise.all(
+            missing.map((c) => fetchByTerm(c, perPage)),
+          );
+          for (const arr2 of fallback) {
+            for (const p of arr2) {
+              const id = (p as WCProduct).id;
+              if (!seen.has(id)) {
+                seen.add(id);
+                merged.push(p);
+              }
+            }
+          }
+        }
+      } else {
+        const results = await Promise.all(terms.map((c) => fetchByTerm(c, perPage)));
+        for (const arr of results) {
+          for (const p of arr) {
+            const id = (p as WCProduct).id;
+            if (!seen.has(id)) {
+              seen.add(id);
+              merged.push(p);
+            }
+          }
+        }
       }
+
       body = JSON.stringify(merged);
     } else if (search) {
       const arr = await fetchByTerm(search, perPage);
@@ -90,12 +157,15 @@ Deno.serve(async (req) => {
       status = res.status;
     }
 
+    if (status === 200) cacheSet(cacheKey, body);
+
     return new Response(body, {
       status,
       headers: {
         ...corsHeaders,
         "Content-Type": "application/json",
-        "Cache-Control": "public, max-age=300",
+        "Cache-Control": "public, max-age=300, s-maxage=600, stale-while-revalidate=86400",
+        "X-Cache": "MISS",
       },
     });
   } catch (error) {

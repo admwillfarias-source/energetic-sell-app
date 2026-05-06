@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Search, Car, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { searchVehicles, type VehicleSuggestion } from "@/lib/fitments";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { fetchBatteriesByVehicle } from "@/lib/api/batteries";
 import { looksLikeBatterySku, normalizeSku } from "@/lib/batterySku";
 import { toast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -30,6 +32,7 @@ export default function VehicleAutocomplete({
   suggestionsMode = "popover",
 }: Props) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState(initialQuery);
   const [open, setOpen] = useState(initialQuery.length >= 2);
   const [highlight, setHighlight] = useState(0);
@@ -89,6 +92,17 @@ export default function VehicleAutocomplete({
 
   useEffect(() => setHighlight(0), [suggestions.length]);
 
+  const prefetchSuggestion = (s: VehicleSuggestion) => {
+    if (!s.codes.length) return;
+    queryClient
+      .prefetchQuery({
+        queryKey: ["resultado", { codes: s.codes, vehicle: s.label }],
+        queryFn: () => fetchBatteriesByVehicle(s.codes, {}),
+        staleTime: 5 * 60 * 1000,
+      })
+      .catch(() => {});
+  };
+
   const choose = (s: VehicleSuggestion) => {
     const codes = s.codes;
     if (codes.length === 0) {
@@ -105,7 +119,9 @@ export default function VehicleAutocomplete({
     } catch {
       // ignore
     }
-    toast({ title: "Buscando baterias compatíveis", description: s.label });
+    // Dispara o fetch ANTES de navegar — a página /resultado consome o cache.
+    prefetchSuggestion(s);
+    markEvent("result_navigate_start");
     onSelect?.();
     navigate(
       `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(s.label)}`,
@@ -209,7 +225,9 @@ export default function VehicleAutocomplete({
                 key={`${s.brand}-${s.model}-${s.year}-${i}`}
                 role="option"
                 aria-selected={i === highlight}
-                onMouseEnter={() => setHighlight(i)}
+                onMouseEnter={() => { setHighlight(i); prefetchSuggestion(s); }}
+                onTouchStart={() => prefetchSuggestion(s)}
+                onFocus={() => prefetchSuggestion(s)}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   choose(s);
