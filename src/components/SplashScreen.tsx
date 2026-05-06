@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import splashImg from "@/assets/splash-3-passos.jpeg";
+import { markEvent } from "@/lib/perfMetrics";
 
 export default function SplashScreen() {
   const [visible, setVisible] = useState(true);
@@ -7,7 +8,10 @@ export default function SplashScreen() {
 
   useEffect(() => {
     const t1 = setTimeout(() => setFade(true), 1400);
-    const t2 = setTimeout(() => setVisible(false), 1900);
+    const t2 = setTimeout(() => {
+      setVisible(false);
+      markEvent("splash_hidden");
+    }, 1900);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
