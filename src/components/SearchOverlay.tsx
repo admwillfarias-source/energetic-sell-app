@@ -67,9 +67,11 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
     try {
       await ensureCatalogLoaded();
       const query = `${vehicle.query} ${year}`;
-      const results = searchVehicles(query, 1);
-      const match = results[0];
-      if (!match || match.codes.length === 0) {
+      // Pega TODAS as variantes do modelo no ano (ex.: HB20 1.0, 1.6, S, X)
+      // e une seus SKUs — assim o cliente vê todas as baterias compatíveis
+      // independente da versão do veículo.
+      const results = searchVehicles(query, 30);
+      if (results.length === 0) {
         toast({
           title: "Sem aplicação cadastrada",
           description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}. Tente outro ano ou digite o modelo do carro.`,
@@ -78,8 +80,20 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
         return;
       }
 
-      const codes = match.codes;
-      const vehicleLabel = match.label;
+      const codeSet = new Set<string>();
+      for (const r of results) {
+        for (const c of r.codes) codeSet.add(c);
+      }
+      const codes = Array.from(codeSet);
+      if (codes.length === 0) {
+        toast({
+          title: "Sem aplicação cadastrada",
+          description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}.`,
+        });
+        setResolving(false);
+        return;
+      }
+      const vehicleLabel = `${vehicle.brand} ${vehicle.model} ${year}`;
 
       // Prefetch dispara em paralelo — a página /resultado consome o cache.
       queryClient
