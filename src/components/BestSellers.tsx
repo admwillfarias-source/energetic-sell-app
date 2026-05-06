@@ -5,15 +5,17 @@ import { BatteryMouraCard } from "./BatteryMouraCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Battery } from "@/data/batteries";
-import { Flame, Search, Car, ChevronLeft, ChevronRight } from "lucide-react";
+import { Flame, Search, Car, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { markEvent } from "@/lib/perfMetrics";
 
 const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 
-const PER_PAGE = 8;
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function BestSellers() {
+  const isMobile = useIsMobile();
+  const PER_PAGE = isMobile ? 4 : 8;
   const [active, setActive] = useState<Battery | null>(null);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [page, setPage] = useState(1);
@@ -33,12 +35,9 @@ export default function BestSellers() {
     [data],
   );
 
-  const totalPages = Math.max(1, Math.ceil(withSku.length / PER_PAGE));
-  const currentPage = Math.min(page, totalPages);
-  const pageItems = withSku.slice(
-    (currentPage - 1) * PER_PAGE,
-    currentPage * PER_PAGE,
-  );
+  const visibleCount = Math.min(withSku.length, page * PER_PAGE);
+  const pageItems = withSku.slice(0, visibleCount);
+  const hasMore = visibleCount < withSku.length;
 
   return (
     <section
@@ -99,51 +98,24 @@ export default function BestSellers() {
                 <BatteryMouraCard
                   key={b.id}
                   battery={b}
-                  highlight={currentPage === 1 && i === 0}
+                  highlight={i === 0}
                   priority={i < 4}
                 />
               ))}
             </div>
 
-            {totalPages > 1 && (
-              <nav
-                className="mt-8 flex flex-wrap items-center justify-center gap-2"
-                aria-label="Paginação de produtos"
-              >
+            {hasMore && (
+              <div className="mt-8 flex justify-center">
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  aria-label="Página anterior"
+                  size="lg"
+                  onClick={() => setPage((p) => p + 1)}
+                  className="min-w-[180px]"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  Ver mais
+                  <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
-                {Array.from({ length: totalPages }).map((_, idx) => {
-                  const n = idx + 1;
-                  return (
-                    <Button
-                      key={n}
-                      variant={n === currentPage ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setPage(n)}
-                      aria-current={n === currentPage ? "page" : undefined}
-                      className="min-w-9"
-                    >
-                      {n}
-                    </Button>
-                  );
-                })}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  aria-label="Próxima página"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </nav>
+              </div>
             )}
           </>
         )}
