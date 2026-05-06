@@ -32,6 +32,7 @@ export default function VehicleAutocomplete({
   suggestionsMode = "popover",
 }: Props) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [query, setQuery] = useState(initialQuery);
   const [open, setOpen] = useState(initialQuery.length >= 2);
   const [highlight, setHighlight] = useState(0);
