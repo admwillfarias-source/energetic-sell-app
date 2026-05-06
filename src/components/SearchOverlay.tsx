@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Car, Truck, X, ChevronLeft, Sparkles } from "lucide-react";
+import { Car, Truck, ChevronLeft, Sparkles } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -59,7 +59,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
     }
   }, [open]);
 
-  const close = () => onOpenChange(false);
+  
 
   const goWithYear = async (vehicle: TopVehicle, year: number) => {
     setResolving(true);
@@ -143,14 +143,8 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
                   : "Encontre a bateria do seu carro"}
               </DialogTitle>
             </div>
-            <button
-              onClick={close}
-              aria-label="Fechar busca"
-              className="rounded-full p-1.5 hover:bg-muted"
-            >
-              <X className="h-4 w-4" />
-            </button>
           </div>
+
           <DialogDescription className="text-left text-xs text-muted-foreground">
             {picked
               ? "Escolha o ano para ver as baterias compatíveis."
