@@ -23,7 +23,7 @@ type WCOrder = {
     address_2: string;
     phone: string;
   };
-  line_items: { name: string; quantity: number; total: string }[];
+  line_items: { name: string; quantity: number; total: string; product_id?: number; sku?: string }[];
   customer_note?: string;
 };
 
@@ -75,16 +75,30 @@ export default function PedidoConfirmado() {
   useEffect(() => {
     if (!order || purchaseFired.current) return;
     purchaseFired.current = true;
+    const value = Number(order.total) || 0;
+    const currency = order.currency || "BRL";
     pushEvent("purchase", {
-      transaction_id: order.number,
-      value: Number(order.total) || 0,
-      currency: order.currency || "BRL",
+      transaction_id: String(order.number),
+      value,
+      currency,
       items: order.line_items.map((li) => ({
+        item_id: String(li.product_id ?? li.sku ?? li.name),
         item_name: li.name,
         quantity: li.quantity,
-        price: Number(li.total) || 0,
+        price: li.quantity ? (Number(li.total) || 0) / li.quantity : Number(li.total) || 0,
       })),
     });
+    // Disparo direto Google Ads (redundância, garante registro mesmo sem GTM)
+    try {
+      window.gtag?.("event", "conversion", {
+        send_to: "AW-994517528/axHrCPb1w6gcEJjEnNoD",
+        value,
+        currency: "BRL",
+        transaction_id: String(order.number),
+      });
+    } catch {
+      /* noop */
+    }
   }, [order]);
 
   // Polling a cada 30s para refletir mudança de status

@@ -21,6 +21,24 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-5JTRM2L');</script>
     <!-- End Google Tag Manager -->
+    <!-- Google tag (gtag.js) - Google Ads AW-994517528 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-994517528"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'AW-994517528');
+      window.gtag_report_conversion = function(url){
+        var callback=function(){if(typeof(url)!='undefined'){window.location=url;}};
+        gtag('event','conversion',{
+          'send_to':'AW-994517528/axHrCPb1w6gcEJjEnNoD',
+          'value':1.0,'currency':'BRL','transaction_id':'','event_callback':callback
+        });
+        return false;
+      };
+    </script>
+    <!-- End Google tag -->
+
     <?php wp_head(); ?>
 </head>
 <body <?php body_class( 'awr-app-body' ); ?>>
