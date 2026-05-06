@@ -23,9 +23,9 @@ export function getYears(brand: string, model: string): string[] {
   return Array.from(years).sort((a, b) => b - a).map(String);
 }
 
-/** Coleta todos os SKUs (Heliar/Moura/Zetta/Excell) do fitment. */
+/** Coleta somente os códigos cadastrados na tabela de aplicação. */
 function collectSkus(f: Fitment): string[] {
-  return [f.skuHeliar, f.skuMoura, f.skuZetta, f.skuExcell]
+  return [f.code, f.skuHeliar, f.skuMoura, f.skuZetta, f.skuExcell]
     .filter((s): s is string => !!s && s.trim().length > 0)
     .map((s) => s.trim().toUpperCase());
 }
@@ -69,6 +69,40 @@ function normalize(s: string): string {
     .replace(/[^a-z0-9\s]/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+/**
+ * Recalcula os SKUs permitidos para um rótulo de veículo usando somente a
+ * tabela de aplicações. Isso impede que códigos extras vindos da URL/cache
+ * sejam exibidos para outro modelo/ano.
+ */
+export function getStrictVehicleCodes(label: string): string[] {
+  const normalized = normalize(label);
+  const yearMatch = normalized.match(/\b(19|20)\d{2}\b/);
+  if (!yearMatch) return [];
+
+  const year = Number(yearMatch[0]);
+  const withoutYear = normalize(normalized.replace(yearMatch[0], ""));
+  const codeSet = new Set<string>();
+
+  for (const f of getFitments()) {
+    if (year < f.yearStart || year > f.yearEnd) continue;
+
+    const brand = normalize(f.brand);
+    const model = normalize(f.model);
+    if (!brand || !model || !withoutYear.startsWith(brand)) continue;
+
+    const requestedModel = normalize(withoutYear.slice(brand.length));
+    if (!requestedModel) continue;
+
+    const sameModel = model === requestedModel;
+    const requestedBaseModel = model.startsWith(`${requestedModel} `);
+    if (!sameModel && !requestedBaseModel) continue;
+
+    for (const sku of collectSkus(f)) codeSet.add(sku);
+  }
+
+  return Array.from(codeSet);
 }
 
 /** Distância de Levenshtein limitada (early exit). */

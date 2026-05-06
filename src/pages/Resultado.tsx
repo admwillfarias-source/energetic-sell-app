@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { fetchBatteriesByVehicle, fetchBatteries, type VehicleBrand } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { getStrictVehicleCodes } from "@/lib/fitments";
 import { BatteryMouraCard } from "@/components/BatteryMouraCard";
 import { Battery } from "@/data/batteries";
 import { CartProvider } from "@/context/CartContext";
@@ -38,29 +39,47 @@ export default function Resultado() {
     [codesParam],
   );
 
-  // Catálogo é carregado em background — não bloqueia a query de produtos,
-  // pois /resultado usa apenas os codes da URL.
+  const [catalogReady, setCatalogReady] = useState(!vehicle);
+
+  // Para busca por veículo, a página recalcula os códigos pela tabela de
+  // aplicação antes de buscar produtos. Assim códigos extras na URL/cache não
+  // aumentam a quantidade de baterias exibidas.
   useEffect(() => {
-    ensureCatalogLoaded().catch(() => {});
     markEvent("resultado_page_mounted");
-  }, []);
+    if (!vehicle) {
+      ensureCatalogLoaded().catch(() => {});
+      setCatalogReady(true);
+      return;
+    }
+    setCatalogReady(false);
+    ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
+  }, [vehicle]);
+
+  const strictVehicleCodes = useMemo(() => {
+    if (!vehicle || !catalogReady) return [];
+    return getStrictVehicleCodes(vehicle);
+  }, [vehicle, catalogReady]);
+
+  const effectiveCodes = vehicle ? strictVehicleCodes : codes;
 
   const { data: results = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["resultado", { codes, vehicle }],
+    queryKey: ["resultado", { codes: effectiveCodes, vehicle }],
     queryFn: () => {
-      if (vehicle && codes.length > 0) {
+      if (vehicle && effectiveCodes.length > 0) {
         const groups: Partial<Record<VehicleBrand, string[]>> = {};
-        return fetchBatteriesByVehicle(codes, groups);
+        return fetchBatteriesByVehicle(effectiveCodes, groups);
       }
-      return fetchBatteries({ codes: codes.length ? codes : undefined, perPage: 30 });
+      return fetchBatteries({ codes: effectiveCodes.length ? effectiveCodes : undefined, perPage: 30 });
     },
-    enabled: codes.length > 0,
+    enabled: effectiveCodes.length > 0 && (!vehicle || catalogReady),
     staleTime: 5 * 60 * 1000,
   });
 
+  const isResultLoading = isLoading || (!!vehicle && !catalogReady);
+
   // Marca quando os resultados ficam disponíveis (cache hit é instantâneo).
   useEffect(() => {
-    if (!isLoading && results.length > 0) {
+    if (!isResultLoading && results.length > 0) {
       markEvent("resultado_results_ready");
       try {
         measureBetween(
@@ -72,7 +91,7 @@ export default function Resultado() {
         // ignore
       }
     }
-  }, [isLoading, results.length]);
+  }, [isResultLoading, results.length]);
 
   // Ordena por marca (Moura, Zetta, Heliar, Excell) e depois por preço crescente
   const BRAND_ORDER: Record<string, number> = {
@@ -209,7 +228,7 @@ export default function Resultado() {
         jsonLd={jsonLd}
       />
       {/* noindex quando a busca não tem resultados, para não poluir o índice */}
-      {vehicle && !isLoading && !hasResults && (
+      {vehicle && !isResultLoading && !hasResults && (
         <meta name="robots" content="noindex,follow" />
       )}
       <Header />
@@ -284,7 +303,7 @@ export default function Resultado() {
           </div>
 
           {/* Lista */}
-          {isLoading ? (
+          {isResultLoading ? (
             <div className="grid gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-44 rounded-2xl" />
