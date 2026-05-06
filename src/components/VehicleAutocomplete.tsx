@@ -83,7 +83,7 @@ export default function VehicleAutocomplete({
 
   const suggestions = useMemo<VehicleSuggestion[]>(() => {
     if (loading) return [];
-    return searchVehicles(query, 10);
+    return searchVehicles(query, suggestionsMode === "list" ? 30 : 10);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, loading, version]);
 
