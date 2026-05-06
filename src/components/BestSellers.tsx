@@ -8,6 +8,7 @@ import { Battery } from "@/data/batteries";
 import { Flame, Search, Car, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { markEvent } from "@/lib/perfMetrics";
+import { getPriorityBrands } from "@/lib/priorityBrands";
 
 const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 
