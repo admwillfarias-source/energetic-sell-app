@@ -30,23 +30,20 @@ export default function BestSellers() {
     if (!isLoading && data.length > 0) markEvent("best_sellers_ready");
   }, [isLoading, data.length]);
 
-  // Ordem de prioridade por amperagem solicitada pelo cliente
-  const AMP_ORDER = [
-    60, 40, 50, 45, 48, 72, 70, 75, 78, 80, 90, 95, 100, 150, 180, 200, 210, 220,
-  ];
+  // Marcas priorizadas na primeira página
+  const PRIORITY_BRANDS = ["Moura", "Heliar", "Excell"];
 
   const withSku = useMemo(() => {
     const list = data.filter((b) => !!b.sku && b.sku.trim() !== "");
-    const rank = (amp: number) => {
-      const i = AMP_ORDER.indexOf(amp);
-      return i === -1 ? AMP_ORDER.length + amp : i;
-    };
-    return [...list].sort((a, b) => {
-      const ra = rank(a.amperage);
-      const rb = rank(b.amperage);
-      if (ra !== rb) return ra - rb;
-      return b.price - a.price;
-    });
+    const isPriority = (brand: string) =>
+      PRIORITY_BRANDS.some((p) => p.toLowerCase() === brand.toLowerCase());
+    const priority = list
+      .filter((b) => isPriority(b.brand))
+      .sort((a, b) => a.price - b.price);
+    const rest = list
+      .filter((b) => !isPriority(b.brand))
+      .sort((a, b) => a.price - b.price);
+    return [...priority, ...rest];
   }, [data]);
 
   const vehicleLabel =
