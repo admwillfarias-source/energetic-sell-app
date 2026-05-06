@@ -17,6 +17,8 @@ type Props = {
   placeholder?: string;
   initialQuery?: string;
   onSelect?: () => void;
+  /** "popover": dropdown absoluto (default). "list": lista renderizada inline abaixo do input. */
+  suggestionsMode?: "popover" | "list";
 };
 
 export default function VehicleAutocomplete({
@@ -25,6 +27,7 @@ export default function VehicleAutocomplete({
   placeholder = "Carro e ano (Ex: Onix 2018) ou modelo da bateria (Ex: M60GD)",
   initialQuery = "",
   onSelect,
+  suggestionsMode = "popover",
 }: Props) {
   const navigate = useNavigate();
   const [query, setQuery] = useState(initialQuery);
