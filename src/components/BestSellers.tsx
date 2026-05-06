@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBatteries } from "@/lib/api/batteries";
-import { BatteryCard } from "./BatteryCard";
+import { BatteryMouraCard } from "./BatteryMouraCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Battery } from "@/data/batteries";
@@ -63,9 +63,14 @@ export default function BestSellers() {
             ))}
           </div>
         ) : ordered.length === 0 ? null : (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {ordered.map((b, i) => (
-              <BatteryCard key={b.id} battery={b} onSelect={setActive} priority={i < 4} />
+              <BatteryMouraCard
+                key={b.id}
+                battery={b}
+                highlight={i === 0}
+                priority={i < 4}
+              />
             ))}
           </div>
         )}

@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { brands, amperageOptions, Battery } from "@/data/batteries";
 import { fetchBatteries, fetchBatteriesByVehicle, type VehicleBrand } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
-import { BatteryCard } from "./BatteryCard";
+import { BatteryMouraCard } from "./BatteryMouraCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -153,9 +153,15 @@ export function BatteryGrid() {
                 </Button>
               </div>
             ) : (
-              <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
                 {filtered.map((b, i) => (
-                  <BatteryCard key={b.id} battery={b} onSelect={setActive} priority={i < 3} />
+                  <BatteryMouraCard
+                    key={b.id}
+                    battery={b}
+                    highlight={i === 0}
+                    vehicleLabel={vehicle}
+                    priority={i < 3}
+                  />
                 ))}
               </div>
             )}
