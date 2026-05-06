@@ -11,7 +11,7 @@ import { markEvent } from "@/lib/perfMetrics";
 
 const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 
-const PER_PAGE = 8;
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function BestSellers() {
   const [active, setActive] = useState<Battery | null>(null);
