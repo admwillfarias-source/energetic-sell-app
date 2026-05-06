@@ -13,6 +13,7 @@ const HowItWorks = lazy(() =>
   import("@/components/HowItWorks").then((m) => ({ default: m.HowItWorks })),
 );
 const HowToOrder = lazy(() => import("@/components/HowToOrder"));
+const BestSellers = lazy(() => import("@/components/BestSellers"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
 const FaqHome = lazy(() => import("@/components/FaqHome"));
 const FloatingWhatsApp = lazy(() => import("@/components/FloatingWhatsApp"));
