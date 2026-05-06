@@ -5,9 +5,19 @@ import { useCart, formatBRL } from "@/context/CartContext";
 import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
 import batteryImg from "@/assets/battery-product.webp";
 
-const CheckoutDialog = lazy(() =>
-  import("@/components/CheckoutDialog").then((m) => ({ default: m.CheckoutDialog })),
-);
+const checkoutImport = () =>
+  import("@/components/CheckoutDialog").then((m) => ({ default: m.CheckoutDialog }));
+const CheckoutDialog = lazy(checkoutImport);
+
+// Preload no idle para abrir instantâneo ao clicar em "Peça agora"
+if (typeof window !== "undefined") {
+  const preload = () => checkoutImport();
+  if ("requestIdleCallback" in window) {
+    (window as any).requestIdleCallback(preload, { timeout: 2500 });
+  } else {
+    setTimeout(preload, 1500);
+  }
+}
 
 export function CartDrawer() {
   const { items, isOpen, setOpen, setQuantity, remove, subtotal } = useCart();
