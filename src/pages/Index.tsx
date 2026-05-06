@@ -128,11 +128,10 @@ const Index = () => {
           <FloatingWhatsApp />
         </Suspense>
         
-        {PerfReport && (
-          <Suspense fallback={null}>
-            <PerfReport />
-          </Suspense>
-        )}
+
+        <Suspense fallback={null}>
+          <PerfReport />
+        </Suspense>
         {MobileDebugOverlay && (
           <Suspense fallback={null}>
             <MobileDebugOverlay />
