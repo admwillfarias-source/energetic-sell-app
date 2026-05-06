@@ -225,7 +225,9 @@ export default function VehicleAutocomplete({
                 key={`${s.brand}-${s.model}-${s.year}-${i}`}
                 role="option"
                 aria-selected={i === highlight}
-                onMouseEnter={() => setHighlight(i)}
+                onMouseEnter={() => { setHighlight(i); prefetchSuggestion(s); }}
+                onTouchStart={() => prefetchSuggestion(s)}
+                onFocus={() => prefetchSuggestion(s)}
                 onMouseDown={(e) => {
                   e.preventDefault();
                   choose(s);
