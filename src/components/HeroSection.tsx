@@ -17,6 +17,7 @@ function getLiveDeliveries() {
 
 const VehicleAutocomplete = lazy(() => import("@/components/VehicleAutocomplete"));
 const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
+const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 
 
 import heroBg from "@/assets/hero-bg.webp";
@@ -64,6 +65,7 @@ function SearchPlaceholder({
 
 export default function HeroSection() {
   const [searchActive, setSearchActive] = useState(false);
+  const [overlayOpen, setOverlayOpen] = useState(false);
   const [initialQuery, setInitialQuery] = useState("");
   const [whatsVisible, setWhatsVisible] = useState(false);
   const whatsRef = useRef<HTMLDivElement>(null);
