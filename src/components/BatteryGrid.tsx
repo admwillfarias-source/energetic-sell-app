@@ -53,6 +53,10 @@ export function BatteryGrid() {
     staleTime: 5 * 60 * 1000,
   });
 
+  useEffect(() => {
+    if (!isLoading && results.length > 0) markEvent("battery_grid_ready");
+  }, [isLoading, results.length]);
+
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [selectedAmps, setSelectedAmps] = useState<number[]>([]);
   const [priceMax, setPriceMax] = useState<number>(5000);
