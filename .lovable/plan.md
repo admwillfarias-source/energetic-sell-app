@@ -1,98 +1,51 @@
-## O que vai mudar
+# Instalar Google Tag Manager + eventos de conversão
 
-Hoje o cliente clica no campo de busca do Hero e digita carro+ano à mão. Vamos copiar a melhor parte do Moura Fácil: ao clicar/focar no campo, **abre um overlay em tela cheia por cima do site** com:
+O ID informado (`GTM-5JTRM2L`) é de um container do **Google Tag Manager**. A melhor prática é instalar o GTM no site e, dentro do GTM, configurar a tag de conversão do Google Ads (AW-XXXX) apontando para os eventos do dataLayer que o site dispara. Assim você não precisa mexer no código toda vez que mudar uma conversão.
 
-1. Um campo de busca grande, já focado e pronto para digitar.
-2. Logo abaixo, **atalhos visuais com os modelos mais vendidos no Brasil dos últimos 10 anos** — basta clicar no card, escolher o ano e ir direto para o resultado.
-3. Botão "fechar" / clique fora / tecla `Esc` para voltar ao site.
+## O que será feito
 
-O overlay funciona tanto no desktop quanto no celular, sem mudar de rota (mantém o `/`), abrindo instantaneamente.
+### 1. Instalar o GTM no app React (`index.html`)
+- Adicionar o snippet `<script>` do GTM no `<head>` com `GTM-5JTRM2L`.
+- Adicionar o `<noscript><iframe>` no início do `<body>` (fallback).
+- Inicializar `window.dataLayer` antes do snippet.
 
-## Fluxo do usuário
+### 2. Instalar o GTM no tema WordPress
+- O tema `wp-theme/awr-baterias-fast` já tem um carregador lazy (`inc/perf-gtm.php`) que lê o ID do Customizer.
+- Plano: setar `awrf_gtm_id = GTM-5JTRM2L` por padrão, ou o usuário configura em Customizer → AWR Fast.
+- O tema `wp-theme/awr-baterias` (SPA) receberá o snippet direto no `index.php` (head + noscript no body).
 
-```text
-[Home] clique no campo de busca
-   │
-   ▼
-[Overlay tela cheia]
- ┌────────────────────────────────┐
- │  ✕                              │
- │  Encontre a bateria do seu carro│
- │  ┌──────────────────────────┐   │
- │  │ 🔍  Onix 2018...         │   │
- │  └──────────────────────────┘   │
- │                                 │
- │  Mais buscados                  │
- │  ┌────┐ ┌────┐ ┌────┐ ┌────┐    │
- │  │Onix│ │HB20│ │Strd│ │Polo│    │
- │  └────┘ └────┘ └────┘ └────┘    │
- │  ┌────┐ ┌────┐ ┌────┐ ┌────┐    │
- │  │Argo│ │Mobi│ │Kwid│ │Coro│    │
- │  └────┘ └────┘ └────┘ └────┘    │
- │  ┌────┐ ┌────┐ ┌────┐ ┌────┐    │
- │  │Tcrs│ │Trck│ │Comp│ │Hilx│    │
- │  └────┘ └────┘ └────┘ └────┘    │
- └────────────────────────────────┘
-   │
-   ▼ (clicou em "Onix")
-[Mini-stepper de ano]
-   │ 2024 · 2023 · 2022 · 2021 · 2020 · 2019 · 2018 · 2017 · 2016 · 2015
-   ▼
-[/resultado?codes=...&v=Chevrolet Onix 2018]
-```
+### 3. Disparar eventos de conversão no dataLayer
+Criar helper `src/lib/gtm.ts` com `pushEvent(name, payload)` e disparar:
 
-## Carros propostos (top vendidos no BR — últimos 10 anos)
+| Evento dataLayer | Onde dispara | Uso no GTM |
+|---|---|---|
+| `lead_whatsapp` | clique no botão WhatsApp (Floating, Hero, MobileBar) | conversão "Lead WhatsApp" |
+| `lead_call` | clique em link `tel:` | conversão "Ligação" |
+| `begin_checkout` | abertura do `CheckoutDialog` | remarketing |
+| `purchase` | página `/pedido-confirmado` (com `value` e `transaction_id` quando disponível) | conversão "Compra" |
 
-12 atalhos no overlay, em ordem de popularidade:
-
-1. Chevrolet Onix
-2. Hyundai HB20
-3. Fiat Strada
-4. Volkswagen Polo
-5. Fiat Argo
-6. Fiat Mobi
-7. Renault Kwid
-8. Toyota Corolla
-9. Volkswagen T-Cross
-10. Chevrolet Tracker
-11. Jeep Compass
-12. Toyota Hilux
-
-Cada card mostra: marca + modelo + um ícone/silhueta (lucide `Car`/`Truck` por enquanto, sem precisar de imagens externas).
+### 4. Configuração no painel do GTM (passo a passo, fora do código)
+Depois do deploy, no painel `tagmanager.google.com`:
+1. Criar tag **Google Ads Conversion Tracking** com seu `AW-XXXX` + label.
+2. Criar **Trigger** do tipo *Custom Event* com o nome do evento (ex.: `purchase`).
+3. Publicar o container.
 
 ## Detalhes técnicos
 
-**Novos arquivos**
-- `src/components/SearchOverlay.tsx` — Dialog full-screen (usando `@/components/ui/dialog` que já existe), contém:
-  - `<VehicleAutocomplete variant="inline" />` reaproveitado (já tem toda a lógica de busca, sugestões, navegação para `/resultado`).
-  - Grid responsiva (`grid-cols-2 sm:grid-cols-3 md:grid-cols-4`) com os 12 cards.
-  - Sub-componente local `YearPicker` que aparece ao clicar num card: lista os 10 anos (atual − 9 .. atual) como pílulas. Ao escolher, chama a mesma função de busca do `VehicleAutocomplete` (`searchVehicles("Onix 2018")` → pega os codes → `navigate("/resultado?codes=...&v=...")`).
-- `src/data/topVehicles.ts` — array com `{ brand, model, label, icon }` dos 12 modelos, fácil de editar depois.
+- `index.html`: snippet GTM padrão (head + noscript), sem alterar CSP/headers.
+- O GTM substitui a necessidade do bloco lazy em `inc/perf-gtm.php` quando estamos no app React puro; mantemos o lazy só no tema fast (já existe).
+- `src/lib/tracking.ts` ganha implementação real para `trackLead` / `trackCall` empurrando para `window.dataLayer` (hoje é no-op).
+- `src/pages/PedidoConfirmado.tsx`: push de `purchase` no mount, usando dados do pedido se existirem.
 
-**Arquivos editados**
-- `src/components/HeroSection.tsx`
-  - O `SearchPlaceholder` já tem `onActivate` — em vez de só carregar o autocomplete inline, chama `setOverlayOpen(true)`.
-  - Quando o overlay fecha, foco volta para o campo do Hero.
-  - Mantém o autocomplete inline atual como fallback (caso JS falhe / SSR), mas no fluxo normal o overlay é a porta de entrada.
-- (Opcional) `src/components/Header.tsx` — se houver um botão de busca no header mobile, ele também abre o mesmo overlay.
+## Arquivos a alterar
+- `index.html` (snippet GTM)
+- `src/lib/gtm.ts` (novo helper)
+- `src/lib/tracking.ts` (substituir no-ops por dataLayer push)
+- `src/pages/PedidoConfirmado.tsx` (evento `purchase`)
+- `src/components/CheckoutDialog.tsx` (evento `begin_checkout`)
+- `wp-theme/awr-baterias/index.php` (snippet GTM no tema SPA do WP)
 
-**Lógica de seleção do carro**
-- Ao clicar num card + escolher ano, montamos `query = "${model} ${year}"` e usamos `searchVehicles(query, 1)` (já existe em `src/lib/fitments.ts`).
-- Se retornar 1 sugestão → `navigate("/resultado?codes=...&v=...")` igual ao autocomplete.
-- Se retornar 0 (ex.: ano sem fitment cadastrado) → toast "Sem aplicação cadastrada para esse ano, tente outro" e mantém o overlay aberto.
-- O catálogo (`ensureCatalogLoaded`) precisa estar pronto antes de resolver os codes — já é o que o `VehicleAutocomplete` faz.
-
-**Acessibilidade & UX**
-- `Dialog` do shadcn já cuida de focus trap, `Esc` para fechar, `aria-modal`, `aria-labelledby`.
-- Auto-foco no input ao abrir.
-- Animação rápida de fade/scale (já incluída no Dialog).
-- No mobile, overlay ocupa 100vh com scroll interno.
-
-**Performance**
-- `SearchOverlay` é `lazy()` — só baixa o chunk quando o cliente realmente clica no campo. Não impacta o LCP.
-- Marca um evento `markEvent("search_overlay_opened")` no `perfMetrics` para medirmos o ganho.
-
-## O que NÃO muda
-- A página `/resultado` continua igual.
-- A seção "Mais vendidas" (cards de baterias abaixo do "Como pedir") continua igual — são coisas diferentes (baterias × carros).
-- O autocomplete inline antigo continua funcionando como fallback dentro do overlay.
+## O que você precisa me confirmar antes de implementar
+1. Confirma que `GTM-5JTRM2L` é o container correto (do Google Tag Manager, não Google Ads direto)?
+2. Quer que eu dispare os 4 eventos acima ou só `purchase` (pedido confirmado)?
+3. Tem o `AW-XXXX` + label de conversão do Google Ads para eu deixar documentado, ou você mesmo configura dentro do GTM?
