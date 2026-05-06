@@ -284,7 +284,7 @@ export default function Resultado() {
           </div>
 
           {/* Lista */}
-          {isLoading || !catalogReady ? (
+          {isLoading ? (
             <div className="grid gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-44 rounded-2xl" />
