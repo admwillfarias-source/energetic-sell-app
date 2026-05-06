@@ -4,6 +4,7 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import { brands, amperageOptions, Battery } from "@/data/batteries";
 import { fetchBatteries, fetchBatteriesByVehicle, type VehicleBrand } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { getStrictVehicleCodes } from "@/lib/fitments";
 import { BatteryMouraCard } from "./BatteryMouraCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,12 @@ export function BatteryGrid() {
 
   const isVehicleSearch = !!vehicle && codes.length > 0;
 
+  const strictVehicleCodes = useMemo(() => {
+    if (!isVehicleSearch || !catalogReady) return codes;
+    const strictCodes = getStrictVehicleCodes(vehicle);
+    return strictCodes.length ? strictCodes : codes;
+  }, [isVehicleSearch, catalogReady, vehicle, codes]);
+
   const [catalogReady, setCatalogReady] = useState(false);
   useEffect(() => {
     if (!isVehicleSearch) return;
@@ -33,7 +40,7 @@ export function BatteryGrid() {
   }, [isVehicleSearch]);
 
   const { data: results = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["batteries", { search, codes, vehicle: isVehicleSearch, catalogReady }],
+    queryKey: ["batteries", { search, codes: isVehicleSearch ? strictVehicleCodes : codes, vehicle: isVehicleSearch, catalogReady }],
     queryFn: () => {
       if (isVehicleSearch) {
         // ESTRITO: usar SOMENTE os códigos cadastrados no fitment da planilha.
@@ -41,7 +48,7 @@ export function BatteryGrid() {
         // em alguns veículos, ex.: Creta retornando equivalentes incorretos).
         // Cada código do fitment é buscado no WooCommerce exatamente como está.
         const groups: Partial<Record<VehicleBrand, string[]>> = {};
-        return fetchBatteriesByVehicle(codes, groups);
+        return fetchBatteriesByVehicle(strictVehicleCodes, groups);
       }
       return fetchBatteries({
         search: search || undefined,
