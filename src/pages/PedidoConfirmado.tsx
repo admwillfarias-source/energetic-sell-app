@@ -23,7 +23,7 @@ type WCOrder = {
     address_2: string;
     phone: string;
   };
-  line_items: { name: string; quantity: number; total: string }[];
+  line_items: { name: string; quantity: number; total: string; product_id?: number; sku?: string }[];
   customer_note?: string;
 };
 
