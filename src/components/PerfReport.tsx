@@ -31,21 +31,39 @@ export default function PerfReport() {
   if (!open) return null;
 
   const metrics = getMetrics();
-  const heroSearchReady = metrics.find((m) => m.name === "hero_search_ready");
-  const lcp = metrics.find((m) => m.name === "LCP");
-  const heroMounted = metrics.find((m) => m.name === "hero_mounted");
-  const firstInteractive = metrics.find((m) => m.name === "hero_search_interactive");
+  const find = (n: string) => metrics.find((m) => m.name === n);
+
+  const ttfb = find("TTFB");
+  const fcp = find("FCP");
+  const lcp = find("LCP");
+  const cls = find("CLS");
+  const inp = find("INP");
+  const tbt = find("TBT");
+
+  const heroMounted = find("hero_mounted");
+  const firstInteractive = find("hero_search_interactive");
+  const catalogReady = find("hero_search_ready");
+  const splashHidden = find("splash_hidden");
+  const bestSellersReady = find("best_sellers_ready");
+  const batteryGridReady = find("battery_grid_ready");
 
   const fmt = (n?: number) => (n == null ? "—" : `${Math.round(n)} ms`);
+  const fmtVal = (n?: number, digits = 3) => (n == null ? "—" : n.toFixed(digits));
   const score = (n?: number, good = 2500, ok = 4000) => {
     if (n == null) return "text-muted-foreground";
     if (n <= good) return "text-awr-green";
     if (n <= ok) return "text-accent";
     return "text-destructive";
   };
+  const scoreCls = (n?: number) => {
+    if (n == null) return "text-muted-foreground";
+    if (n <= 0.1) return "text-awr-green";
+    if (n <= 0.25) return "text-accent";
+    return "text-destructive";
+  };
 
   return (
-    <div className="fixed bottom-24 right-3 z-[10000] w-72 rounded-xl border border-border bg-card/95 p-3 text-xs shadow-2xl backdrop-blur lg:bottom-3">
+    <div className="fixed bottom-24 right-3 z-[10000] w-80 max-h-[70vh] overflow-y-auto rounded-xl border border-border bg-card/95 p-3 text-xs shadow-2xl backdrop-blur lg:bottom-3">
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-1.5 font-semibold">
           <Activity className="h-3.5 w-3.5 text-primary" />
@@ -60,9 +78,47 @@ export default function PerfReport() {
         </button>
       </div>
 
+      <div className="mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        Web Vitals
+      </div>
       <dl className="grid grid-cols-2 gap-y-1">
+        <dt className="text-muted-foreground">TTFB</dt>
+        <dd className={`text-right font-mono font-semibold ${score(ttfb?.time, 800, 1800)}`}>
+          {fmt(ttfb?.time)}
+        </dd>
+
+        <dt className="text-muted-foreground">FCP</dt>
+        <dd className={`text-right font-mono font-semibold ${score(fcp?.time, 1800, 3000)}`}>
+          {fmt(fcp?.time)}
+        </dd>
+
         <dt className="text-muted-foreground">LCP</dt>
-        <dd className={`text-right font-mono font-semibold ${score(lcp?.time)}`}>{fmt(lcp?.time)}</dd>
+        <dd className={`text-right font-mono font-semibold ${score(lcp?.time, 2500, 4000)}`}>
+          {fmt(lcp?.time)}
+        </dd>
+
+        <dt className="text-muted-foreground">CLS</dt>
+        <dd className={`text-right font-mono font-semibold ${scoreCls(cls?.value)}`}>
+          {fmtVal(cls?.value)}
+        </dd>
+
+        <dt className="text-muted-foreground">INP</dt>
+        <dd className={`text-right font-mono font-semibold ${score(inp?.duration, 200, 500)}`}>
+          {fmt(inp?.duration)}
+        </dd>
+
+        <dt className="text-muted-foreground">TBT (long tasks)</dt>
+        <dd className={`text-right font-mono font-semibold ${score(tbt?.value, 200, 600)}`}>
+          {fmt(tbt?.value)}
+        </dd>
+      </dl>
+
+      <div className="mt-3 mb-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+        Marcos da página
+      </div>
+      <dl className="grid grid-cols-2 gap-y-1">
+        <dt className="text-muted-foreground">Splash escondido</dt>
+        <dd className="text-right font-mono">{fmt(splashHidden?.time)}</dd>
 
         <dt className="text-muted-foreground">Hero montado</dt>
         <dd className="text-right font-mono">{fmt(heroMounted?.time)}</dd>
@@ -73,8 +129,18 @@ export default function PerfReport() {
         </dd>
 
         <dt className="text-muted-foreground">Catálogo pronto</dt>
-        <dd className={`text-right font-mono font-semibold ${score(heroSearchReady?.time, 2500, 5000)}`}>
-          {fmt(heroSearchReady?.time)}
+        <dd className={`text-right font-mono font-semibold ${score(catalogReady?.time, 2500, 5000)}`}>
+          {fmt(catalogReady?.time)}
+        </dd>
+
+        <dt className="text-muted-foreground">Mais vendidas</dt>
+        <dd className={`text-right font-mono font-semibold ${score(bestSellersReady?.time, 2500, 5000)}`}>
+          {fmt(bestSellersReady?.time)}
+        </dd>
+
+        <dt className="text-muted-foreground">Grid de baterias</dt>
+        <dd className={`text-right font-mono font-semibold ${score(batteryGridReady?.time, 2500, 5000)}`}>
+          {fmt(batteryGridReady?.time)}
         </dd>
       </dl>
 
