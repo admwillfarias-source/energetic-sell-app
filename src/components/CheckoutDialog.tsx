@@ -230,10 +230,10 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
         value: subtotal,
         currency: "BRL",
         items: items.map((it) => ({
-          item_id: it.sku,
-          item_name: it.name,
+          item_id: it.battery.id,
+          item_name: it.battery.name,
           quantity: it.quantity,
-          price: it.price,
+          price: it.battery.price,
         })),
       });
     }
