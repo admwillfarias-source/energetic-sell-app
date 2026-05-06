@@ -209,7 +209,7 @@ export default function Resultado() {
         jsonLd={jsonLd}
       />
       {/* noindex quando a busca não tem resultados, para não poluir o índice */}
-      {vehicle && !isLoading && catalogReady && !hasResults && (
+      {vehicle && !isLoading && !hasResults && (
         <meta name="robots" content="noindex,follow" />
       )}
       <Header />
