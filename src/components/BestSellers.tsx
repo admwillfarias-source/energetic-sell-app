@@ -5,7 +5,7 @@ import { BatteryMouraCard } from "./BatteryMouraCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Battery } from "@/data/batteries";
-import { Flame, Search, Car, ChevronLeft, ChevronRight } from "lucide-react";
+import { Flame, Search, Car, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { markEvent } from "@/lib/perfMetrics";
 
