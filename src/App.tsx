@@ -35,6 +35,7 @@ const wrap = (el: React.ReactNode) => <Suspense fallback={<Fallback />}>{el}</Su
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <SplashScreen />
       <Suspense fallback={null}>
         <LazyToaster />
       </Suspense>
