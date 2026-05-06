@@ -121,6 +121,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
             <>
               <VehicleAutocomplete
                 variant="inline"
+                suggestionsMode="list"
                 onSelect={() => onOpenChange(false)}
               />
 
