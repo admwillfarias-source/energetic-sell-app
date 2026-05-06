@@ -70,15 +70,50 @@ export default function BestSellers() {
     "MA9E","12MVA5","EX60DD","MA6E","2","GB12-1,3","USADAMOTO",
   ].map((s) => s.toUpperCase());
 
+  // Conjunto de SKUs realmente existentes no catálogo
+  const catalogSkus = useMemo(
+    () => new Set(data.map((b) => (b.sku ?? "").toUpperCase()).filter(Boolean)),
+    [data],
+  );
+
+  // SKUs da lista TOP que NÃO existem no catálogo atual (WooCommerce)
+  const missingTopSkus = useMemo(() => {
+    if (catalogSkus.size === 0) return [];
+    return TOP_SKUS.filter((s) => !catalogSkus.has(s));
+  }, [catalogSkus]);
+
+  // Lista efetiva ordenada (ignora SKUs ausentes do catálogo)
+  const effectiveTopSkus = useMemo(
+    () => TOP_SKUS.filter((s) => catalogSkus.has(s)),
+    [catalogSkus],
+  );
+
+  useEffect(() => {
+    if (missingTopSkus.length === 0) return;
+    console.warn(
+      `[BestSellers] ${missingTopSkus.length} SKU(s) da lista de favoritos não existem no catálogo e foram ignorados:`,
+      missingTopSkus,
+    );
+    if (typeof window !== "undefined") {
+      (window as any).__missingTopSkus = missingTopSkus;
+      try {
+        sessionStorage.setItem("missingTopSkus", JSON.stringify(missingTopSkus));
+      } catch {}
+      window.dispatchEvent(
+        new CustomEvent("top-skus-missing", { detail: missingTopSkus }),
+      );
+    }
+  }, [missingTopSkus]);
+
   const withSku = useMemo(() => {
     const list = data.filter((b) => !!b.sku && b.sku.trim() !== "");
     const isPriority = (brand: string) =>
       priorityBrands.some((p) => p.toLowerCase() === brand.toLowerCase());
     const sortByPrice = (a: Battery, b: Battery) => a.price - b.price;
     const topIndex = (sku?: string) =>
-      sku ? TOP_SKUS.indexOf(sku.toUpperCase()) : -1;
+      sku ? effectiveTopSkus.indexOf(sku.toUpperCase()) : -1;
 
-    // 0) Mais pesquisadas (ordem da lista TOP_SKUS)
+    // 0) Mais pesquisadas (ordem da lista, já filtrada pelo catálogo)
     const topMatched = list
       .filter((b) => topIndex(b.sku) >= 0)
       .sort((a, b) => topIndex(a.sku) - topIndex(b.sku));
@@ -89,7 +124,7 @@ export default function BestSellers() {
     const autoRest = rest.filter((b) => isAutomotive(b) && !isPriority(b.brand)).sort(sortByPrice);
     const nonAuto = rest.filter((b) => !isAutomotive(b)).sort(sortByPrice);
     return [...topMatched, ...autoPriority, ...autoRest, ...nonAuto];
-  }, [data, priorityBrands]);
+  }, [data, priorityBrands, effectiveTopSkus]);
 
   const vehicleLabel =
     typeof window !== "undefined"
