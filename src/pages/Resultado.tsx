@@ -79,7 +79,7 @@ export default function Resultado() {
 
   // Marca quando os resultados ficam disponíveis (cache hit é instantâneo).
   useEffect(() => {
-    if (!isLoading && results.length > 0) {
+    if (!isResultLoading && results.length > 0) {
       markEvent("resultado_results_ready");
       try {
         measureBetween(
@@ -91,7 +91,7 @@ export default function Resultado() {
         // ignore
       }
     }
-  }, [isLoading, results.length]);
+  }, [isResultLoading, results.length]);
 
   // Ordena por marca (Moura, Zetta, Heliar, Excell) e depois por preço crescente
   const BRAND_ORDER: Record<string, number> = {
@@ -228,7 +228,7 @@ export default function Resultado() {
         jsonLd={jsonLd}
       />
       {/* noindex quando a busca não tem resultados, para não poluir o índice */}
-      {vehicle && !isLoading && !hasResults && (
+      {vehicle && !isResultLoading && !hasResults && (
         <meta name="robots" content="noindex,follow" />
       )}
       <Header />
@@ -303,7 +303,7 @@ export default function Resultado() {
           </div>
 
           {/* Lista */}
-          {isLoading ? (
+          {isResultLoading ? (
             <div className="grid gap-4">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-44 rounded-2xl" />
