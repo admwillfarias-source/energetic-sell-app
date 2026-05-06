@@ -53,24 +53,24 @@ export function BatteryMouraCard({
       </div>
 
       {/* Bloco preço — centralizado */}
-      <div className="flex flex-col items-center gap-1 px-3 pt-3 pb-2 sm:pt-4">
-        <div className="flex h-24 w-24 items-center justify-center rounded-lg bg-white p-1 sm:h-28 sm:w-28">
+      <div className="flex flex-col items-center gap-1.5 px-3 pt-4 pb-3 sm:pt-5">
+        <div className="flex h-28 w-28 items-center justify-center rounded-lg bg-white p-1 sm:h-32 sm:w-32">
           <BatteryImage
             src={battery.image}
             alt={`Bateria ${battery.brand} ${battery.name} ${battery.amperage}Ah`}
-            width={200}
-            height={200}
+            width={240}
+            height={240}
             priority={priority}
             sizes={COMPACT_SIZES}
           />
         </div>
-        <p className="text-xs leading-tight text-muted-foreground sm:text-sm">
+        <p className="mt-1 text-sm leading-tight text-muted-foreground">
           Em <span className="font-bold text-accent">10x</span> sem juros de
         </p>
-        <p className="font-display text-3xl font-extrabold leading-none text-primary sm:text-4xl">
+        <p className="font-display text-4xl font-extrabold leading-none text-primary sm:text-5xl">
           {formatBRL(installment)}
         </p>
-        <p className="text-[11px] text-muted-foreground sm:text-xs">
+        <p className="text-xs text-muted-foreground">
           à vista{" "}
           <span className="font-bold text-primary">{formatBRL(battery.price)}</span>
         </p>
