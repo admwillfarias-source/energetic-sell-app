@@ -98,51 +98,24 @@ export default function BestSellers() {
                 <BatteryMouraCard
                   key={b.id}
                   battery={b}
-                  highlight={currentPage === 1 && i === 0}
+                  highlight={i === 0}
                   priority={i < 4}
                 />
               ))}
             </div>
 
-            {totalPages > 1 && (
-              <nav
-                className="mt-8 flex flex-wrap items-center justify-center gap-2"
-                aria-label="Paginação de produtos"
-              >
+            {hasMore && (
+              <div className="mt-8 flex justify-center">
                 <Button
                   variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage === 1}
-                  aria-label="Página anterior"
+                  size="lg"
+                  onClick={() => setPage((p) => p + 1)}
+                  className="min-w-[180px]"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  Ver mais
+                  <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
-                {Array.from({ length: totalPages }).map((_, idx) => {
-                  const n = idx + 1;
-                  return (
-                    <Button
-                      key={n}
-                      variant={n === currentPage ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setPage(n)}
-                      aria-current={n === currentPage ? "page" : undefined}
-                      className="min-w-9"
-                    >
-                      {n}
-                    </Button>
-                  );
-                })}
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage === totalPages}
-                  aria-label="Próxima página"
-                >
-                  <ChevronRight className="h-4 w-4" />
-                </Button>
-              </nav>
+              </div>
             )}
           </>
         )}
