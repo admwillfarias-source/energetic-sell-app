@@ -90,8 +90,6 @@ export function BatteryMouraCard({
         <span className="font-bold text-foreground">{battery.name}</span>
         <span className="mx-1.5 text-muted-foreground">·</span>
         <span className="font-bold text-foreground">{battery.amperage}Ah</span>
-        <span className="mx-1.5 text-muted-foreground">·</span>
-        <span className="text-muted-foreground">{city}</span>
       </div>
 
       {/* Benefícios — compactos */}
