@@ -41,7 +41,6 @@ function SearchPlaceholder({
           placeholder="Carro e ano (Ex: Onix 2018) ou modelo da bateria (Ex: M60GD)"
           onFocus={onActivate}
           onClick={onActivate}
-          onTouchStart={onActivate}
           onChange={(e) => {
             onChange(e.target.value);
             onActivate();
