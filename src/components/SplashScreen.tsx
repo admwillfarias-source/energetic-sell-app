@@ -7,11 +7,11 @@ export default function SplashScreen() {
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
-    const t1 = setTimeout(() => setFade(true), 1400);
+    const t1 = setTimeout(() => setFade(true), 350);
     const t2 = setTimeout(() => {
       setVisible(false);
       markEvent("splash_hidden");
-    }, 1900);
+    }, 700);
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
@@ -23,7 +23,7 @@ export default function SplashScreen() {
   return (
     <div
       aria-hidden="true"
-      className={`fixed inset-0 z-[9999] bg-white transition-opacity duration-500 ${
+      className={`fixed inset-0 z-[9999] bg-white transition-opacity duration-300 ${
         fade ? "opacity-0 pointer-events-none" : "opacity-100"
       }`}
       style={{
