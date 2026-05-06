@@ -145,7 +145,6 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
             </div>
           </div>
 
-          </div>
           <DialogDescription className="text-left text-xs text-muted-foreground">
             {picked
               ? "Escolha o ano para ver as baterias compatíveis."
