@@ -21,12 +21,13 @@ if ( ! defined( 'ABSPATH' ) ) { exit; }
     'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
     })(window,document,'script','dataLayer','GTM-5JTRM2L');</script>
     <!-- End Google Tag Manager -->
-    <!-- Google tag (gtag.js) - Google Ads AW-994517528 -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=AW-994517528"></script>
+    <!-- Google tag (gtag.js) - GA4 + Google Ads -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FJ1MK5SLS5"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
+      gtag('config', 'G-FJ1MK5SLS5');
       gtag('config', 'AW-994517528');
       window.gtag_report_conversion = function(url){
         var callback=function(){if(typeof(url)!='undefined'){window.location=url;}};
