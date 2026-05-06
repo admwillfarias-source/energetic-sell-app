@@ -27,17 +27,17 @@ export function BatteryGrid() {
 
   const isVehicleSearch = !!vehicle && codes.length > 0;
 
-  const strictVehicleCodes = useMemo(() => {
-    if (!isVehicleSearch || !catalogReady) return codes;
-    const strictCodes = getStrictVehicleCodes(vehicle);
-    return strictCodes.length ? strictCodes : codes;
-  }, [isVehicleSearch, catalogReady, vehicle, codes]);
-
   const [catalogReady, setCatalogReady] = useState(false);
   useEffect(() => {
     if (!isVehicleSearch) return;
     ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
   }, [isVehicleSearch]);
+
+  const strictVehicleCodes = useMemo(() => {
+    if (!isVehicleSearch || !catalogReady) return codes;
+    const strictCodes = getStrictVehicleCodes(vehicle);
+    return strictCodes.length ? strictCodes : codes;
+  }, [isVehicleSearch, catalogReady, vehicle, codes]);
 
   const { data: results = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["batteries", { search, codes: isVehicleSearch ? strictVehicleCodes : codes, vehicle: isVehicleSearch, catalogReady }],
