@@ -31,13 +31,23 @@ export default function BestSellers() {
     if (!isLoading && data.length > 0) markEvent("best_sellers_ready");
   }, [isLoading, data.length]);
 
-  // Marcas priorizadas na primeira página
-  const PRIORITY_BRANDS = ["Moura", "Heliar", "Excell"];
+  // Marcas priorizadas (configurável via /admin)
+  const [priorityBrands, setPriorityBrandsState] = useState<string[]>(() => getPriorityBrands());
+
+  useEffect(() => {
+    const handler = () => setPriorityBrandsState(getPriorityBrands());
+    window.addEventListener("priority-brands-updated", handler);
+    window.addEventListener("storage", handler);
+    return () => {
+      window.removeEventListener("priority-brands-updated", handler);
+      window.removeEventListener("storage", handler);
+    };
+  }, []);
 
   const withSku = useMemo(() => {
     const list = data.filter((b) => !!b.sku && b.sku.trim() !== "");
     const isPriority = (brand: string) =>
-      PRIORITY_BRANDS.some((p) => p.toLowerCase() === brand.toLowerCase());
+      priorityBrands.some((p) => p.toLowerCase() === brand.toLowerCase());
     const priority = list
       .filter((b) => isPriority(b.brand))
       .sort((a, b) => a.price - b.price);
@@ -45,7 +55,7 @@ export default function BestSellers() {
       .filter((b) => !isPriority(b.brand))
       .sort((a, b) => a.price - b.price);
     return [...priority, ...rest];
-  }, [data]);
+  }, [data, priorityBrands]);
 
   const vehicleLabel =
     typeof window !== "undefined"
