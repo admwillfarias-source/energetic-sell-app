@@ -1,0 +1,34 @@
+import { useEffect, useState } from "react";
+import splashImg from "@/assets/splash-3-passos.jpeg";
+
+export default function SplashScreen() {
+  const [visible, setVisible] = useState(true);
+  const [fade, setFade] = useState(false);
+
+  useEffect(() => {
+    const t1 = setTimeout(() => setFade(true), 1400);
+    const t2 = setTimeout(() => setVisible(false), 1900);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      aria-hidden="true"
+      className={`fixed inset-0 z-[9999] bg-white transition-opacity duration-500 ${
+        fade ? "opacity-0 pointer-events-none" : "opacity-100"
+      }`}
+      style={{
+        backgroundImage: `url(${splashImg})`,
+        backgroundSize: "contain",
+        backgroundPosition: "center",
+        backgroundRepeat: "no-repeat",
+        backgroundColor: "#fff",
+      }}
+    />
+  );
+}
