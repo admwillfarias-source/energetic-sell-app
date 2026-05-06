@@ -122,7 +122,7 @@ export function BatteryMouraCard({
         <Button
           onClick={onBuy}
           size="lg"
-          className="h-11 w-full bg-accent text-sm font-bold uppercase tracking-wide text-accent-foreground hover:bg-accent/90 sm:text-base"
+          className="h-11 w-full whitespace-normal break-words bg-accent px-2 text-[13px] font-bold uppercase leading-tight tracking-wide text-accent-foreground hover:bg-accent/90 sm:text-sm md:text-base"
         >
           Peça agora sua bateria!
         </Button>
