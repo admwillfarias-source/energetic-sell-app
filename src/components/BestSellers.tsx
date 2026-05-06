@@ -14,6 +14,8 @@ const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function BestSellers() {
+  const isMobile = useIsMobile();
+  const PER_PAGE = isMobile ? 4 : 8;
   const [active, setActive] = useState<Battery | null>(null);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [page, setPage] = useState(1);
