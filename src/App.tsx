@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import SplashScreen from "@/components/SplashScreen";
 
 // Todas as outras páginas: lazy. Não viajam no bundle inicial da home.
 const Auth = lazy(() => import("./pages/Auth.tsx"));
