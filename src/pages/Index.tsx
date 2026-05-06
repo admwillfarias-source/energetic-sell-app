@@ -7,13 +7,13 @@ import MobileActionBar from "@/components/MobileActionBar";
 import LazySection from "@/components/LazySection";
 import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
+import BestSellers from "@/components/BestSellers";
 
 const Benefits = lazy(() => import("@/components/Benefits").then((m) => ({ default: m.Benefits })));
 const HowItWorks = lazy(() =>
   import("@/components/HowItWorks").then((m) => ({ default: m.HowItWorks })),
 );
 const HowToOrder = lazy(() => import("@/components/HowToOrder"));
-const BestSellers = lazy(() => import("@/components/BestSellers"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
 const FaqHome = lazy(() => import("@/components/FaqHome"));
 const FloatingWhatsApp = lazy(() => import("@/components/FloatingWhatsApp"));
