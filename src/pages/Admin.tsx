@@ -58,10 +58,56 @@ export default function Admin() {
         </div>
       </header>
 
-      <main className="container py-8">
+      <main className="container py-8 space-y-10">
+        <PriorityBrandsAdmin />
         <FitmentsAdmin />
       </main>
     </div>
+  );
+}
+
+// ============================ PRIORITY BRANDS ============================
+import { Checkbox } from "@/components/ui/checkbox";
+import { ALL_BRANDS, getPriorityBrands, setPriorityBrands } from "@/lib/priorityBrands";
+
+function PriorityBrandsAdmin() {
+  const [selected, setSelected] = useState<string[]>(() => getPriorityBrands());
+
+  const toggle = (brand: string) => {
+    setSelected((prev) =>
+      prev.includes(brand) ? prev.filter((b) => b !== brand) : [...prev, brand],
+    );
+  };
+
+  const save = () => {
+    setPriorityBrands(selected);
+    toast({ title: "Marcas em destaque salvas" });
+  };
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-5">
+      <h2 className="font-display text-lg font-bold">Marcas em destaque (1ª página)</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Selecione quais marcas devem aparecer primeiro no bloco "Mais vendidas".
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4">
+        {ALL_BRANDS.map((brand) => (
+          <label
+            key={brand}
+            className="flex items-center gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm cursor-pointer hover:bg-muted/50"
+          >
+            <Checkbox
+              checked={selected.includes(brand)}
+              onCheckedChange={() => toggle(brand)}
+            />
+            <span>{brand}</span>
+          </label>
+        ))}
+      </div>
+      <div className="mt-4 flex justify-end">
+        <Button onClick={save}>Salvar</Button>
+      </div>
+    </section>
   );
 }
 
