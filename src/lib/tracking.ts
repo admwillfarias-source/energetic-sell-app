@@ -1,4 +1,7 @@
-// Stub de tracking — não envia eventos. Mantém a mesma assinatura usada pelos componentes.
+// Tracking via Google Tag Manager (dataLayer). As tags efetivas
+// (Google Ads conversion, GA4 events, etc.) são configuradas no painel do GTM.
+
+import { pushEvent } from "@/lib/gtm";
 
 declare global {
   interface Window {
@@ -12,25 +15,19 @@ type CallClickEvent = {
 };
 
 export function trackEvent(args: { action: string; category: string; label: string; value?: number }) {
-  try {
-    if (typeof window !== "undefined" && typeof window.gtag === "function") {
-      window.gtag("event", args.action, {
-        event_category: args.category,
-        event_label: args.label,
-        value: args.value,
-      });
-    }
-  } catch {
-    // silencioso
-  }
+  pushEvent(args.action, {
+    event_category: args.category,
+    event_label: args.label,
+    value: args.value,
+  });
 }
 
-export function trackLead(_label: string) {
-  // no-op
+export function trackLead(label: string) {
+  pushEvent("lead_whatsapp", { event_label: label });
 }
 
-export function trackCall(_page: string, _placement: string) {
-  // no-op
+export function trackCall(page: string, placement: string) {
+  pushEvent("lead_call", { page, placement });
 }
 
 export function handleCallClick(event: CallClickEvent, page: string, placement: string) {
