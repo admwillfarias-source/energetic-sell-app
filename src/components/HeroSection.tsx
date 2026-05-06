@@ -15,8 +15,8 @@ function getLiveDeliveries() {
   return 3 + Math.round(wave * 13); // 3..16
 }
 
-const VehicleAutocomplete = lazy(() => import("@/components/VehicleAutocomplete"));
 const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
+const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 
 
 import heroBg from "@/assets/hero-bg.webp";
@@ -63,7 +63,7 @@ function SearchPlaceholder({
 }
 
 export default function HeroSection() {
-  const [searchActive, setSearchActive] = useState(false);
+  const [overlayOpen, setOverlayOpen] = useState(false);
   const [initialQuery, setInitialQuery] = useState("");
   const [whatsVisible, setWhatsVisible] = useState(false);
   const whatsRef = useRef<HTMLDivElement>(null);
@@ -74,11 +74,15 @@ export default function HeroSection() {
     markEvent("hero_search_interactive");
   }, []);
 
-  // Pré-carrega o autocomplete + catálogo após idle, sem bloquear o LCP
+  // Pré-carrega o overlay (chunk + catálogo) em idle, sem bloquear o LCP,
+  // pra abrir instantâneo quando o cliente clicar no campo.
   useEffect(() => {
     const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number };
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
-    const id = schedule(() => setSearchActive(true));
+    const id = schedule(() => {
+      import("@/components/SearchOverlay");
+      import("@/lib/catalogStore").then((m) => m.ensureCatalogLoaded?.()).catch(() => {});
+    });
     return () => {
       const cancel =
         (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback ??
@@ -181,26 +185,18 @@ export default function HeroSection() {
           </div>
 
           <div className="mb-6 rounded-2xl bg-card p-4 shadow-lg md:p-5">
-            {searchActive ? (
-              <Suspense
-                fallback={
-                  <SearchPlaceholder
-                    onActivate={() => {}}
-                    initialValue={initialQuery}
-                    onChange={() => {}}
-                  />
-                }
-              >
-                <VehicleAutocomplete variant="inline" initialQuery={initialQuery} />
-              </Suspense>
-            ) : (
-              <SearchPlaceholder
-                onActivate={() => setSearchActive(true)}
-                initialValue={initialQuery}
-                onChange={setInitialQuery}
-              />
-            )}
+            <SearchPlaceholder
+              onActivate={() => setOverlayOpen(true)}
+              initialValue={initialQuery}
+              onChange={setInitialQuery}
+            />
           </div>
+
+          {overlayOpen && (
+            <Suspense fallback={null}>
+              <SearchOverlay open={overlayOpen} onOpenChange={setOverlayOpen} />
+            </Suspense>
+          )}
 
           <div ref={whatsRef} className="hidden sm:flex flex-col sm:flex-row gap-3 mb-6 min-h-[56px]">
             {whatsVisible && (
