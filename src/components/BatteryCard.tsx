@@ -1,4 +1,4 @@
-import { ShoppingCart, ShieldCheck, Zap, ExternalLink, Clock, CalendarClock } from "lucide-react";
+import { ShoppingCart, ShieldCheck, Zap, Clock, CalendarClock, BadgeCheck } from "lucide-react";
 import { Battery } from "@/data/batteries";
 import { Button } from "@/components/ui/button";
 import { useCart, formatBRL } from "@/context/CartContext";
