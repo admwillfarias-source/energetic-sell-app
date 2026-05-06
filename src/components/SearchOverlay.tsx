@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { Car, Truck, X, ChevronLeft, Sparkles } from "lucide-react";
 import {
   Dialog,
@@ -13,8 +14,9 @@ import VehicleAutocomplete from "@/components/VehicleAutocomplete";
 import { TOP_VEHICLES, type TopVehicle } from "@/data/topVehicles";
 import { searchVehicles } from "@/lib/fitments";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { fetchBatteriesByVehicle } from "@/lib/api/batteries";
 import { toast } from "@/hooks/use-toast";
-import { markEvent } from "@/lib/perfMetrics";
+import { markEvent, measureBetween } from "@/lib/perfMetrics";
 import { cn } from "@/lib/utils";
 
 type Props = {
