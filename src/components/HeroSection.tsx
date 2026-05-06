@@ -15,7 +15,6 @@ function getLiveDeliveries() {
   return 3 + Math.round(wave * 13); // 3..16
 }
 
-const VehicleAutocomplete = lazy(() => import("@/components/VehicleAutocomplete"));
 const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
 const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 
@@ -64,7 +63,6 @@ function SearchPlaceholder({
 }
 
 export default function HeroSection() {
-  const [searchActive, setSearchActive] = useState(false);
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [initialQuery, setInitialQuery] = useState("");
   const [whatsVisible, setWhatsVisible] = useState(false);
@@ -76,11 +74,15 @@ export default function HeroSection() {
     markEvent("hero_search_interactive");
   }, []);
 
-  // Pré-carrega o autocomplete + catálogo após idle, sem bloquear o LCP
+  // Pré-carrega o overlay (chunk + catálogo) em idle, sem bloquear o LCP,
+  // pra abrir instantâneo quando o cliente clicar no campo.
   useEffect(() => {
     const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number };
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
-    const id = schedule(() => setSearchActive(true));
+    const id = schedule(() => {
+      import("@/components/SearchOverlay");
+      import("@/lib/catalogStore").then((m) => m.ensureCatalogLoaded?.()).catch(() => {});
+    });
     return () => {
       const cancel =
         (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback ??
