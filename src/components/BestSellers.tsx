@@ -35,12 +35,9 @@ export default function BestSellers() {
     [data],
   );
 
-  const totalPages = Math.max(1, Math.ceil(withSku.length / PER_PAGE));
-  const currentPage = Math.min(page, totalPages);
-  const pageItems = withSku.slice(
-    (currentPage - 1) * PER_PAGE,
-    currentPage * PER_PAGE,
-  );
+  const visibleCount = Math.min(withSku.length, page * PER_PAGE);
+  const pageItems = withSku.slice(0, visibleCount);
+  const hasMore = visibleCount < withSku.length;
 
   return (
     <section
