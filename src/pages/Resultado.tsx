@@ -21,6 +21,7 @@ import { CartProvider } from "@/context/CartContext";
 import { CartDrawer } from "@/components/CartDrawer";
 import { cityPages } from "@/data/cityContent";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import { markEvent, measureBetween } from "@/lib/perfMetrics";
 import {
   breadcrumbLd, faqLd, localBusinessLd, organizationLd, SITE_URL,
 } from "@/lib/seoSchemas";
@@ -37,9 +38,11 @@ export default function Resultado() {
     [codesParam],
   );
 
-  const [catalogReady, setCatalogReady] = useState(false);
+  // Catálogo é carregado em background — não bloqueia a query de produtos,
+  // pois /resultado usa apenas os codes da URL.
   useEffect(() => {
-    ensureCatalogLoaded().then(() => setCatalogReady(true)).catch(() => setCatalogReady(true));
+    ensureCatalogLoaded().catch(() => {});
+    markEvent("resultado_page_mounted");
   }, []);
 
   const { data: results = [], isLoading, isError, refetch } = useQuery({
@@ -51,9 +54,25 @@ export default function Resultado() {
       }
       return fetchBatteries({ codes: codes.length ? codes : undefined, perPage: 30 });
     },
-    enabled: catalogReady && codes.length > 0,
+    enabled: codes.length > 0,
     staleTime: 5 * 60 * 1000,
   });
+
+  // Marca quando os resultados ficam disponíveis (cache hit é instantâneo).
+  useEffect(() => {
+    if (!isLoading && results.length > 0) {
+      markEvent("resultado_results_ready");
+      try {
+        measureBetween(
+          "result_total_ms",
+          "result_navigate_start",
+          "resultado_results_ready",
+        );
+      } catch {
+        // ignore
+      }
+    }
+  }, [isLoading, results.length]);
 
   // Ordena por marca (Moura, Zetta, Heliar, Excell) e depois por preço crescente
   const BRAND_ORDER: Record<string, number> = {
