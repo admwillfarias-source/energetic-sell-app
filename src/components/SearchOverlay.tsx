@@ -29,10 +29,13 @@ const YEARS = Array.from({ length: 10 }, (_, i) => CURRENT_YEAR - i);
 
 const TRUCK_MODELS = new Set(["Strada", "Hilux"]);
 
+type StartStopChoice = "standard" | "start-stop";
+
 export default function SearchOverlay({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [picked, setPicked] = useState<TopVehicle | null>(null);
+  const [pickedYear, setPickedYear] = useState<number | null>(null);
   const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
