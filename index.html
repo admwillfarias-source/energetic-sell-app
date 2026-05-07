@@ -47,12 +47,12 @@
       }
       body{
         background:hsl(var(--background));color:hsl(var(--foreground));
-        font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+        font-family:Inter,"Inter Fallback",system-ui,-apple-system,"Segoe UI",sans-serif;
         -webkit-font-smoothing:antialiased;
         font-size:16px;line-height:1.5;
       }
       #root{min-height:100vh}
-      h1,h2,h3{font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif;letter-spacing:-0.02em;margin:0}
+      h1,h2,h3{font-family:"Plus Jakarta Sans","Plus Jakarta Sans Fallback",Inter,system-ui,sans-serif;letter-spacing:-0.02em;margin:0}
       section#inicio{position:relative;display:flex;align-items:center;min-height:80vh;padding-top:64px;background:hsl(var(--secondary))}
       section#inicio>div:first-child{position:absolute;inset:0;z-index:0;background:hsl(var(--secondary))}
     </style>

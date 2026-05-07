@@ -1,5 +1,25 @@
 /* Fontes self-hosted via @fontsource — carregadas diferidas em main.tsx
-   para não bloquear o CSS crítico. Fallback: system-ui (font-display: swap). */
+   para não bloquear o CSS crítico. Fallbacks ajustados abaixo evitam CLS. */
+
+/* Fallback metrics-adjusted para Inter — minimiza shift quando a fonte web entra */
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  size-adjust: 107%;
+  ascent-override: 90%;
+  descent-override: 22%;
+  line-gap-override: 0%;
+}
+
+/* Fallback metrics-adjusted para Plus Jakarta Sans */
+@font-face {
+  font-family: "Plus Jakarta Sans Fallback";
+  src: local("Arial");
+  size-adjust: 105%;
+  ascent-override: 95%;
+  descent-override: 25%;
+  line-gap-override: 0%;
+}
 
 @tailwind base;
 @tailwind components;
@@ -91,7 +111,7 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: Inter, system-ui, -apple-system, sans-serif;
+    font-family: Inter, "Inter Fallback", system-ui, -apple-system, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {

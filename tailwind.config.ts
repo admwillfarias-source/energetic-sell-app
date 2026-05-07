@@ -17,9 +17,9 @@ export default {
         xs: "420px",
       },
       fontFamily: {
-        sans: ["Inter", "system-ui", "-apple-system", "sans-serif"],
-        display: ['"Plus Jakarta Sans"', "Inter", "system-ui", "sans-serif"],
-        body: ["Inter", "system-ui", "sans-serif"],
+        sans: ["Inter", '"Inter Fallback"', "system-ui", "-apple-system", "sans-serif"],
+        display: ['"Plus Jakarta Sans"', '"Plus Jakarta Sans Fallback"', "Inter", "system-ui", "sans-serif"],
+        body: ["Inter", '"Inter Fallback"', "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
