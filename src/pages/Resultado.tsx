@@ -62,18 +62,47 @@ export default function Resultado() {
 
   const effectiveCodes = vehicle ? strictVehicleCodes : codes;
 
-  const { data: results = [], isLoading, isError, refetch } = useQuery({
-    queryKey: ["resultado", { codes: effectiveCodes, vehicle }],
-    queryFn: () => {
-      if (vehicle && effectiveCodes.length > 0) {
-        const groups: Partial<Record<VehicleBrand, string[]>> = {};
-        return fetchBatteriesByVehicle(effectiveCodes, groups);
-      }
-      return fetchBatteries({ codes: effectiveCodes.length ? effectiveCodes : undefined, perPage: 30 });
-    },
-    enabled: effectiveCodes.length > 0 && (!vehicle || catalogReady),
+  // ===== Carregamento progressivo: cada SKU vira uma query separada.
+  // Os cards aparecem assim que cada produto chega, sem esperar a lista toda.
+  const perSkuQueries = useQueries({
+    queries: (vehicle ? effectiveCodes : []).map((sku) => ({
+      queryKey: ["wc-product-sku", sku],
+      queryFn: async () => {
+        const list = await fetchBatteries({ codes: [sku], perPage: 1 });
+        return list.find((b) => (b.sku ?? "").toUpperCase() === sku.toUpperCase()) ?? null;
+      },
+      enabled: !!vehicle && catalogReady && !!sku,
+      staleTime: 5 * 60 * 1000,
+    })),
+  });
+
+  const fallbackQuery = useQuery({
+    queryKey: ["resultado-fallback", { codes: effectiveCodes }],
+    queryFn: () =>
+      fetchBatteries({
+        codes: effectiveCodes.length ? effectiveCodes : undefined,
+        perPage: 30,
+      }),
+    enabled: !vehicle && effectiveCodes.length > 0,
     staleTime: 5 * 60 * 1000,
   });
+
+  const results: Battery[] = vehicle
+    ? perSkuQueries
+        .map((q) => q.data)
+        .filter((b): b is Battery => !!b)
+    : fallbackQuery.data ?? [];
+
+  const isLoading = vehicle
+    ? perSkuQueries.length > 0 && perSkuQueries.every((q) => q.isLoading)
+    : fallbackQuery.isLoading;
+  const isError = vehicle
+    ? perSkuQueries.length > 0 && perSkuQueries.every((q) => q.isError)
+    : fallbackQuery.isError;
+  const refetch = () => {
+    if (vehicle) perSkuQueries.forEach((q) => q.refetch());
+    else fallbackQuery.refetch();
+  };
 
   const isResultLoading = isLoading || (!!vehicle && !catalogReady);
 
