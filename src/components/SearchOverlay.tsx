@@ -124,10 +124,8 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
         ?? getStrictVehicleCodes(`${vehicle.brand} ${vehicle.model} ${year}`);
 
       if (!codes || codes.length === 0) {
-        toast({
-          title: "Sem aplicação cadastrada",
-          description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}. Tente outro ano ou digite o modelo do carro.`,
-        });
+        setPickedYear(year);
+        setNotFound({ year });
         return;
       }
       const suffix = found[0]?.hasStartStop ? " Start/Stop" : "";
