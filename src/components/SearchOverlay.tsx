@@ -68,6 +68,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
       setPicked(null);
       setPickedYear(null);
       setVariants(null);
+      setNotFound(null);
       setResolving(false);
     }
   }, [open]);
