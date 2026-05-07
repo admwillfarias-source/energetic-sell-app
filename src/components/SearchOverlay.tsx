@@ -220,7 +220,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
             </>
           )}
 
-          {picked && (
+          {picked && pickedYear === null && (
             <div>
               <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
                 {TRUCK_MODELS.has(picked.model) ? (
@@ -240,7 +240,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
                     key={y}
                     variant="outline"
                     disabled={resolving}
-                    onClick={() => goWithYear(picked, y)}
+                    onClick={() => handleYearClick(picked, y)}
                     className={cn(
                       "h-12 text-base font-bold hover:border-primary hover:bg-primary hover:text-primary-foreground",
                     )}
@@ -250,13 +250,76 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
                 ))}
               </div>
 
-              <p className="mt-4 text-center text-xs text-muted-foreground">
+              {picked.startStopFromYear && (
+                <p className="mt-4 text-center text-[11px] text-muted-foreground">
+                  A partir de {picked.startStopFromYear}, perguntaremos se o seu {picked.label} tem
+                  tecnologia <span className="font-semibold text-foreground">Start/Stop</span> para
+                  indicar a bateria correta (EFB/AGM).
+                </p>
+              )}
+
+              <p className="mt-3 text-center text-xs text-muted-foreground">
                 Não é o ano certo?{" "}
                 <button
                   onClick={() => setPicked(null)}
                   className="font-semibold text-primary underline-offset-2 hover:underline"
                 >
                   Voltar e digitar o modelo
+                </button>
+              </p>
+            </div>
+          )}
+
+          {picked && pickedYear !== null && (
+            <div>
+              <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
+                {TRUCK_MODELS.has(picked.model) ? (
+                  <Truck className="h-6 w-6 text-primary" />
+                ) : (
+                  <Car className="h-6 w-6 text-primary" />
+                )}
+                <div>
+                  <div className="font-semibold leading-tight">
+                    {picked.brand} {picked.label} {pickedYear}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Seu carro tem sistema Start/Stop?
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button
+                  variant="outline"
+                  disabled={resolving}
+                  onClick={() => chooseAndGo(picked, pickedYear, "standard")}
+                  className="h-14 flex-col gap-0.5 hover:border-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  <span className="text-sm font-bold">Não tem Start/Stop</span>
+                  <span className="text-[11px] opacity-80">Bateria convencional</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={resolving}
+                  onClick={() => chooseAndGo(picked, pickedYear, "start-stop")}
+                  className="h-14 flex-col gap-0.5 hover:border-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  <span className="text-sm font-bold">Tem Start/Stop</span>
+                  <span className="text-[11px] opacity-80">Bateria EFB/AGM</span>
+                </Button>
+              </div>
+
+              <p className="mt-3 text-center text-[11px] text-muted-foreground">
+                O sistema Start/Stop desliga o motor automaticamente em paradas curtas e exige
+                bateria reforçada.
+              </p>
+
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                <button
+                  onClick={() => setPickedYear(null)}
+                  className="font-semibold text-primary underline-offset-2 hover:underline"
+                >
+                  ← Trocar o ano
                 </button>
               </p>
             </div>
