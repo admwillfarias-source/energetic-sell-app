@@ -55,6 +55,7 @@ const App = () => (
           <Route path="/bateria/:sku" element={wrap(<BatterySku />)} />
           <Route path="/auth" element={wrap(<Auth />)} />
           <Route path="/admin" element={wrap(<Admin />)} />
+          <Route path="/admin/validacao-skus" element={wrap(<SkuValidation />)} />
           <Route path="/admin/whatsapp-logs" element={wrap(<WhatsappLogs />)} />
           <Route path="/admin/whatsapp-test" element={wrap(<WhatsappTest />)} />
           <Route path="/admin/whatsapp-diagnostico" element={wrap(<WhatsappDiagnose />)} />
