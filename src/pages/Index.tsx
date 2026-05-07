@@ -3,7 +3,6 @@ import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import { BatteryGrid } from "@/components/BatteryGrid";
-import MobileActionBar from "@/components/MobileActionBar";
 import LazySection from "@/components/LazySection";
 import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
@@ -14,6 +13,7 @@ const HowItWorks = lazy(() =>
   import("@/components/HowItWorks").then((m) => ({ default: m.HowItWorks })),
 );
 const HowToOrder = lazy(() => import("@/components/HowToOrder"));
+const MobileActionBar = lazy(() => import("@/components/MobileActionBar"));
 const Testimonials = lazy(() => import("@/components/Testimonials"));
 const FaqHome = lazy(() => import("@/components/FaqHome"));
 const FloatingWhatsApp = lazy(() => import("@/components/FloatingWhatsApp"));
@@ -127,7 +127,9 @@ const Index = () => {
         <Suspense fallback={null}>
           <CartDrawer />
         </Suspense>
-        <MobileActionBar />
+        <Suspense fallback={null}>
+          <MobileActionBar />
+        </Suspense>
         <Suspense fallback={null}>
           <FloatingWhatsApp />
         </Suspense>
