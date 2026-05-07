@@ -44,6 +44,9 @@ export default function Admin() {
         <div className="container flex items-center justify-between py-4">
           <h1 className="font-display text-xl font-bold">Administração do Catálogo</h1>
           <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={() => navigate("/admin/validacao-skus")} className="gap-1.5">
+              <ShieldCheck className="h-4 w-4" /> Validar SKUs
+            </Button>
             <Button variant="outline" size="sm" onClick={() => navigate("/admin/whatsapp-test")} className="gap-1.5">
               <Send className="h-4 w-4" /> Teste WhatsApp
             </Button>
