@@ -58,22 +58,76 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
       });
     } else {
       setPicked(null);
+      setPickedYear(null);
       setResolving(false);
     }
   }, [open]);
 
-  
+  const finishWithCodes = (
+    vehicle: TopVehicle,
+    year: number,
+    codes: string[],
+    suffix = "",
+  ) => {
+    const vehicleLabel = `${vehicle.brand} ${vehicle.model} ${year}${suffix}`;
+    queryClient
+      .prefetchQuery({
+        queryKey: ["resultado", { codes, vehicle: vehicleLabel }],
+        queryFn: () => fetchBatteriesByVehicle(codes, {}),
+        staleTime: 5 * 60 * 1000,
+      })
+      .then(() => {
+        markEvent("result_prefetch_done");
+        try {
+          measureBetween("result_load_ms", "result_navigate_start", "result_prefetch_done");
+        } catch {
+          // ignore
+        }
+      })
+      .catch(() => {});
 
-  const goWithYear = async (vehicle: TopVehicle, year: number) => {
+    try {
+      sessionStorage.setItem("lastVehicleSearch", vehicleLabel);
+    } catch {
+      // ignore
+    }
+    onOpenChange(false);
+    navigate(
+      `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(vehicleLabel)}`,
+    );
+  };
+
+  const handleYearClick = (vehicle: TopVehicle, year: number) => {
+    const hasStartStop =
+      !!vehicle.startStopSkus?.length &&
+      typeof vehicle.startStopFromYear === "number" &&
+      year >= vehicle.startStopFromYear;
+    if (hasStartStop) {
+      // Mostra a tela de Start/Stop antes de navegar.
+      setPicked({ ...vehicle });
+      setPickedYear(year);
+      return;
+    }
+    chooseAndGo(vehicle, year, "standard");
+  };
+
+  const chooseAndGo = async (
+    vehicle: TopVehicle,
+    year: number,
+    choice: StartStopChoice,
+  ) => {
     setResolving(true);
     markEvent("result_navigate_start");
     try {
       await ensureCatalogLoaded();
-      const vehicleLabel = `${vehicle.brand} ${vehicle.model} ${year}`;
-      // Usa somente os códigos cadastrados na tabela de aplicação para este
-      // modelo/ano, sem ampliar por busca fuzzy, equivalência ou cruzamento.
-      const codes = getStrictVehicleCodes(vehicleLabel);
-      if (codes.length === 0) {
+      const codes =
+        choice === "start-stop" && vehicle.startStopSkus?.length
+          ? vehicle.startStopSkus
+          : vehicle.standardSkus?.length
+            ? vehicle.standardSkus
+            : getStrictVehicleCodes(`${vehicle.brand} ${vehicle.model} ${year}`);
+
+      if (!codes || codes.length === 0) {
         toast({
           title: "Sem aplicação cadastrada",
           description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}. Tente outro ano ou digite o modelo do carro.`,
@@ -81,37 +135,8 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
         setResolving(false);
         return;
       }
-
-      // Prefetch dispara em paralelo — a página /resultado consome o cache.
-      queryClient
-        .prefetchQuery({
-          queryKey: ["resultado", { codes, vehicle: vehicleLabel }],
-          queryFn: () => fetchBatteriesByVehicle(codes, {}),
-          staleTime: 5 * 60 * 1000,
-        })
-        .then(() => {
-          markEvent("result_prefetch_done");
-          try {
-            measureBetween(
-              "result_load_ms",
-              "result_navigate_start",
-              "result_prefetch_done",
-            );
-          } catch {
-            // ignore
-          }
-        })
-        .catch(() => {});
-
-      try {
-        sessionStorage.setItem("lastVehicleSearch", vehicleLabel);
-      } catch {
-        // ignore
-      }
-      onOpenChange(false);
-      navigate(
-        `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(vehicleLabel)}`,
-      );
+      const suffix = choice === "start-stop" ? " Start/Stop" : "";
+      finishWithCodes(vehicle, year, codes, suffix);
     } finally {
       setResolving(false);
     }
