@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Car, Truck, ChevronLeft, Sparkles } from "lucide-react";
+import { Car, Truck, ChevronLeft, Sparkles, MessageCircle } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -37,7 +37,14 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
   const [picked, setPicked] = useState<TopVehicle | null>(null);
   const [pickedYear, setPickedYear] = useState<number | null>(null);
   const [variants, setVariants] = useState<VehicleVariant[] | null>(null);
+  const [notFound, setNotFound] = useState<{ year: number } | null>(null);
   const [resolving, setResolving] = useState(false);
+
+  const WHATSAPP_NUMBER = "5551993199486";
+  const buildWhatsAppUrl = (vehicleLabel: string) => {
+    const msg = `Olá! Preciso de ajuda para encontrar a bateria do meu ${vehicleLabel}. Vocês podem me orientar?`;
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  };
 
   useEffect(() => {
     if (open) {
@@ -61,6 +68,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
       setPicked(null);
       setPickedYear(null);
       setVariants(null);
+      setNotFound(null);
       setResolving(false);
     }
   }, [open]);
@@ -116,10 +124,8 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
         ?? getStrictVehicleCodes(`${vehicle.brand} ${vehicle.model} ${year}`);
 
       if (!codes || codes.length === 0) {
-        toast({
-          title: "Sem aplicação cadastrada",
-          description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}. Tente outro ano ou digite o modelo do carro.`,
-        });
+        setPickedYear(year);
+        setNotFound({ year });
         return;
       }
       const suffix = found[0]?.hasStartStop ? " Start/Stop" : "";
@@ -299,6 +305,53 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
                   onClick={() => {
                     setPickedYear(null);
                     setVariants(null);
+                  }}
+                  className="font-semibold text-primary underline-offset-2 hover:underline"
+                >
+                  ← Trocar o ano
+                </button>
+              </p>
+            </div>
+          )}
+
+          {picked && notFound && (
+            <div>
+              <div className="mb-4 rounded-xl border border-border bg-muted/40 p-4 text-center">
+                <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
+                  {TRUCK_MODELS.has(picked.model) ? (
+                    <Truck className="h-6 w-6 text-primary" />
+                  ) : (
+                    <Car className="h-6 w-6 text-primary" />
+                  )}
+                </div>
+                <div className="font-semibold">
+                  Não encontramos a bateria para
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  {picked.brand} {picked.label} {notFound.year}
+                </div>
+              </div>
+
+              <p className="mb-3 text-center text-sm text-muted-foreground">
+                Fale agora com um especialista no WhatsApp e receba a indicação certa em minutos.
+              </p>
+
+              <a
+                href={buildWhatsAppUrl(`${picked.brand} ${picked.label} ${notFound.year}`)}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => onOpenChange(false)}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-3 text-base font-bold text-white shadow-md transition hover:brightness-110"
+              >
+                <MessageCircle className="h-5 w-5" />
+                Tirar dúvida no WhatsApp
+              </a>
+
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                <button
+                  onClick={() => {
+                    setPickedYear(null);
+                    setNotFound(null);
                   }}
                   className="font-semibold text-primary underline-offset-2 hover:underline"
                 >
