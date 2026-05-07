@@ -438,10 +438,18 @@ export default function Resultado() {
         </div>
       </main>
 
-      <Footer />
-      <CartDrawer />
-      <FloatingWhatsApp />
+      <Suspense fallback={<div style={{ minHeight: 300 }} />}>
+        <Footer />
+      </Suspense>
+      <Suspense fallback={null}>
+        <CartDrawer />
+      </Suspense>
+      <Suspense fallback={null}>
+        <FloatingWhatsApp />
+      </Suspense>
     </div>
     </CartProvider>
+  );
+}
   );
 }
