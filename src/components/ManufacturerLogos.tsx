@@ -30,6 +30,8 @@ export default function ManufacturerLogos({ variant = "full" }: Props) {
             key={b.name}
             src={b.img}
             alt={`Logo ${b.name} — distribuidor autorizado AWR Baterias`}
+            width={120}
+            height={32}
             className="h-7 md:h-8 w-auto object-contain grayscale opacity-70 hover:grayscale-0 hover:opacity-100 transition-all"
             loading="lazy"
             decoding="async"
@@ -61,6 +63,8 @@ export default function ManufacturerLogos({ variant = "full" }: Props) {
               <img
                 src={b.img}
                 alt={`Logo ${b.name} — distribuidor autorizado AWR Baterias`}
+                width={140}
+                height={56}
                 className="h-12 md:h-14 w-auto object-contain"
                 loading="lazy"
                 decoding="async"
