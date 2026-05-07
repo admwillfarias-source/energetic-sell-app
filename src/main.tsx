@@ -9,6 +9,7 @@ import "./index.css";
 import heroBg from "@/assets/hero-bg.webp";
 import heroBgSm from "@/assets/hero-bg-sm.webp";
 import { startLcpTracking, markEvent } from "@/lib/perfMetrics";
+import { initDeferredTracking } from "@/lib/loadTracking";
 
 // Inicia o tracking de Web Vitals o quanto antes
 startLcpTracking();
@@ -31,3 +32,6 @@ createRoot(document.getElementById("root")!).render(
     <App />
   </HelmetProvider>,
 );
+
+// Inicializa GTM/GA4/Ads de forma diferida (após interação ou idle).
+initDeferredTracking();
