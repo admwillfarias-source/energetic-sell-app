@@ -42,24 +42,14 @@ export default function BestSellers() {
   const [page, setPage] = useState(1);
 
   const { data = [], isLoading } = useQuery({
-    queryKey: ["best-sellers-top-skus"],
+    queryKey: ["best-sellers-top-skus", isMobile ? "m" : "d"],
     queryFn: async () => {
-      // Busca explícita pelos SKUs favoritos + um lote geral como fallback
-      const [byCodes, general] = await Promise.all([
-        fetchBatteries({ codes: TOP_SKUS, perPage: 100 }),
-        fetchBatteries({ perPage: 100 }),
-      ]);
-      const seen = new Set<string>();
-      const merged: Battery[] = [];
-      for (const b of [...byCodes, ...general]) {
-        if (!seen.has(b.id)) {
-          seen.add(b.id);
-          merged.push(b);
-        }
-      }
-      return merged;
+      // Uma única chamada leve. Em mobile reduzimos ainda mais para
+      // acelerar o carregamento e evitar timeouts em redes lentas.
+      return fetchBatteries({ perPage: isMobile ? 30 : 60 });
     },
     staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
   });
 
   useEffect(() => {
@@ -106,10 +96,6 @@ export default function BestSellers() {
 
   useEffect(() => {
     if (missingTopSkus.length === 0) return;
-    console.warn(
-      `[BestSellers] ${missingTopSkus.length} SKU(s) da lista de favoritos não existem no catálogo e foram ignorados:`,
-      missingTopSkus,
-    );
     if (typeof window !== "undefined") {
       (window as any).__missingTopSkus = missingTopSkus;
       try {
