@@ -101,14 +101,29 @@ export default function Resultado() {
     excell: 3,
   };
   const sorted = useMemo<Battery[]>(
-    () =>
-      [...results].sort((a, b) => {
+    () => {
+      const list = [...results].sort((a, b) => {
         const oa = BRAND_ORDER[a.brand?.toLowerCase() ?? ""] ?? 99;
         const ob = BRAND_ORDER[b.brand?.toLowerCase() ?? ""] ?? 99;
         if (oa !== ob) return oa - ob;
         return a.price - b.price;
-      }),
-    [results],
+      });
+      // Mantém no máximo 1 produto por marca (Moura, Zetta, Heliar, Excell)
+      // → garante até 4 baterias por carro conforme a tabela de aplicação.
+      if (vehicle) {
+        const seen = new Set<string>();
+        const dedup: Battery[] = [];
+        for (const b of list) {
+          const k = (b.brand ?? "").toLowerCase();
+          if (seen.has(k)) continue;
+          seen.add(k);
+          dedup.push(b);
+        }
+        return dedup.slice(0, 4);
+      }
+      return list;
+    },
+    [results, vehicle],
   );
 
   // ===== SEO derivado dos resultados =====
