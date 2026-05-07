@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search } from "lucide-react";
 import { Header } from "@/components/Header";
-import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,9 +18,10 @@ import { getStrictVehicleCodes, getStrictVehicleSkuMap } from "@/lib/fitments";
 import { BatteryMouraCard } from "@/components/BatteryMouraCard";
 import { Battery } from "@/data/batteries";
 import { CartProvider } from "@/context/CartContext";
-import { CartDrawer } from "@/components/CartDrawer";
 import { cityPages } from "@/data/cityContent";
-import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+const Footer = lazy(() => import("@/components/Footer").then((m) => ({ default: m.Footer })));
+const CartDrawer = lazy(() => import("@/components/CartDrawer").then((m) => ({ default: m.CartDrawer })));
+const FloatingWhatsApp = lazy(() => import("@/components/FloatingWhatsApp"));
 import { markEvent, measureBetween } from "@/lib/perfMetrics";
 import {
   breadcrumbLd, faqLd, localBusinessLd, organizationLd, SITE_URL,
