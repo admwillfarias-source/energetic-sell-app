@@ -1,4 +1,6 @@
-import { supabase } from "@/integrations/supabase/client";
+// Lazy import: o client supabase (~128KB) não entra no chunk inicial.
+const getSupabase = () =>
+  import("@/integrations/supabase/client").then((m) => m.supabase);
 
 export type Fitment = {
   id?: string;
@@ -41,6 +43,7 @@ export async function ensureCatalogLoaded(): Promise<void> {
   loadingPromise = (async () => {
     const PAGE = 1000;
     const fitsAll: DBFitment[] = [];
+    const supabase = await getSupabase();
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await supabase
         .from("fitments")

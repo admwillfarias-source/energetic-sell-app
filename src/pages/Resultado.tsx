@@ -1,19 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search, MapPin } from "lucide-react";
+import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { fetchBatteriesByVehicle, fetchBatteries } from "@/lib/api/batteries";
+const ResultadoFAQ = lazy(() =>
+  import("./Resultado.parts").then((m) => ({ default: m.ResultadoFAQ })),
+);
+const ResultadoCidades = lazy(() =>
+  import("./Resultado.parts").then((m) => ({ default: m.ResultadoCidades })),
+);
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { getStrictVehicleCodes, getStrictVehicleSkuMap } from "@/lib/fitments";
 import { BatteryMouraCard } from "@/components/BatteryMouraCard";
@@ -46,6 +46,11 @@ export default function Resultado() {
   // aumentam a quantidade de baterias exibidas.
   useEffect(() => {
     markEvent("resultado_page_mounted");
+    try {
+      measureBetween("boot_to_resultado", "app_boot", "resultado_page_mounted");
+    } catch {
+      // ignore
+    }
     if (!vehicle) {
       ensureCatalogLoaded().catch(() => {});
       setCatalogReady(true);
@@ -190,52 +195,63 @@ export default function Resultado() {
       ]
     : [];
 
-  // ===== JSON-LD =====
-  const jsonLd = useMemo(() => {
-    if (!vehicle) return [organizationLd()];
-
-    const breadcrumb = breadcrumbLd([
-      { name: "Início", url: SITE_URL },
-      { name: "Baterias", url: `${SITE_URL}/#catalogo` },
-      { name: `Bateria para ${vehicle}`, url: canonical },
-    ]);
-
-    const itemList = {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      name: `Baterias compatíveis com ${vehicle}`,
-      numberOfItems: sorted.length,
-      itemListElement: sorted.map((b, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        item: {
-          "@type": "Product",
-          name: b.name,
-          brand: { "@type": "Brand", name: b.brand },
-          ...(b.sku ? { sku: b.sku } : {}),
-          ...(b.image ? { image: b.image } : {}),
-          url: b.permalink || canonical,
-          offers: {
-            "@type": "Offer",
-            priceCurrency: "BRL",
-            price: b.price,
-            availability: "https://schema.org/InStock",
+  // ===== JSON-LD (deferido para fora do paint inicial) =====
+  const [jsonLd, setJsonLd] = useState<Record<string, unknown>[]>([]);
+  useEffect(() => {
+    const build = () => {
+      if (!vehicle) {
+        setJsonLd([organizationLd()]);
+        return;
+      }
+      const breadcrumb = breadcrumbLd([
+        { name: "Início", url: SITE_URL },
+        { name: "Baterias", url: `${SITE_URL}/#catalogo` },
+        { name: `Bateria para ${vehicle}`, url: canonical },
+      ]);
+      const itemList = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name: `Baterias compatíveis com ${vehicle}`,
+        numberOfItems: sorted.length,
+        itemListElement: sorted.map((b, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          item: {
+            "@type": "Product",
+            name: b.name,
+            brand: { "@type": "Brand", name: b.brand },
+            ...(b.sku ? { sku: b.sku } : {}),
+            ...(b.image ? { image: b.image } : {}),
             url: b.permalink || canonical,
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "BRL",
+              price: b.price,
+              availability: "https://schema.org/InStock",
+              url: b.permalink || canonical,
+            },
           },
-        },
-      })),
+        })),
+      };
+      const faqPage = faqLd(faq);
+      const localBusiness = localBusinessLd({
+        url: canonical,
+        city: "Porto Alegre",
+        state: "RS",
+        areas: cityPages.map((c) => ({ name: c.name, deliveryTime: c.deliveryTime })),
+      });
+      setJsonLd(
+        [breadcrumb, itemList, faqPage, localBusiness, organizationLd()].filter(
+          Boolean,
+        ) as Record<string, unknown>[],
+      );
     };
-
-    const faqPage = faqLd(faq);
-
-    const localBusiness = localBusinessLd({
-      url: canonical,
-      city: "Porto Alegre",
-      state: "RS",
-      areas: cityPages.map((c) => ({ name: c.name, deliveryTime: c.deliveryTime })),
-    });
-
-    return [breadcrumb, itemList, faqPage, localBusiness, organizationLd()].filter(Boolean) as Record<string, unknown>[];
+    const w = window as unknown as {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+    };
+    const idle = w.requestIdleCallback;
+    if (idle) idle(build, { timeout: 2000 });
+    else setTimeout(build, 200);
   }, [vehicle, sorted, canonical, faq]);
 
   // Cidades destacadas para linkagem interna
@@ -413,45 +429,10 @@ export default function Resultado() {
                 </p>
               </section>
 
-              <section className="mt-6 rounded-2xl border border-border bg-card p-5 md:p-7">
-                <h2 className="font-display text-lg font-bold md:text-xl">
-                  Perguntas frequentes sobre bateria para {vehicle}
-                </h2>
-                <Accordion type="single" collapsible className="mt-3">
-                  {faq.map((f, i) => (
-                    <AccordionItem key={i} value={`faq-${i}`}>
-                      <AccordionTrigger className="text-left text-sm font-semibold md:text-base">
-                        {f.q}
-                      </AccordionTrigger>
-                      <AccordionContent className="text-sm text-muted-foreground md:text-base">
-                        {f.a}
-                      </AccordionContent>
-                    </AccordionItem>
-                  ))}
-                </Accordion>
-              </section>
-
-              <section className="mt-6 rounded-2xl border border-border bg-card p-5 md:p-7">
-                <h2 className="font-display text-lg font-bold md:text-xl">
-                  Atendimento de bateria para {vehicle} em Porto Alegre e região
-                </h2>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Entregamos a bateria do {vehicle} nas principais cidades da região metropolitana:
-                </p>
-                <ul className="mt-4 grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4">
-                  {featuredCities.map((c) => (
-                    <li key={c.slug}>
-                      <Link
-                        to={`/baterias/${c.slug}`}
-                        className="group inline-flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs font-semibold transition-colors hover:border-primary hover:text-primary md:text-sm"
-                      >
-                        <MapPin className="h-3.5 w-3.5 text-primary" />
-                        Bateria em {c.name}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <Suspense fallback={null}>
+                <ResultadoFAQ vehicle={vehicle} faq={faq} />
+                <ResultadoCidades vehicle={vehicle} cities={featuredCities} />
+              </Suspense>
             </>
           )}
         </div>
