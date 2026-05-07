@@ -11,7 +11,16 @@
     <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
     <link rel="preconnect" href="https://mkkehvaclefoxkdlcmqm.supabase.co" crossorigin />
 
-    <!-- LCP: preload responsivo do hero (path estável em /public, sem hash) -->
+    <!-- LCP: preload responsivo do hero — AVIF primeiro (menor), WebP fallback -->
+    <link
+      rel="preload"
+      as="image"
+      href="/hero-bg-sm.avif"
+      imagesrcset="/hero-bg-sm.avif 768w, /hero-bg.avif 1600w"
+      imagesizes="100vw"
+      fetchpriority="high"
+      type="image/avif"
+    />
     <link
       rel="preload"
       as="image"
