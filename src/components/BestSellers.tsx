@@ -96,10 +96,6 @@ export default function BestSellers() {
 
   useEffect(() => {
     if (missingTopSkus.length === 0) return;
-    console.warn(
-      `[BestSellers] ${missingTopSkus.length} SKU(s) da lista de favoritos não existem no catálogo e foram ignorados:`,
-      missingTopSkus,
-    );
     if (typeof window !== "undefined") {
       (window as any).__missingTopSkus = missingTopSkus;
       try {
