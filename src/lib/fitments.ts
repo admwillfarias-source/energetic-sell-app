@@ -83,26 +83,45 @@ export function getStrictVehicleCodes(label: string): string[] {
 
   const year = Number(yearMatch[0]);
   const withoutYear = normalize(normalized.replace(yearMatch[0], ""));
-  const codeSet = new Set<string>();
+
+  type Match = { f: Fitment; exact: boolean; modelLen: number };
+  const matches: Match[] = [];
 
   for (const f of getFitments()) {
     if (year < f.yearStart || year > f.yearEnd) continue;
-
     const brand = normalize(f.brand);
     const model = normalize(f.model);
     if (!brand || !model || !withoutYear.startsWith(brand)) continue;
-
     const requestedModel = normalize(withoutYear.slice(brand.length));
     if (!requestedModel) continue;
-
     const sameModel = model === requestedModel;
     const requestedBaseModel = model.startsWith(`${requestedModel} `);
     if (!sameModel && !requestedBaseModel) continue;
-
-    for (const sku of collectSkus(f)) codeSet.add(sku);
+    matches.push({ f, exact: sameModel, modelLen: model.length });
   }
 
-  return Array.from(codeSet);
+  if (matches.length === 0) return [];
+
+  // Prefere match exato; senão, pega o modelo mais "base" (mais curto).
+  matches.sort((a, b) => {
+    if (a.exact !== b.exact) return a.exact ? -1 : 1;
+    return a.modelLen - b.modelLen;
+  });
+
+  // Retorna apenas os SKUs (até 4 marcas + code) de UM único fitment, para
+  // limitar a 4 baterias por carro conforme tabela de aplicação.
+  const best = matches[0].f;
+  const ordered = [best.skuMoura, best.skuZetta, best.skuHeliar, best.skuExcell, best.code];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const s of ordered) {
+    if (!s) continue;
+    const v = s.trim().toUpperCase();
+    if (!v || seen.has(v)) continue;
+    seen.add(v);
+    out.push(v);
+  }
+  return out;
 }
 
 /** Distância de Levenshtein limitada (early exit). */
