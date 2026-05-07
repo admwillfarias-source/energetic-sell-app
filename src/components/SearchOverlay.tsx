@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import VehicleAutocomplete from "@/components/VehicleAutocomplete";
 import { TOP_VEHICLES, type TopVehicle } from "@/data/topVehicles";
-import { getStrictVehicleCodes } from "@/lib/fitments";
+import { getStrictVehicleCodes, getVehicleVariants, type VehicleVariant } from "@/lib/fitments";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { fetchBatteriesByVehicle } from "@/lib/api/batteries";
 import { toast } from "@/hooks/use-toast";
