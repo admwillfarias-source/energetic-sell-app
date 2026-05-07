@@ -8,10 +8,7 @@
     <meta name="format-detection" content="telephone=yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
 
-    <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
-    <link rel="preconnect" href="https://mkkehvaclefoxkdlcmqm.supabase.co" crossorigin />
-
-    <!-- LCP: preload responsivo do hero — AVIF primeiro (menor), WebP fallback -->
+    <!-- LCP: preload responsivo do hero — AVIF primeiro (menor), WebP fallback. ANTES de qualquer outro recurso. -->
     <link
       rel="preload"
       as="image"
@@ -30,6 +27,9 @@
       fetchpriority="high"
       type="image/webp"
     />
+
+    <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
+    <link rel="preconnect" href="https://mkkehvaclefoxkdlcmqm.supabase.co" crossorigin />
 
     <!-- CSS crítico inline: pinta hero acima da dobra sem esperar o bundle CSS -->
     <style>
