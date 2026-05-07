@@ -1,19 +1,19 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search, MapPin } from "lucide-react";
+import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
 import { fetchBatteriesByVehicle, fetchBatteries } from "@/lib/api/batteries";
+const ResultadoFAQ = lazy(() =>
+  import("./Resultado.parts").then((m) => ({ default: m.ResultadoFAQ })),
+);
+const ResultadoCidades = lazy(() =>
+  import("./Resultado.parts").then((m) => ({ default: m.ResultadoCidades })),
+);
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { getStrictVehicleCodes, getStrictVehicleSkuMap } from "@/lib/fitments";
 import { BatteryMouraCard } from "@/components/BatteryMouraCard";
