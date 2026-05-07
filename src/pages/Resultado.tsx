@@ -46,6 +46,11 @@ export default function Resultado() {
   // aumentam a quantidade de baterias exibidas.
   useEffect(() => {
     markEvent("resultado_page_mounted");
+    try {
+      measureBetween("boot_to_resultado", "app_boot", "resultado_page_mounted");
+    } catch {
+      // ignore
+    }
     if (!vehicle) {
       ensureCatalogLoaded().catch(() => {});
       setCatalogReady(true);
