@@ -328,8 +328,8 @@ export default function Resultado() {
           {/* Lista — carregamento progressivo: cards aparecem assim que cada
               SKU chega; skeletons preenchem os pendentes. */}
           {(() => {
-            const stillPending = vehicle
-              ? perSkuQueries.filter((q) => q.isLoading).length
+            const stillPending = vehicle && isLoading
+              ? Math.max(0, effectiveCodes.length - results.length)
               : 0;
             if (isResultLoading && sorted.length === 0) {
               return (
