@@ -222,6 +222,7 @@ export async function fetchBatteries({
   if (codes && codes.length) params.set("codes", codes.join(","));
   else if (search) params.set("search", search);
 
+  const supabase = await getSupabase();
   const { data, error } = await supabase.functions.invoke<WCProduct[]>(
     `wc-products?${params.toString()}`,
     { method: "GET" },
