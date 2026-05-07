@@ -9,6 +9,7 @@ import SplashScreen from "@/components/SplashScreen";
 // Todas as outras páginas: lazy. Não viajam no bundle inicial da home.
 const Auth = lazy(() => import("./pages/Auth.tsx"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
+const SkuValidation = lazy(() => import("./pages/SkuValidation.tsx"));
 const WhatsappLogs = lazy(() => import("./pages/WhatsappLogs.tsx"));
 const WhatsappTest = lazy(() => import("./pages/WhatsappTest.tsx"));
 const WhatsappDiagnose = lazy(() => import("./pages/WhatsappDiagnose.tsx"));
