@@ -7,7 +7,7 @@ import MobileActionBar from "@/components/MobileActionBar";
 import LazySection from "@/components/LazySection";
 import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
-import BestSellers from "@/components/BestSellers";
+const BestSellers = lazy(() => import("@/components/BestSellers"));
 
 const Benefits = lazy(() => import("@/components/Benefits").then((m) => ({ default: m.Benefits })));
 const HowItWorks = lazy(() =>
