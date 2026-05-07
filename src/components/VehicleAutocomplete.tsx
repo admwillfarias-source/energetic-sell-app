@@ -337,3 +337,63 @@ export default function VehicleAutocomplete({
     </section>
   );
 }
+
+function YearPickerDialog({
+  suggestion,
+  onClose,
+  onPick,
+}: {
+  suggestion: VehicleSuggestion | null;
+  onClose: () => void;
+  onPick: (label: string, codes: string[]) => void;
+}) {
+  const open = !!suggestion;
+
+  const years = useMemo(() => {
+    if (!suggestion) return [] as number[];
+    const m = suggestion.label.match(/\((\d{4})-(\d{4})\)/);
+    if (!m) return [];
+    const start = Number(m[1]);
+    const end = Number(m[2]);
+    if (!start || !end || start > end) return [];
+    const arr: number[] = [];
+    for (let y = end; y >= start; y--) arr.push(y);
+    return arr;
+  }, [suggestion]);
+
+  if (!suggestion) return null;
+
+  const handlePick = (year: number) => {
+    const cleanLabel = suggestion.label.replace(/\s*\(\d{4}-\d{4}\)\s*$/, "").trim();
+    const finalLabel = `${cleanLabel} ${year}`;
+    onPick(finalLabel, suggestion.codes);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            Escolha o ano do veículo
+          </DialogTitle>
+          <DialogDescription>
+            <span className="font-semibold text-foreground">{suggestion.brand} {suggestion.model}</span>
+            {" "}— selecione o ano para mostrarmos as baterias indicadas para esse modelo.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 max-h-72 overflow-y-auto pr-1">
+          {years.map((y) => (
+            <button
+              key={y}
+              onClick={() => handlePick(y)}
+              className="rounded-md border border-border bg-card px-3 py-2 text-sm font-semibold hover:border-primary hover:bg-primary/5 hover:text-primary transition-colors"
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
