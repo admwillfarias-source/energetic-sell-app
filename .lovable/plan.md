@@ -1,41 +1,40 @@
-## Estado atual vs. Passo 1
+## Diagnóstico
 
-Boa notícia: **a maior parte do Passo 1 já está implementada** (foi feita em passos anteriores). Verifiquei:
+Os CSS bloqueantes que o PageSpeed lista — `400-*.css`, `600-*.css`, `700-*.css`, `800-*.css` (e `index-*.css`) — vêm de:
 
-- ✅ `index.html` **não tem** scripts síncronos de GTM/GA4/Ads no `<head>`. Só tem o stub de `dataLayer` + `gtag` + `gtag_report_conversion`.
-- ✅ `src/lib/loadTracking.ts` já existe com `initDeferredTracking()` carregando GTM + GA4 + Ads via interação OU `requestIdleCallback` (timeout 4s / 3.5s fallback).
-- ✅ `src/main.tsx` já chama `initDeferredTracking()` após o `createRoot().render(...)`.
-- ✅ `<noscript>` do GTM já está no `<body>` do `index.html`.
-- ❌ **Não existem** no projeto: `call-tracking_9.js`, `wcm/loader.js`, `~flock.js`. Esses scripts vinham do tema WordPress antigo e não fazem parte deste app React. **Não há nada para remover/diferir**.
+- **`index-*.css`**: bundle Tailwind. Já é tratado pelo plugin `deferMainCss()` em `vite.config.ts` (vira `rel="preload" as="style" onload=...`). OK.
+- **`400/600/700/800-*.css`**: vêm dos `import("@fontsource/...")` em `src/main.tsx`. Mesmo sendo `import()` dinâmico dentro de `requestIdleCallback`, o runtime do Vite injeta cada CSS no `<head>` como `<link rel="stylesheet">` *e espera o load* antes de resolver a Promise. Em redes mobile lentas, esses 4 links entram no `<head>` durante a janela de carregamento e bloqueiam o paint — exatamente o que o Lighthouse mostra (500 ms × 4).
 
-Ou seja: o objetivo do Passo 1 (TBT alto causado por GTM/GA4/Ads síncronos) **já foi atingido na arquitetura atual**. Não faz sentido reescrever `loadTracking.ts` no formato do prompt — isso seria regressão (perderia o helper `gtag_report_conversion` que já redireciona corretamente, perderia o `pushEvent` integrado, e re-introduziria `console.log`s em produção).
+O plugin `deferMainCss()` não reescreve esses links porque ele roda em `transformIndexHtml` (build-time), e os links de fontsource são inseridos em runtime pelo loader do Vite.
 
-## O que proponho fazer neste passo
+## Plano
 
-Como o "carregar deferred" já está pronto, vou focar nas **2 melhorias reais** que ainda dão ganho de TBT no estado atual:
+Trocar a estratégia de carregamento das fontes em `src/main.tsx`: parar de usar `import("@fontsource/.../400.css")` (que injeta `<link rel="stylesheet">` bloqueante) e passar a injetar manualmente cada CSS de fonte como `<link rel="preload" as="style">` que só vira `stylesheet` no `onload`.
 
-### 1. Acelerar gatilho idle (3.5s → 2s)
-Hoje o tracking carrega no máx em 3.5s. Para Lighthouse mobile (que não simula interação), antecipar para 2s reduz a janela em que GTM concorre com hidratação React tardia, melhorando consistência do TBT medido. Mantém a lógica de "primeira interação dispara antes" intacta.
+### Alterações
 
-### 2. Garantir que GTM/GA não rodem durante a janela do LCP
-Atualmente `requestIdleCallback` pode disparar **antes** do LCP em conexões rápidas. Vou adicionar uma trava: o tracking só carrega quando **(LCP já ocorreu) OU (interação) OU (timeout 2s)**, o que vier primeiro. Implementação: escutar o `PerformanceObserver` de `largest-contentful-paint` e marcar uma flag; o `idle` callback espera essa flag antes de injetar scripts. Isso é o que mais reduz TBT no Lighthouse.
+**`src/main.tsx`** — substituir `loadFontsDeferred()`:
 
-### 3. Limpar `console.log` de tracking em produção
-Não há logs hoje (já está limpo) — só vou confirmar.
+1. Remover os 4 `import("@fontsource/...")` dinâmicos.
+2. Criar um helper `injectFontCssNonBlocking(href)` que:
+   - Cria `<link rel="preload" as="style" href={href}>`.
+   - No `onload`, troca para `rel="stylesheet"`.
+   - Anexa em `document.head`.
+3. Usar `import.meta.glob` com `query: '?url', import: 'default', eager: true` para obter as URLs hashadas dos 4 arquivos `@fontsource/inter/{400,600}.css` e `@fontsource/plus-jakarta-sans/{700,800}.css` no build, sem injetar CSS.
+4. Disparar `injectFontCssNonBlocking()` para os 4 dentro de `requestIdleCallback` (timeout 2 s) — igual ao padrão atual, mas agora sem bloqueio.
 
-### Arquivos afetados
-- `src/lib/loadTracking.ts` — ajustar timeout para 2s e adicionar gate de LCP via `PerformanceObserver`.
-- Nenhum outro arquivo precisa mudar.
+Isso garante:
+- O Vite ainda gera os arquivos CSS hashados (`400-*.css`, etc.) e o bundle os referencia, então o cache busting continua funcionando.
+- Os CSS entram no `<head>` como `preload`, nunca como `stylesheet` síncrono — o navegador não os trata como render-blocking.
+- Fallback `<noscript>` não é necessário porque as fontes são puramente decorativas (já há fallback metrics-adjusted em `src/index.css`).
 
-### O que **não** vou fazer (e por quê)
-- ❌ Não vou remover scripts de `index.html` — já foram removidos.
-- ❌ Não vou criar `loadCallTracking/loadWebCM/loadFlock` — esses scripts não existem no projeto React (só existiam no tema WP).
-- ❌ Não vou reescrever `loadTracking.ts` do zero no formato do prompt — perderia funcionalidade já correta (redirect do `gtag_report_conversion`, integração com `pushEvent`).
-- ❌ Não vou adicionar `console.log` em produção.
+### Não muda
 
-## Validação após implementação
-1. Rodar Lighthouse mobile no preview e confirmar TBT.
-2. Conferir no DevTools Network que `gtm.js`/`gtag/js` carregam só após LCP ou interação.
-3. Confirmar que clicar em CTA de conversão (WhatsApp/checkout) ainda dispara `gtag_report_conversion` corretamente — se o usuário clicar antes do tracking carregar, o stub atual já redireciona via `window.location.href`.
+- `index.html` (CSS crítico inline + preload do hero seguem iguais).
+- `vite.config.ts` / `deferMainCss()` (continua tratando o `index-*.css` principal).
+- `src/index.css` (fallbacks de fonte permanecem).
+- Tracking, LCP gate e qualquer outro passo anterior.
 
-Posso prosseguir?
+### Resultado esperado
+
+Os 4 CSS de fontsource somem da lista de "render-blocking resources" no Lighthouse. FCP cai porque o `<head>` deixa de receber 4 `<link rel="stylesheet">` extras durante a janela inicial. CLS continua controlado pelos fallbacks `Inter Fallback` / `Plus Jakarta Sans Fallback` já existentes.

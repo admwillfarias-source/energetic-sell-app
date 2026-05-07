@@ -5,18 +5,35 @@ import "./index.css";
 import { startLcpTracking, markEvent } from "@/lib/perfMetrics";
 import { initDeferredTracking } from "@/lib/loadTracking";
 
-// Fontes carregadas de forma diferida — não bloqueiam o CSS crítico.
-// O fallback system-ui (definido em index.css) é mostrado via font-display: swap.
+// Fontes carregadas de forma diferida e NÃO bloqueante.
+// Pegamos as URLs hashadas dos CSS do @fontsource via ?url (não injeta <link>),
+// e nós mesmos inserimos como <link rel="preload" as="style" onload="rel=stylesheet">
+// para que nunca apareçam como render-blocking no Lighthouse.
+// Fallback metrics-adjusted (Inter Fallback / Plus Jakarta Sans Fallback) em index.css cobre o swap.
+import inter400Url from "@fontsource/inter/400.css?url";
+import inter600Url from "@fontsource/inter/600.css?url";
+import jakarta700Url from "@fontsource/plus-jakarta-sans/700.css?url";
+import jakarta800Url from "@fontsource/plus-jakarta-sans/800.css?url";
+
+function injectFontCssNonBlocking(href: string) {
+  if (document.querySelector(`link[data-font-css="${href}"]`)) return;
+  const link = document.createElement("link");
+  link.rel = "preload";
+  link.as = "style";
+  link.href = href;
+  link.setAttribute("data-font-css", href);
+  link.onload = () => {
+    link.onload = null;
+    link.rel = "stylesheet";
+  };
+  document.head.appendChild(link);
+}
+
 function loadFontsDeferred() {
   const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
   const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 200));
   schedule(() => {
-    Promise.all([
-      import("@fontsource/inter/400.css"),
-      import("@fontsource/inter/600.css"),
-      import("@fontsource/plus-jakarta-sans/700.css"),
-      import("@fontsource/plus-jakarta-sans/800.css"),
-    ]).catch(() => {});
+    [inter400Url, inter600Url, jakarta700Url, jakarta800Url].forEach(injectFontCssNonBlocking);
   }, { timeout: 2000 });
 }
 loadFontsDeferred();
