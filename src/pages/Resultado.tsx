@@ -127,7 +127,7 @@ export default function Resultado() {
           seen.add(k);
           dedup.push(b);
         }
-        return dedup.slice(0, 4);
+        return dedup.slice(0, 6);
       }
       return list;
     },
