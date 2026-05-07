@@ -2,9 +2,9 @@ import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { brands, amperageOptions, Battery } from "@/data/batteries";
-import { fetchBatteries, fetchBatteriesByVehicle, type VehicleBrand } from "@/lib/api/batteries";
+import { fetchBatteries, fetchBatteriesByVehicle } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
-import { getStrictVehicleCodes } from "@/lib/fitments";
+import { getStrictVehicleCodes, getStrictVehicleSkuMap } from "@/lib/fitments";
 import { BatteryMouraCard } from "./BatteryMouraCard";
 import { BatteryDetailDialog } from "./BatteryDetailDialog";
 import { Button } from "@/components/ui/button";
@@ -43,12 +43,11 @@ export function BatteryGrid() {
     queryKey: ["batteries", { search, codes: isVehicleSearch ? strictVehicleCodes : codes, vehicle: isVehicleSearch, catalogReady }],
     queryFn: () => {
       if (isVehicleSearch) {
-        // ESTRITO: usar SOMENTE os códigos cadastrados no fitment da planilha.
-        // NÃO expandir via tabela de equivalências (estava trazendo SKUs errados
-        // em alguns veículos, ex.: Creta retornando equivalentes incorretos).
-        // Cada código do fitment é buscado no WooCommerce exatamente como está.
-        const groups: Partial<Record<VehicleBrand, string[]>> = {};
-        return fetchBatteriesByVehicle(strictVehicleCodes, groups);
+        // ESTRITO: usa o mapa marca → SKU homologado da tabela. O resultado
+        // contém UMA bateria por marca (Moura/Zetta/Heliar/Excell) cujo SKU
+        // bate exatamente com o cadastrado em fitments.
+        const skuMap = getStrictVehicleSkuMap(vehicle);
+        return fetchBatteriesByVehicle(strictVehicleCodes, skuMap);
       }
       return fetchBatteries({
         search: search || undefined,

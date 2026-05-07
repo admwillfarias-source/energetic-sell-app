@@ -8,9 +8,9 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { fetchBatteriesByVehicle, type VehicleBrand } from "@/lib/api/batteries";
+import { fetchBatteriesByVehicle } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
-import { searchVehicles } from "@/lib/fitments";
+import { searchVehicles, getStrictVehicleSkuMap } from "@/lib/fitments";
 import { BatteryCompactCard } from "@/components/BatteryCompactCard";
 import { Battery } from "@/data/batteries";
 import { CartProvider } from "@/context/CartContext";
@@ -50,8 +50,10 @@ export default function VehicleSeo() {
   const { data: results = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["vehicle-seo", { slug, year, codes }],
     queryFn: () => {
-      const groups: Partial<Record<VehicleBrand, string[]>> = {};
-      return fetchBatteriesByVehicle(codes, groups);
+      // Mapeia marca → SKU homologado da tabela; assim cada marca exibe
+      // exatamente o modelo de bateria cadastrado para o veículo.
+      const skuMap = getStrictVehicleSkuMap(vehicleLabel);
+      return fetchBatteriesByVehicle(codes, skuMap);
     },
     enabled: catalogReady && codes.length > 0,
     staleTime: 5 * 60 * 1000,

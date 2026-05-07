@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/accordion";
 import { fetchBatteriesByVehicle, fetchBatteries } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
-import { getStrictVehicleCodes } from "@/lib/fitments";
+import { getStrictVehicleCodes, getStrictVehicleSkuMap } from "@/lib/fitments";
 import { BatteryMouraCard } from "@/components/BatteryMouraCard";
 import { Battery } from "@/data/batteries";
 import { CartProvider } from "@/context/CartContext";
@@ -68,7 +68,7 @@ export default function Resultado() {
     queryKey: ["resultado-batch", { codes: effectiveCodes, vehicle: !!vehicle }],
     queryFn: () =>
       vehicle
-        ? fetchBatteriesByVehicle(effectiveCodes)
+        ? fetchBatteriesByVehicle(effectiveCodes, getStrictVehicleSkuMap(vehicle))
         : fetchBatteries({
             codes: effectiveCodes.length ? effectiveCodes : undefined,
             perPage: 30,
