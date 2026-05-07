@@ -11,42 +11,16 @@
     <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
     <link rel="preconnect" href="https://mkkehvaclefoxkdlcmqm.supabase.co" crossorigin />
 
-    <!-- Google Tag Manager -->
-    <script>
-      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
-      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
-      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
-      'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
-      })(window,document,'script','dataLayer','GTM-5JTRM2L');
-    </script>
-    <!-- End Google Tag Manager -->
-
-    <!-- Google tag (gtag.js) - GA4 + Google Ads -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FJ1MK5SLS5"></script>
+    <!-- dataLayer + gtag stub (carregamento real em src/lib/loadTracking.ts, diferido) -->
     <script>
       window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'G-FJ1MK5SLS5');
-      gtag('config', 'AW-994517528');
-
-      // Helper para conversão "Compra" do Google Ads.
-      // Uso: onclick="return gtag_report_conversion('https://exemplo.com')"
-      window.gtag_report_conversion = function(url) {
-        var callback = function () {
-          if (typeof(url) != 'undefined') { window.location = url; }
-        };
-        gtag('event', 'conversion', {
-          'send_to': 'AW-994517528/axHrCPb1w6gcEJjEnNoD',
-          'value': 1.0,
-          'currency': 'BRL',
-          'transaction_id': '',
-          'event_callback': callback
-        });
+      window.gtag = window.gtag || function(){ window.dataLayer.push(arguments); };
+      // Stub: enfileira a conversão até o gtag real carregar (em loadTracking.ts).
+      window.gtag_report_conversion = window.gtag_report_conversion || function(url){
+        if (typeof url !== 'undefined') { window.location.href = url; }
         return false;
       };
     </script>
-    <!-- End Google tag -->
 
 
     <title>AWR Baterias Porto Alegre | Entrega e instalação em 35 min</title>

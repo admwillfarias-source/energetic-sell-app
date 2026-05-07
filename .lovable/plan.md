@@ -1,112 +1,53 @@
-# Conversões Google Ads + GA4 via dataLayer/GTM
+## Objetivo
+Subir o Performance Score mobile de 31 para >70, reduzir LCP (5.9s → <2.5s) e FCP (4.1s → <1.8s) atacando os gargalos do PageSpeed: scripts de terceiros, JS não usado, CSS render-blocking e entrega do LCP.
 
-Implementação em duas frentes: (1) ajustes no código para o payload ficar 100% compatível com Google Ads/GA4 e instalação direta do gtag de conversão, (2) passo a passo de configuração no painel do GTM para você publicar.
+## Passo 1 — Scripts de terceiros (GTM, GA4, Google Ads)
 
-## 1. Ajustes no código
+Hoje em `index.html` os scripts de GTM e gtag carregam **síncronos no `<head>`**, contribuindo direto pros 8s de main-thread.
 
-### 1.1 Instalar gtag.js de Google Ads (`AW-994517528`) — `index.html` e `wp-theme/awr-baterias/index.php`
-Logo após o snippet do GTM, no `<head>`:
+Mudanças em `index.html`:
+- Remover o IIFE inline do GTM e o bloco `gtag` do `<head>`.
+- Manter apenas a inicialização mínima: `window.dataLayer = []` e o stub `gtag()`.
+- Criar `src/lib/loadTracking.ts` que injeta GTM + gtag (`AW-994517528`, `G-FJ1MK5SLS5`) e dispara `gtag_report_conversion` apenas após:
+  - primeira interação (`scroll`, `touchstart`, `mousemove`, `keydown`), ou
+  - `requestIdleCallback` com timeout de 4s, ou
+  - evento `load` + 2s.
+- Importar `loadTracking` no fim de `src/main.tsx` após o render.
+- Manter o `<noscript>` do GTM no `<body>` (já está correto).
 
-```html
-<!-- Google tag (gtag.js) - Google Ads -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-994517528"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'AW-994517528');
-</script>
-```
+Ganho esperado: -2 a -3s de TBT/main-thread no mobile.
 
-E expor `gtag_report_conversion` global (mesma assinatura que o Google forneceu, `send_to: 'AW-994517528/axHrCPb1w6gcEJjEnNoD'`) para uso em botões/links de "Compra".
+## Passo 2 — CSS render-blocking + fontes
 
-### 1.2 Ajustar payload do `purchase` — `src/pages/PedidoConfirmado.tsx`
-Hoje os `items` enviam `item_name`, `quantity`, `price`. Google Ads/GA4 esperam também `item_id`. Atualizar para:
+- **Fontes**: hoje `main.tsx` importa 4 CSS de `@fontsource` que entram no bundle CSS crítico. Trocar por `@fontsource/.../400.css` carregado via dynamic `import()` em `requestIdleCallback`, e adicionar fallback `font-family` em `index.css` com `font-display: swap` (o `@fontsource` já usa swap, mas mover pra fora do critical reduz bytes do CSS bloqueante).
+- Alternativa mais segura: manter os imports síncronos mas reduzir para apenas `inter/400` + `plus-jakarta-sans/700` (remover 600 e 800; usar `font-synthesis` quando faltar).
+- Adicionar `<link rel="preload" as="style" ... onload="this.rel='stylesheet'">` para o CSS principal no `index.html` (Vite já gera com hash; usar pequeno script inline que troca o `<link rel="stylesheet">` por preload+swap).
+- Inlinar no `<head>` do `index.html` o CSS crítico mínimo (reset + tokens HSL + classes do hero acima da dobra). Manter <2KB.
 
-```ts
-pushEvent("purchase", {
-  transaction_id: String(order.number),
-  value: Number(order.total) || 0,
-  currency: order.currency || "BRL",
-  items: order.line_items.map((li) => ({
-    item_id: String(li.product_id ?? li.sku ?? li.name),
-    item_name: li.name,
-    quantity: li.quantity,
-    price: li.quantity ? (Number(li.total) || 0) / li.quantity : Number(li.total) || 0,
-  })),
-});
-```
+## Passo 3 — LCP (hero + imagens de marca)
 
-E disparar **também** o `gtag` direto (redundância para garantir registro mesmo se a tag do GTM falhar):
+`HeroSection.tsx` já tem `fetchpriority="high"`, `loading="eager"` e preload em `main.tsx`. O delay de 8.5s vem porque o preload acontece **depois** do parse do JS bundle. Ajustes:
+- Mover o `<link rel="preload" as="image" imagesrcset="..." imagesizes="100vw" fetchpriority="high">` direto pro `<head>` do `index.html` apontando pros assets em `/assets/...` (resolver via script que lê `import.meta.glob` no build) **OU** mais simples: copiar `hero-bg-sm.webp` e `hero-bg.webp` para `public/` e referenciar por path estável `/hero-bg-sm.webp` no preload do HTML e no `<picture>`.
+- Remover do `main.tsx` o `preloadHero()` (substituído pelo preload no HTML).
+- Adicionar `width`/`height` explícitos nas imagens `heliar-efb.png`, `heliar-1.png`, `exf70.png` em `BatteryCard`/`BatteryGrid` e converter para `.webp` (script de build ou substituir assets manualmente).
 
-```ts
-window.gtag?.('event', 'conversion', {
-  send_to: 'AW-994517528/axHrCPb1w6gcEJjEnNoD',
-  value: Number(order.total) || 0,
-  currency: 'BRL',
-  transaction_id: String(order.number),
-});
-```
+## Passo 4 — Cache, CLS, reflow
 
-Tipar `WCOrder.line_items` com `product_id?: number` e `sku?: string` (campos que a API do Woo já retorna).
+- `public/_headers` já cobre `/assets/*` com 1 ano immutable. Adicionar regras para `.avif` e revisar TTL de `.webp` de 30 dias para 1 ano com `immutable` em `/assets/*` (já ok). Adicionar `Cache-Control` no `<meta http-equiv>` não — manter só headers.
+- Auditar uso de `offsetWidth`/`getBoundingClientRect` em loops nos componentes do hero (`VehicleAutocomplete`, `SearchOverlay`) pra eliminar forced reflows; mover medições para `useLayoutEffect` único.
+- Garantir `aspect-ratio` ou `width/height` em `BatteryImage`, `ManufacturerLogos` e cards de `BestSellers` para CLS=0.
+- Reduzir DOM: `BestSellers` já está lazy + `perPage` reduzido no mobile; aplicar mesmo padrão em `Testimonials` e `FaqHome` (lazy via `LazySection`).
 
-### 1.3 Ajustar payload do `begin_checkout` — `src/components/CheckoutDialog.tsx`
-Mesma normalização: incluir `item_id` (usar `battery.id`/`battery.sku`) nos items.
+## Validação
+Após cada passo, rodar `scripts/lighthouse.mjs` (mobile) e reportar deltas de LCP, FCP, TBT, Performance Score. Critério de aceite: Score mobile ≥ 70, LCP < 2.5s, TBT < 300ms.
 
-## 2. Configuração no painel do GTM (`tagmanager.google.com`, container `GTM-5JTRM2L`)
+## Arquivos impactados
+- `index.html` (remover scripts síncronos, adicionar preload de imagem e CSS)
+- `src/main.tsx` (remover preloadHero, importar loadTracking)
+- `src/lib/loadTracking.ts` (novo)
+- `src/components/HeroSection.tsx` (referenciar `/hero-bg-sm.webp` se mover para public)
+- `src/components/BatteryImage.tsx`, `BatteryGrid.tsx`, `ManufacturerLogos.tsx` (dimensões)
+- `src/pages/Index.tsx` (lazy em Testimonials/FaqHome)
+- `public/_headers` (ajustes finos)
 
-### 2.1 Variáveis (Variables → User-Defined → New → Data Layer Variable)
-Criar uma variável para cada campo que vamos reaproveitar:
-
-| Nome da variável | Data Layer Variable Name |
-|---|---|
-| `dlv.transaction_id` | `transaction_id` |
-| `dlv.value` | `value` |
-| `dlv.currency` | `currency` |
-| `dlv.items` | `items` |
-
-### 2.2 Triggers (Triggers → New → Custom Event)
-- `CE - purchase` → Event name: `purchase`
-- `CE - begin_checkout` → Event name: `begin_checkout`
-- `CE - lead_whatsapp` → Event name: `lead_whatsapp`
-- `CE - lead_call` → Event name: `lead_call`
-
-### 2.3 Tags Google Ads (Tags → New → Google Ads Conversion Tracking)
-- **Compra** — Conversion ID `AW-994517528`, Label `axHrCPb1w6gcEJjEnNoD`, Value `{{dlv.value}}`, Currency `{{dlv.currency}}`, Order ID `{{dlv.transaction_id}}` → Trigger `CE - purchase`.
-- **Lead WhatsApp** — criar conversão própria no Google Ads, copiar o label e usar Trigger `CE - lead_whatsapp`.
-- **Lead Ligação** — idem para `CE - lead_call`.
-
-### 2.4 Tags GA4 (Tags → New → Google Analytics: GA4 Event)
-Você precisa do `Measurement ID` (G-XXXXXXX) do GA4. Na tag:
-- Configuration Tag: criar primeiro um `GA4 Configuration` com seu `G-XXXXXXX` e trigger `All Pages`.
-- `GA4 - purchase` → Event name `purchase`, Event Parameters: `transaction_id={{dlv.transaction_id}}`, `value={{dlv.value}}`, `currency={{dlv.currency}}`, `items={{dlv.items}}` → Trigger `CE - purchase`.
-- `GA4 - begin_checkout` → mesmos parâmetros (sem `transaction_id`) → Trigger `CE - begin_checkout`.
-- Opcional: `GA4 - generate_lead` para `lead_whatsapp`/`lead_call`.
-
-No GA4 (`analytics.google.com` → Admin → Events → Conversions), marcar `purchase`, `begin_checkout` e `generate_lead` como conversões.
-
-### 2.5 Validar no Preview Mode
-1. GTM → botão **Preview** (Tag Assistant) → digitar a URL do site → Connect.
-2. Na aba do site:
-   - Abrir o Checkout → confirmar `begin_checkout` em **Summary**, com `value`, `currency`, `items` preenchidos.
-   - Clicar no botão WhatsApp → conferir `lead_whatsapp`.
-   - Clicar em "Ligar agora" (mobile) → conferir `lead_call`.
-   - Finalizar um pedido de teste → na página `/pedido-confirmado` conferir `purchase` com `transaction_id`, `value`, `items[*].item_id`.
-3. Em cada evento, verificar que as tags **Google Ads Conversion** e **GA4 Event** aparecem em "Tags Fired".
-4. Se algo cair em "Tags Not Fired", clicar para inspecionar a condição que falhou.
-
-### 2.6 Publicar
-GTM → **Submit** → nome da versão (ex.: `conversoes-ads-ga4-v1`) → **Publish**.
-
-## Arquivos a alterar
-
-- `index.html` — adicionar gtag de `AW-994517528` + `gtag_report_conversion`.
-- `wp-theme/awr-baterias/index.php` — mesmo snippet.
-- `src/pages/PedidoConfirmado.tsx` — payload `purchase` com `item_id` + chamada direta `gtag('event','conversion',...)`.
-- `src/components/CheckoutDialog.tsx` — payload `begin_checkout` com `item_id`.
-- `src/lib/gtm.ts` — declarar `window.gtag` para tipagem TS.
-
-## O que preciso de você
-
-1. **Measurement ID do GA4** (`G-XXXXXXX`) — para configurar a tag GA4 Configuration. Sem ele, configuro só Google Ads agora e GA4 depois.
-2. Existe **conversão de Lead** já criada no Google Ads (com label próprio para WhatsApp e Ligação)? Se sim, me passe os labels; se não, dá pra criar no painel do Google Ads e depois plugar no GTM.
+Confirmar antes de iniciar Passo 1.
