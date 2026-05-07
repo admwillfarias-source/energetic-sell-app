@@ -43,6 +43,7 @@ export async function ensureCatalogLoaded(): Promise<void> {
   loadingPromise = (async () => {
     const PAGE = 1000;
     const fitsAll: DBFitment[] = [];
+    const supabase = await getSupabase();
     for (let from = 0; ; from += PAGE) {
       const { data, error } = await supabase
         .from("fitments")
