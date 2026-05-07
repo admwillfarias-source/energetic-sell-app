@@ -105,6 +105,22 @@ export default function VehicleAutocomplete({
       .catch(() => {});
   };
 
+  const navigateToResult = (label: string, codes: string[]) => {
+    try { sessionStorage.setItem("lastVehicleSearch", label); } catch { /* ignore */ }
+    queryClient
+      .prefetchQuery({
+        queryKey: ["resultado", { codes, vehicle: label }],
+        queryFn: () => fetchBatteriesByVehicle(codes, {}),
+        staleTime: 5 * 60 * 1000,
+      })
+      .catch(() => {});
+    markEvent("result_navigate_start");
+    onSelect?.();
+    navigate(
+      `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(label)}`,
+    );
+  };
+
   const choose = (s: VehicleSuggestion) => {
     const codes = s.codes;
     if (codes.length === 0) {
@@ -116,18 +132,17 @@ export default function VehicleAutocomplete({
     }
     setQuery(s.label);
     setOpen(false);
-    try {
-      sessionStorage.setItem("lastVehicleSearch", s.label);
-    } catch {
-      // ignore
+
+    // Se o rótulo cobre mais de um ano (ex.: "FIAT PALIO (1997-2019)"),
+    // abre o seletor para o cliente escolher o ano específico — assim a
+    // próxima tela já busca exatamente as baterias indicadas para aquele ano.
+    const range = s.label.match(/\((\d{4})-(\d{4})\)/);
+    if (range && Number(range[1]) !== Number(range[2])) {
+      setYearPicker(s);
+      return;
     }
-    // Dispara o fetch ANTES de navegar — a página /resultado consome o cache.
-    prefetchSuggestion(s);
-    markEvent("result_navigate_start");
-    onSelect?.();
-    navigate(
-      `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(s.label)}`,
-    );
+
+    navigateToResult(s.label, codes);
   };
 
   const onSubmit = () => {
