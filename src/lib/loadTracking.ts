@@ -64,10 +64,10 @@ function loadAll() {
 export function initDeferredTracking() {
   if (typeof window === "undefined") return;
 
-  const trigger = () => {
-    cleanup();
-    loadAll();
-  };
+  // Gate: só liberamos o tracking depois que o LCP terminou,
+  // para não competir com a renderização do herói.
+  let lcpDone = false;
+  let pendingTrigger = false;
 
   const events = ["scroll", "touchstart", "mousemove", "keydown", "click"] as const;
   const opts: AddEventListenerOptions = { once: true, passive: true, capture: true };
@@ -76,13 +76,60 @@ export function initDeferredTracking() {
     events.forEach((e) => window.removeEventListener(e, trigger, opts));
   }
 
-  events.forEach((e) => window.addEventListener(e, trigger, opts));
+  function trigger() {
+    cleanup();
+    if (lcpDone) {
+      loadAll();
+    } else {
+      // Aguarda LCP; quando chegar, dispara.
+      pendingTrigger = true;
+    }
+  }
+
+  // Interação do usuário sempre tem prioridade — se ele já interagiu,
+  // o LCP "perceptual" já passou e podemos carregar imediatamente.
+  events.forEach((e) =>
+    window.addEventListener(
+      e,
+      () => {
+        cleanup();
+        loadAll();
+      },
+      opts,
+    ),
+  );
+
+  // Observa LCP via PerformanceObserver
+  try {
+    const PO = (window as unknown as { PerformanceObserver?: typeof PerformanceObserver }).PerformanceObserver;
+    if (PO) {
+      const po = new PO((list) => {
+        if (list.getEntries().length > 0) {
+          lcpDone = true;
+          po.disconnect();
+          if (pendingTrigger) loadAll();
+        }
+      });
+      po.observe({ type: "largest-contentful-paint", buffered: true });
+    } else {
+      lcpDone = true;
+    }
+  } catch {
+    lcpDone = true;
+  }
+
+  // Hard cap: garante que o LCP-gate não atrase indefinidamente.
+  // Após 2.5s assumimos que o LCP já ocorreu.
+  setTimeout(() => {
+    lcpDone = true;
+    if (pendingTrigger) loadAll();
+  }, 2500);
 
   const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
   const idle = w.requestIdleCallback;
   if (idle) {
-    idle(trigger, { timeout: 4000 });
+    idle(trigger, { timeout: 2000 });
   } else {
-    setTimeout(trigger, 3500);
+    setTimeout(trigger, 2000);
   }
 }

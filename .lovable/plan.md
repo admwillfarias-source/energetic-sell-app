@@ -1,55 +1,41 @@
-## Passo 4 — CLS, cache, DOM e CSS não usado (final)
+## Estado atual vs. Passo 1
 
-Boa parte já foi feita nos passos anteriores (cache 1 ano para assets/webp/avif/woff2; lazy sections em quase tudo abaixo da dobra; dimensões no hero, BatteryImage e ManufacturerLogos). Restam ajustes finos.
+Boa notícia: **a maior parte do Passo 1 já está implementada** (foi feita em passos anteriores). Verifiquei:
 
-### 1. CLS de fontes — ajustar fallback metrics
-A causa do "Layout shift culprits" do PageSpeed é a troca `system-ui` → Inter/Plus Jakarta. Adicionar `@font-face` no `index.css` para os fallbacks com `size-adjust`/`ascent-override` casados, técnica recomendada pelo Chrome team:
+- ✅ `index.html` **não tem** scripts síncronos de GTM/GA4/Ads no `<head>`. Só tem o stub de `dataLayer` + `gtag` + `gtag_report_conversion`.
+- ✅ `src/lib/loadTracking.ts` já existe com `initDeferredTracking()` carregando GTM + GA4 + Ads via interação OU `requestIdleCallback` (timeout 4s / 3.5s fallback).
+- ✅ `src/main.tsx` já chama `initDeferredTracking()` após o `createRoot().render(...)`.
+- ✅ `<noscript>` do GTM já está no `<body>` do `index.html`.
+- ❌ **Não existem** no projeto: `call-tracking_9.js`, `wcm/loader.js`, `~flock.js`. Esses scripts vinham do tema WordPress antigo e não fazem parte deste app React. **Não há nada para remover/diferir**.
 
-```css
-@font-face {
-  font-family: "Inter Fallback";
-  src: local("Arial");
-  size-adjust: 107%;
-  ascent-override: 90%;
-  descent-override: 22%;
-  line-gap-override: 0%;
-}
-@font-face {
-  font-family: "Plus Jakarta Sans Fallback";
-  src: local("Arial");
-  size-adjust: 105%;
-  ascent-override: 95%;
-  descent-override: 25%;
-  line-gap-override: 0%;
-}
-```
-E ajustar `tailwind.config.ts` para incluir esses fallbacks nas famílias `sans`/`display` antes de `system-ui`. CLS de fonte → ~0.
+Ou seja: o objetivo do Passo 1 (TBT alto causado por GTM/GA4/Ads síncronos) **já foi atingido na arquitetura atual**. Não faz sentido reescrever `loadTracking.ts` no formato do prompt — isso seria regressão (perderia o helper `gtag_report_conversion` que já redireciona corretamente, perderia o `pushEvent` integrado, e re-introduziria `console.log`s em produção).
 
-### 2. Confirmar dimensões em imagens above-the-fold
-- `BatteryImage.tsx`, `ManufacturerLogos.tsx`, `HeroSection.tsx` — já têm `width`/`height` (verificado).
-- Imagens em `CartDrawer`, `BatteryDetailDialog`, `CheckoutDialog` — abrem sob demanda, sem impacto no CLS inicial. Não tocar.
+## O que proponho fazer neste passo
 
-### 3. Reflow no `MobileDebugOverlay`
-- `MobileDebugOverlay` só roda em DEV (`import.meta.env.DEV`), não vai pra produção. Sem ação.
-- Não há `getBoundingClientRect` em hot paths de produção.
+Como o "carregar deferred" já está pronto, vou focar nas **2 melhorias reais** que ainda dão ganho de TBT no estado atual:
 
-### 4. CSS não usado (Tailwind)
-- `tailwind.config.ts` já tem `content` correto (`./src/**/*.{ts,tsx}`). Tailwind purga no build.
-- O "16 KiB de CSS não utilizado" do Lighthouse vem majoritariamente de utilities Radix/shadcn que são usadas só em rotas internas. Não dá pra reduzir mais sem split de CSS por rota (Vite ainda não suporta nativamente). Aceitar.
+### 1. Acelerar gatilho idle (3.5s → 2s)
+Hoje o tracking carrega no máx em 3.5s. Para Lighthouse mobile (que não simula interação), antecipar para 2s reduz a janela em que GTM concorre com hidratação React tardia, melhorando consistência do TBT medido. Mantém a lógica de "primeira interação dispara antes" intacta.
 
-### 5. Cache headers
-- `public/_headers` já está correto: `/assets/*` e `/*.{webp,avif,woff2}` com `max-age=31536000, immutable`. Nada a fazer.
+### 2. Garantir que GTM/GA não rodem durante a janela do LCP
+Atualmente `requestIdleCallback` pode disparar **antes** do LCP em conexões rápidas. Vou adicionar uma trava: o tracking só carrega quando **(LCP já ocorreu) OU (interação) OU (timeout 2s)**, o que vier primeiro. Implementação: escutar o `PerformanceObserver` de `largest-contentful-paint` e marcar uma flag; o `idle` callback espera essa flag antes de injetar scripts. Isso é o que mais reduz TBT no Lighthouse.
 
-### 6. DOM size
-- `BestSellers`, `FaqHome`, `Testimonials` já estão lazy. `BatteryGrid` continua eager (é parte do produto). Sem ação adicional.
+### 3. Limpar `console.log` de tracking em produção
+Não há logs hoje (já está limpo) — só vou confirmar.
 
-### 7. Validação
-- Rodar PageSpeed mobile e conferir queda de CLS para <0.05.
-- Confirmar no DevTools que `Inter Fallback` aparece como família ativa antes da fonte web carregar.
+### Arquivos afetados
+- `src/lib/loadTracking.ts` — ajustar timeout para 2s e adicionar gate de LCP via `PerformanceObserver`.
+- Nenhum outro arquivo precisa mudar.
 
-### Arquivos impactados
-- `src/index.css` — adicionar 2 `@font-face` de fallback com size-adjust.
-- `tailwind.config.ts` — incluir `"Inter Fallback"` e `"Plus Jakarta Sans Fallback"` nas famílias `sans`, `display`, `body`.
-- (`index.html` CSS crítico inline também atualizado para usar o fallback ajustado em `body`/`h1-h3`.)
+### O que **não** vou fazer (e por quê)
+- ❌ Não vou remover scripts de `index.html` — já foram removidos.
+- ❌ Não vou criar `loadCallTracking/loadWebCM/loadFlock` — esses scripts não existem no projeto React (só existiam no tema WP).
+- ❌ Não vou reescrever `loadTracking.ts` do zero no formato do prompt — perderia funcionalidade já correta (redirect do `gtag_report_conversion`, integração com `pushEvent`).
+- ❌ Não vou adicionar `console.log` em produção.
 
-Confirmar para implementar.
+## Validação após implementação
+1. Rodar Lighthouse mobile no preview e confirmar TBT.
+2. Conferir no DevTools Network que `gtm.js`/`gtag/js` carregam só após LCP ou interação.
+3. Confirmar que clicar em CTA de conversão (WhatsApp/checkout) ainda dispara `gtag_report_conversion` corretamente — se o usuário clicar antes do tracking carregar, o stub atual já redireciona via `window.location.href`.
+
+Posso prosseguir?
