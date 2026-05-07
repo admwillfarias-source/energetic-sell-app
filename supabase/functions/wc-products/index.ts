@@ -55,7 +55,29 @@ function looksLikeSku(term: string): boolean {
   const t = term.trim();
   if (!t || t.includes(" ")) return false;
   if (t.length > 14) return false;
-  return /^[A-Za-z0-9-]+$/.test(t) && /[A-Za-z]/.test(t) && /\d/.test(t);
+  return /^[A-Za-z0-9.,-]+$/.test(t) && /[A-Za-z]/.test(t) && /\d/.test(t);
+}
+
+function skuVariants(term: string): string[] {
+  const t = term.trim().toUpperCase();
+  const variants = new Set<string>([t]);
+  if (t.startsWith("HEFB")) variants.add(t.replace(/^HEFB/, "EFB"));
+  if (t.startsWith("HFB")) variants.add(t.replace(/^HFB/, "EFB"));
+  if (t.startsWith("EFB")) variants.add(`H${t}`);
+  if (t.startsWith("HAGM")) variants.add(t.replace(/^HAGM/, "AGM"));
+  if (t.startsWith("AGM")) variants.add(`H${t}`);
+  if (t.startsWith("HS")) variants.add(t.replace(/^HS/, "H"));
+  return Array.from(variants);
+}
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 async function fetchByTerm(term: string, perPage: string): Promise<unknown[]> {
@@ -113,41 +135,12 @@ Deno.serve(async (req) => {
       const seen = new Set<number>();
 
       if (allSkus) {
-        const skuUrl = new URL(WC_BASE);
-        skuUrl.searchParams.set("per_page", perPage);
-        skuUrl.searchParams.set("sku", terms.join(","));
-        const arr = await fetchJson(skuUrl.toString());
-        for (const p of arr) {
-          const id = (p as WCProduct).id;
-          if (!seen.has(id)) {
-            seen.add(id);
-            merged.push(p);
-          }
-        }
-        // Fallback: para SKUs não retornados, tenta search individual (paralelo)
-        const returnedSkus = new Set(
-          merged
-            .map((p) => ((p as WCProduct).sku ?? "").toUpperCase())
-            .filter(Boolean),
-        );
-        const missing = terms.filter((t) => !returnedSkus.has(t.toUpperCase()));
-        if (missing.length) {
-          const fallback = await Promise.all(
-            missing.map((c) => fetchByTerm(c, perPage)),
-          );
-          for (const arr2 of fallback) {
-            for (const p of arr2) {
-              const id = (p as WCProduct).id;
-              if (!seen.has(id)) {
-                seen.add(id);
-                merged.push(p);
-              }
-            }
-          }
-        }
-      } else {
-        const results = await Promise.all(terms.map((c) => fetchByTerm(c, perPage)));
-        for (const arr of results) {
+        const expandedTerms = Array.from(new Set(terms.flatMap(skuVariants)));
+        for (const group of chunk(expandedTerms, 25)) {
+          const skuUrl = new URL(WC_BASE);
+          skuUrl.searchParams.set("per_page", perPage);
+          skuUrl.searchParams.set("sku", group.join(","));
+          const arr = await fetchJson(skuUrl.toString());
           for (const p of arr) {
             const id = (p as WCProduct).id;
             if (!seen.has(id)) {
@@ -155,6 +148,39 @@ Deno.serve(async (req) => {
               merged.push(p);
             }
           }
+          if (expandedTerms.length > 25) await wait(120);
+        }
+        // Fallback: para SKUs não retornados, tenta search individual (paralelo)
+        const returnedSkus = new Set(
+          merged
+            .map((p) => ((p as WCProduct).sku ?? "").toUpperCase())
+            .filter(Boolean),
+        );
+        const missing = terms.filter((t) => !skuVariants(t).some((v) => returnedSkus.has(v)));
+        if (missing.length) {
+          for (const c of missing.slice(0, 30)) {
+            const arr2 = await fetchByTerm(c, perPage);
+            for (const p of arr2) {
+              const id = (p as WCProduct).id;
+              if (!seen.has(id)) {
+                seen.add(id);
+                merged.push(p);
+              }
+            }
+            await wait(120);
+          }
+        }
+      } else {
+        for (const c of terms) {
+          const arr = await fetchByTerm(c, perPage);
+          for (const p of arr) {
+            const id = (p as WCProduct).id;
+            if (!seen.has(id)) {
+              seen.add(id);
+              merged.push(p);
+            }
+          }
+          if (terms.length > 1) await wait(120);
         }
       }
 
