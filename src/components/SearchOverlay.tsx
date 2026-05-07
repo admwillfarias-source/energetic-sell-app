@@ -36,6 +36,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
   const [picked, setPicked] = useState<TopVehicle | null>(null);
   const [pickedYear, setPickedYear] = useState<number | null>(null);
+  const [variants, setVariants] = useState<VehicleVariant[] | null>(null);
   const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
@@ -59,17 +60,15 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
     } else {
       setPicked(null);
       setPickedYear(null);
+      setVariants(null);
       setResolving(false);
     }
   }, [open]);
 
   const finishWithCodes = (
-    vehicle: TopVehicle,
-    year: number,
+    vehicleLabel: string,
     codes: string[],
-    suffix = "",
   ) => {
-    const vehicleLabel = `${vehicle.brand} ${vehicle.model} ${year}${suffix}`;
     queryClient
       .prefetchQuery({
         queryKey: ["resultado", { codes, vehicle: vehicleLabel }],
@@ -97,49 +96,43 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
     );
   };
 
-  const handleYearClick = (vehicle: TopVehicle, year: number) => {
-    const hasStartStop =
-      !!vehicle.startStopSkus?.length &&
-      typeof vehicle.startStopFromYear === "number" &&
-      year >= vehicle.startStopFromYear;
-    if (hasStartStop) {
-      // Mostra a tela de Start/Stop antes de navegar.
-      setPicked({ ...vehicle });
-      setPickedYear(year);
-      return;
-    }
-    chooseAndGo(vehicle, year, "standard");
-  };
-
-  const chooseAndGo = async (
-    vehicle: TopVehicle,
-    year: number,
-    choice: StartStopChoice,
-  ) => {
+  const handleYearClick = async (vehicle: TopVehicle, year: number) => {
     setResolving(true);
     markEvent("result_navigate_start");
     try {
       await ensureCatalogLoaded();
-      const codes =
-        choice === "start-stop" && vehicle.startStopSkus?.length
-          ? vehicle.startStopSkus
-          : vehicle.standardSkus?.length
-            ? vehicle.standardSkus
-            : getStrictVehicleCodes(`${vehicle.brand} ${vehicle.model} ${year}`);
+      const found = getVehicleVariants(vehicle.brand, vehicle.model, year);
+
+      if (found.length > 1) {
+        // Múltiplas linhas na tabela para o ano → pedir variante.
+        setPickedYear(year);
+        setVariants(found);
+        return;
+      }
+
+      // Apenas uma (ou nenhuma) variante na tabela para o ano.
+      const codes = found[0]?.skus
+        ?? vehicle.standardSkus
+        ?? getStrictVehicleCodes(`${vehicle.brand} ${vehicle.model} ${year}`);
 
       if (!codes || codes.length === 0) {
         toast({
           title: "Sem aplicação cadastrada",
           description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}. Tente outro ano ou digite o modelo do carro.`,
         });
-        setResolving(false);
         return;
       }
-      const suffix = choice === "start-stop" ? " Start/Stop" : "";
-      finishWithCodes(vehicle, year, codes, suffix);
+      const suffix = found[0]?.hasStartStop ? " Start/Stop" : "";
+      finishWithCodes(`${vehicle.brand} ${vehicle.model} ${year}${suffix}`, codes);
     } finally {
       setResolving(false);
     }
+  };
+
+  const chooseVariant = (variant: VehicleVariant) => {
+    if (!picked || pickedYear === null) return;
+    const label = `${picked.brand} ${picked.model} ${pickedYear} ${variant.variantLabel}`.trim();
+    finishWithCodes(label, variant.skus);
   };
 
   return (
