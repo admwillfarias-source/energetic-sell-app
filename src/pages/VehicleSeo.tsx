@@ -50,8 +50,10 @@ export default function VehicleSeo() {
   const { data: results = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["vehicle-seo", { slug, year, codes }],
     queryFn: () => {
-      const groups: Partial<Record<VehicleBrand, string[]>> = {};
-      return fetchBatteriesByVehicle(codes, groups);
+      // Mapeia marca → SKU homologado da tabela; assim cada marca exibe
+      // exatamente o modelo de bateria cadastrado para o veículo.
+      const skuMap = getStrictVehicleSkuMap(vehicleLabel);
+      return fetchBatteriesByVehicle(codes, skuMap);
     },
     enabled: catalogReady && codes.length > 0,
     staleTime: 5 * 60 * 1000,
