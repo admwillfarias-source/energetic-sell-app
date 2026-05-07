@@ -68,7 +68,7 @@ export default function Resultado() {
     queryKey: ["resultado-batch", { codes: effectiveCodes, vehicle: !!vehicle }],
     queryFn: () =>
       vehicle
-        ? fetchBatteriesByVehicle(effectiveCodes)
+        ? fetchBatteriesByVehicle(effectiveCodes, getStrictVehicleSkuMap(vehicle))
         : fetchBatteries({
             codes: effectiveCodes.length ? effectiveCodes : undefined,
             perPage: 30,
