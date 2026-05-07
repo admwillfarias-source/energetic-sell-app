@@ -1,7 +1,27 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
+
+// Reescreve <link rel="stylesheet" href="/assets/index-*.css"> em preload+swap
+// para que o CSS principal não bloqueie o FCP. Roda apenas no build.
+function deferMainCss(): Plugin {
+  return {
+    name: "defer-main-css",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(html) {
+        return html.replace(
+          /<link rel="stylesheet"([^>]*?)href="([^"]+\.css)"([^>]*)>/g,
+          (_m, before, href, after) =>
+            `<link rel="preload" as="style"${before}href="${href}"${after} onload="this.onload=null;this.rel='stylesheet'">` +
+            `<noscript><link rel="stylesheet"${before}href="${href}"${after}></noscript>`,
+        );
+      },
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -12,7 +32,7 @@ export default defineConfig(({ mode }) => ({
       overlay: false,
     },
   },
-  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  plugins: [react(), mode === "development" && componentTagger(), deferMainCss()].filter(Boolean),
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

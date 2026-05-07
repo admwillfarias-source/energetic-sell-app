@@ -1,53 +1,44 @@
-## Objetivo
-Subir o Performance Score mobile de 31 para >70, reduzir LCP (5.9s → <2.5s) e FCP (4.1s → <1.8s) atacando os gargalos do PageSpeed: scripts de terceiros, JS não usado, CSS render-blocking e entrega do LCP.
+## Passo 2 (revisado) — CSS crítico inline + defer do bundle CSS + fontes
 
-## Passo 1 — Scripts de terceiros (GTM, GA4, Google Ads)
+O Passo 2 anterior já cuidou das fontes (carregamento via `requestIdleCallback` + fallback `system-ui`). Falta agora o que mais pesa no FCP: o **CSS bundle do Vite (`/assets/index-*.css`) é render-blocking**. Esse passo ataca isso.
 
-Hoje em `index.html` os scripts de GTM e gtag carregam **síncronos no `<head>`**, contribuindo direto pros 8s de main-thread.
+### 1. Inline de CSS crítico no `<head>` do `index.html`
+Adicionar um `<style>` inline (~1.5 KB) com o mínimo para pintar o hero acima da dobra no mobile:
+- Reset básico (`*,*::before,*::after { box-sizing:border-box }`, `body { margin:0 }`).
+- Tokens HSL essenciais (`--background`, `--foreground`, `--primary`, `--primary-foreground`, `--secondary`, `--secondary-foreground`, `--accent`, `--accent-foreground`, `--card`, `--muted-foreground`, `--border`, `--ring`, `--radius`).
+- `body { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: Inter, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }`.
+- Estilos da seção hero: `section#inicio` ocupando `min-height:80vh` com `padding-top:64px` + container central, h1 grande com `font-family: "Plus Jakarta Sans", Inter, system-ui` e `min-height` reservado (evita CLS quando a fonte web entra).
+- Caixa de busca (`.rounded-2xl bg-card p-4 shadow-lg`) em altura fixa para não shiftar.
+- `#root { min-height: 100vh }` para não pintar branco.
 
-Mudanças em `index.html`:
-- Remover o IIFE inline do GTM e o bloco `gtag` do `<head>`.
-- Manter apenas a inicialização mínima: `window.dataLayer = []` e o stub `gtag()`.
-- Criar `src/lib/loadTracking.ts` que injeta GTM + gtag (`AW-994517528`, `G-FJ1MK5SLS5`) e dispara `gtag_report_conversion` apenas após:
-  - primeira interação (`scroll`, `touchstart`, `mousemove`, `keydown`), ou
-  - `requestIdleCallback` com timeout de 4s, ou
-  - evento `load` + 2s.
-- Importar `loadTracking` no fim de `src/main.tsx` após o render.
-- Manter o `<noscript>` do GTM no `<body>` (já está correto).
+Tudo escrito em CSS puro (sem dependência do Tailwind), apenas para a primeira pintura. O Tailwind/CSS principal continua governando o resto da página assim que carrega.
 
-Ganho esperado: -2 a -3s de TBT/main-thread no mobile.
+### 2. Defer do bundle CSS principal
+Hoje o Vite injeta `<link rel="stylesheet" href="/assets/index-XXXX.css">` automaticamente — render-blocking. Como o nome tem hash e é inserido pelo bundler, não dá para editar à mão no `index.html`. A solução é um pequeno **plugin Vite** dentro de `vite.config.ts` que, no hook `transformIndexHtml`, reescreve a tag emitida para:
 
-## Passo 2 — CSS render-blocking + fontes
+```html
+<link rel="preload" as="style" href="...css" onload="this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="...css"></noscript>
+```
 
-- **Fontes**: hoje `main.tsx` importa 4 CSS de `@fontsource` que entram no bundle CSS crítico. Trocar por `@fontsource/.../400.css` carregado via dynamic `import()` em `requestIdleCallback`, e adicionar fallback `font-family` em `index.css` com `font-display: swap` (o `@fontsource` já usa swap, mas mover pra fora do critical reduz bytes do CSS bloqueante).
-- Alternativa mais segura: manter os imports síncronos mas reduzir para apenas `inter/400` + `plus-jakarta-sans/700` (remover 600 e 800; usar `font-synthesis` quando faltar).
-- Adicionar `<link rel="preload" as="style" ... onload="this.rel='stylesheet'">` para o CSS principal no `index.html` (Vite já gera com hash; usar pequeno script inline que troca o `<link rel="stylesheet">` por preload+swap).
-- Inlinar no `<head>` do `index.html` o CSS crítico mínimo (reset + tokens HSL + classes do hero acima da dobra). Manter <2KB.
+Isso libera o FCP enquanto o CSS completo baixa em paralelo. Alternativa mais simples (sem plugin): usar `media="print" onload="this.media='all'"`. Mesma ideia, mais compatível.
 
-## Passo 3 — LCP (hero + imagens de marca)
+### 3. Ajustes finos nas fontes (já parcialmente feitos)
+- Confirmar que `@fontsource` (já carregado em `requestIdleCallback`) usa `font-display: swap` por padrão — sim, é o default do pacote, nada a fazer.
+- Adicionar `font-size-adjust` ou ajustar `letter-spacing` no fallback `system-ui` se o CLS de fonte continuar visível depois (mensurar antes).
+- Reduzir variantes? Já estamos em 4 (Inter 400/600 + Plus Jakarta 700/800). Manter — todas são usadas.
 
-`HeroSection.tsx` já tem `fetchpriority="high"`, `loading="eager"` e preload em `main.tsx`. O delay de 8.5s vem porque o preload acontece **depois** do parse do JS bundle. Ajustes:
-- Mover o `<link rel="preload" as="image" imagesrcset="..." imagesizes="100vw" fetchpriority="high">` direto pro `<head>` do `index.html` apontando pros assets em `/assets/...` (resolver via script que lê `import.meta.glob` no build) **OU** mais simples: copiar `hero-bg-sm.webp` e `hero-bg.webp` para `public/` e referenciar por path estável `/hero-bg-sm.webp` no preload do HTML e no `<picture>`.
-- Remover do `main.tsx` o `preloadHero()` (substituído pelo preload no HTML).
-- Adicionar `width`/`height` explícitos nas imagens `heliar-efb.png`, `heliar-1.png`, `exf70.png` em `BatteryCard`/`BatteryGrid` e converter para `.webp` (script de build ou substituir assets manualmente).
+### 4. Validação
+- Verificar visualmente no preview mobile que o hero pinta sem flash de não-estilizado.
+- Conferir no DevTools Network que o CSS principal carrega como `preload` → `stylesheet` (não-blocking).
+- Rodar `scripts/lighthouse.mjs` mobile e comparar FCP/LCP.
 
-## Passo 4 — Cache, CLS, reflow
+### Arquivos impactados
+- `index.html` — inserir `<style>` crítico no `<head>`.
+- `vite.config.ts` — adicionar plugin que reescreve a tag `<link rel="stylesheet">` do bundle para preload+swap.
+- (Sem mudanças em componentes React.)
 
-- `public/_headers` já cobre `/assets/*` com 1 ano immutable. Adicionar regras para `.avif` e revisar TTL de `.webp` de 30 dias para 1 ano com `immutable` em `/assets/*` (já ok). Adicionar `Cache-Control` no `<meta http-equiv>` não — manter só headers.
-- Auditar uso de `offsetWidth`/`getBoundingClientRect` em loops nos componentes do hero (`VehicleAutocomplete`, `SearchOverlay`) pra eliminar forced reflows; mover medições para `useLayoutEffect` único.
-- Garantir `aspect-ratio` ou `width/height` em `BatteryImage`, `ManufacturerLogos` e cards de `BestSellers` para CLS=0.
-- Reduzir DOM: `BestSellers` já está lazy + `perPage` reduzido no mobile; aplicar mesmo padrão em `Testimonials` e `FaqHome` (lazy via `LazySection`).
+### Detalhes técnicos
+O plugin Vite (em `transformIndexHtml`, fase `post`) procura `<link rel="stylesheet" crossorigin href="/assets/index-...css">` no HTML emitido pelo build e o substitui por `<link rel="preload" as="style" .../><noscript>...</noscript>` mais um pequeno `onload` inline. Em dev (sem hash), o plugin não faz nada — o Vite serve CSS via HMR e é instantâneo.
 
-## Validação
-Após cada passo, rodar `scripts/lighthouse.mjs` (mobile) e reportar deltas de LCP, FCP, TBT, Performance Score. Critério de aceite: Score mobile ≥ 70, LCP < 2.5s, TBT < 300ms.
-
-## Arquivos impactados
-- `index.html` (remover scripts síncronos, adicionar preload de imagem e CSS)
-- `src/main.tsx` (remover preloadHero, importar loadTracking)
-- `src/lib/loadTracking.ts` (novo)
-- `src/components/HeroSection.tsx` (referenciar `/hero-bg-sm.webp` se mover para public)
-- `src/components/BatteryImage.tsx`, `BatteryGrid.tsx`, `ManufacturerLogos.tsx` (dimensões)
-- `src/pages/Index.tsx` (lazy em Testimonials/FaqHome)
-- `public/_headers` (ajustes finos)
-
-Confirmar antes de iniciar Passo 1.
+Confirmar antes de implementar.
