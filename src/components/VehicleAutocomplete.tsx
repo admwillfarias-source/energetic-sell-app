@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
-import { Search, Car, Loader2 } from "lucide-react";
+import { Search, Car, Loader2, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { searchVehicles, type VehicleSuggestion } from "@/lib/fitments";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { fetchBatteriesByVehicle } from "@/lib/api/batteries";
@@ -38,6 +39,7 @@ export default function VehicleAutocomplete({
   const [highlight, setHighlight] = useState(0);
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState(0);
+  const [yearPicker, setYearPicker] = useState<VehicleSuggestion | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -103,6 +105,22 @@ export default function VehicleAutocomplete({
       .catch(() => {});
   };
 
+  const navigateToResult = (label: string, codes: string[]) => {
+    try { sessionStorage.setItem("lastVehicleSearch", label); } catch { /* ignore */ }
+    queryClient
+      .prefetchQuery({
+        queryKey: ["resultado", { codes, vehicle: label }],
+        queryFn: () => fetchBatteriesByVehicle(codes, {}),
+        staleTime: 5 * 60 * 1000,
+      })
+      .catch(() => {});
+    markEvent("result_navigate_start");
+    onSelect?.();
+    navigate(
+      `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(label)}`,
+    );
+  };
+
   const choose = (s: VehicleSuggestion) => {
     const codes = s.codes;
     if (codes.length === 0) {
@@ -114,18 +132,17 @@ export default function VehicleAutocomplete({
     }
     setQuery(s.label);
     setOpen(false);
-    try {
-      sessionStorage.setItem("lastVehicleSearch", s.label);
-    } catch {
-      // ignore
+
+    // Se o rótulo cobre mais de um ano (ex.: "FIAT PALIO (1997-2019)"),
+    // abre o seletor para o cliente escolher o ano específico — assim a
+    // próxima tela já busca exatamente as baterias indicadas para aquele ano.
+    const range = s.label.match(/\((\d{4})-(\d{4})\)/);
+    if (range && Number(range[1]) !== Number(range[2])) {
+      setYearPicker(s);
+      return;
     }
-    // Dispara o fetch ANTES de navegar — a página /resultado consome o cache.
-    prefetchSuggestion(s);
-    markEvent("result_navigate_start");
-    onSelect?.();
-    navigate(
-      `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(s.label)}`,
-    );
+
+    navigateToResult(s.label, codes);
   };
 
   const onSubmit = () => {
@@ -285,6 +302,12 @@ export default function VehicleAutocomplete({
           Nenhum veículo encontrado. Tente outra grafia ou inclua o ano.
         </div>
       )}
+
+      <YearPickerDialog
+        suggestion={yearPicker}
+        onClose={() => setYearPicker(null)}
+        onPick={(label, codes) => { setYearPicker(null); navigateToResult(label, codes); }}
+      />
     </div>
   );
 
@@ -312,5 +335,65 @@ export default function VehicleAutocomplete({
         </div>
       </div>
     </section>
+  );
+}
+
+function YearPickerDialog({
+  suggestion,
+  onClose,
+  onPick,
+}: {
+  suggestion: VehicleSuggestion | null;
+  onClose: () => void;
+  onPick: (label: string, codes: string[]) => void;
+}) {
+  const open = !!suggestion;
+
+  const years = useMemo(() => {
+    if (!suggestion) return [] as number[];
+    const m = suggestion.label.match(/\((\d{4})-(\d{4})\)/);
+    if (!m) return [];
+    const start = Number(m[1]);
+    const end = Number(m[2]);
+    if (!start || !end || start > end) return [];
+    const arr: number[] = [];
+    for (let y = end; y >= start; y--) arr.push(y);
+    return arr;
+  }, [suggestion]);
+
+  if (!suggestion) return null;
+
+  const handlePick = (year: number) => {
+    const cleanLabel = suggestion.label.replace(/\s*\(\d{4}-\d{4}\)\s*$/, "").trim();
+    const finalLabel = `${cleanLabel} ${year}`;
+    onPick(finalLabel, suggestion.codes);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            Escolha o ano do veículo
+          </DialogTitle>
+          <DialogDescription>
+            <span className="font-semibold text-foreground">{suggestion.brand} {suggestion.model}</span>
+            {" "}— selecione o ano para mostrarmos as baterias indicadas para esse modelo.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 max-h-72 overflow-y-auto pr-1">
+          {years.map((y) => (
+            <button
+              key={y}
+              onClick={() => handlePick(y)}
+              className="rounded-md border border-border bg-card px-3 py-2 text-sm font-semibold hover:border-primary hover:bg-primary/5 hover:text-primary transition-colors"
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 }
