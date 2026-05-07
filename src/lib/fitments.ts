@@ -242,9 +242,32 @@ function levenshtein(a: string, b: string, max: number): number {
 }
 
 function maxEditsFor(token: string): number {
-  if (token.length <= 3) return 0;
-  if (token.length <= 5) return 1;
-  return 2;
+  // Mais tolerante a erros de digitação: até 1 erro em palavras curtas e
+  // até 3 em palavras longas (cobre "honnda", "creeta", "volkswagem", etc.).
+  if (token.length <= 3) return 1;
+  if (token.length <= 5) return 2;
+  if (token.length <= 8) return 3;
+  return 4;
+}
+
+/**
+ * Normalização "fonética" leve para tolerar variações comuns de grafia
+ * (ph→f, k→c, y→i, w→v, qu→k, ç→c, letras duplicadas). Usada em paralelo
+ * à comparação literal para aumentar a chance de match.
+ */
+function phoneticKey(s: string): string {
+  return s
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/ph/g, "f")
+    .replace(/qu/g, "k")
+    .replace(/[kqc]/g, "k")
+    .replace(/y/g, "i")
+    .replace(/w/g, "v")
+    .replace(/h/g, "")
+    .replace(/(.)\1+/g, "$1")
+    .replace(/[^a-z0-9]/g, "");
 }
 
 /**
@@ -254,11 +277,15 @@ function maxEditsFor(token: string): number {
  *  - prefixo: alto
  *  - substring: médio
  *  - fuzzy (Levenshtein dentro do limite): baixo
+ *  - fonético: baixo (tolera ph/f, k/c, y/i, letras duplicadas)
  *  - colado (haystack sem espaços contém o token): médio (cobre "L200" vs "L 200")
  */
 function matchToken(token: string, hayTokens: string[], hayJoined: string): number {
   let best = -1;
   if (hayJoined.includes(token)) best = Math.max(best, 4 + token.length);
+
+  const tokenPhon = phoneticKey(token);
+
   for (const h of hayTokens) {
     if (h === token) {
       best = Math.max(best, 12 + token.length);
@@ -273,9 +300,27 @@ function matchToken(token: string, hayTokens: string[], hayJoined: string): numb
       continue;
     }
     const max = maxEditsFor(token);
-    if (max > 0 && Math.abs(h.length - token.length) <= max) {
+    if (max > 0 && Math.abs(h.length - token.length) <= max + 1) {
       const d = levenshtein(token, h, max);
-      if (d <= max) best = Math.max(best, 3 + token.length - d);
+      if (d <= max) {
+        best = Math.max(best, 3 + token.length - d);
+        continue;
+      }
+    }
+    // Match fonético: tolera variações de grafia comuns
+    if (tokenPhon.length >= 2) {
+      const hPhon = phoneticKey(h);
+      if (hPhon === tokenPhon) {
+        best = Math.max(best, 6 + Math.min(h.length, token.length));
+      } else if (hPhon.length >= 3 && (hPhon.startsWith(tokenPhon) || tokenPhon.startsWith(hPhon))) {
+        best = Math.max(best, 4 + Math.min(hPhon.length, tokenPhon.length));
+      } else if (hPhon.length >= 3 && tokenPhon.length >= 3) {
+        const phMax = maxEditsFor(tokenPhon);
+        if (Math.abs(hPhon.length - tokenPhon.length) <= phMax) {
+          const d = levenshtein(tokenPhon, hPhon, phMax);
+          if (d <= phMax) best = Math.max(best, 2 + tokenPhon.length - d);
+        }
+      }
     }
   }
   return best;
