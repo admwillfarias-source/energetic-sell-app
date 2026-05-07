@@ -37,7 +37,14 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
   const [picked, setPicked] = useState<TopVehicle | null>(null);
   const [pickedYear, setPickedYear] = useState<number | null>(null);
   const [variants, setVariants] = useState<VehicleVariant[] | null>(null);
+  const [notFound, setNotFound] = useState<{ year: number } | null>(null);
   const [resolving, setResolving] = useState(false);
+
+  const WHATSAPP_NUMBER = "5551993199486";
+  const buildWhatsAppUrl = (vehicleLabel: string) => {
+    const msg = `Olá! Preciso de ajuda para encontrar a bateria do meu ${vehicleLabel}. Vocês podem me orientar?`;
+    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
+  };
 
   useEffect(() => {
     if (open) {
