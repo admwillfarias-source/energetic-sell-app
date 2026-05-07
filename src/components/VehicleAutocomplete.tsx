@@ -39,6 +39,7 @@ export default function VehicleAutocomplete({
   const [highlight, setHighlight] = useState(0);
   const [loading, setLoading] = useState(true);
   const [version, setVersion] = useState(0);
+  const [yearPicker, setYearPicker] = useState<VehicleSuggestion | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
