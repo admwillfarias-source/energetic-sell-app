@@ -165,11 +165,8 @@ Deno.serve(async (req) => {
     } else {
       const target = new URL(WC_BASE);
       target.searchParams.set("per_page", perPage);
-      const res = await fetch(target.toString(), {
-        headers: { Accept: "application/json" },
-      });
-      body = await res.text();
-      status = res.status;
+      const arr = await fetchJson(target.toString());
+      body = JSON.stringify(arr);
     }
 
     if (status === 200) cacheSet(cacheKey, body);
