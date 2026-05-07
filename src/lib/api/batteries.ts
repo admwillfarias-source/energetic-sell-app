@@ -269,29 +269,75 @@ const SKU_ALIASES: Record<string, string> = {
   M180TE: "M180BE",
 };
 
+/** Variantes de SKU aceitas pelo WooCommerce (espelha edge function). */
+function skuVariants(raw: string): string[] {
+  const t = raw.trim().toUpperCase();
+  if (!t) return [];
+  const set = new Set<string>([t]);
+  const alias = SKU_ALIASES[t];
+  if (alias) set.add(alias.toUpperCase());
+  if (t.startsWith("HEFB")) set.add(t.replace(/^HEFB/, "EFB"));
+  if (t.startsWith("HFB")) set.add(t.replace(/^HFB/, "EFB"));
+  if (t.startsWith("EFB")) set.add(`H${t}`);
+  if (t.startsWith("HAGM")) set.add(t.replace(/^HAGM/, "AGM"));
+  if (t.startsWith("AGM")) set.add(`H${t}`);
+  if (t.startsWith("HS")) set.add(t.replace(/^HS/, "H"));
+  return Array.from(set);
+}
+
 /**
  * Busca baterias APENAS pelos SKUs cadastrados na planilha para o veículo.
- * Aplica equivalências (aliases) para SKUs que não existem mais no catálogo
- * — sem isso, marcas como Moura ficam ocultas em vários veículos (ex.: FIT 2008).
+ * Quando recebe `skuMap`, garante UMA bateria por marca correspondendo
+ * exatamente ao SKU homologado (Moura → SKU Moura da tabela, Heliar → SKU
+ * Heliar da tabela, etc.). Isso impede que o WooCommerce traga um modelo
+ * diferente do homologado para aquela marca.
  */
 export async function fetchBatteriesByVehicle(
   codes: string[],
-  _groups: Partial<Record<VehicleBrand, string[]>> = {},
+  skuMap?: Partial<Record<VehicleBrand, string>>,
 ): Promise<Battery[]> {
-  if (!codes.length) return [];
+  // Constrói o conjunto de SKUs a consultar (com variantes/aliases).
+  const sourceCodes = skuMap
+    ? Object.values(skuMap).filter((s): s is string => !!s)
+    : codes;
+  if (!sourceCodes.length) return [];
 
   const wanted = new Set<string>();
-  for (const raw of codes) {
-    const c = raw.trim().toUpperCase();
-    if (!c) continue;
-    wanted.add(c);
-    const alias = SKU_ALIASES[c];
-    if (alias) wanted.add(alias.toUpperCase());
+  for (const c of sourceCodes) {
+    for (const v of skuVariants(c)) wanted.add(v);
   }
 
   const list = await fetchBatteries({ codes: Array.from(wanted), perPage: 30 });
-  // Não filtramos por SKU exato: a edge function já consulta o WooCommerce
-  // pelos SKUs informados. Se a loja retornar variações de nomenclatura
-  // (ex.: HEFB60HD vs EFB60HD), elas devem aparecer assim mesmo.
-  return list.sort((a, b) => b.price - a.price);
+
+  // Sem skuMap (modo legado): retorna a lista bruta ordenada por preço desc.
+  if (!skuMap) return list.sort((a, b) => b.price - a.price);
+
+  // Com skuMap: para cada marca cadastrada, escolhe o produto cujo SKU bate
+  // com uma das variantes do SKU homologado. Se nada bater para a marca,
+  // omite (a marca simplesmente não aparece — sinal de SKU desatualizado).
+  const byUpperSku = new Map<string, Battery>();
+  for (const b of list) {
+    const k = (b.sku ?? "").trim().toUpperCase();
+    if (k && !byUpperSku.has(k)) byUpperSku.set(k, b);
+  }
+
+  const ORDER: VehicleBrand[] = ["Moura", "Zetta", "Heliar", "Excell"];
+  const out: Battery[] = [];
+  const usedIds = new Set<string>();
+  for (const brand of ORDER) {
+    const sku = skuMap[brand];
+    if (!sku) continue;
+    let chosen: Battery | undefined;
+    for (const v of skuVariants(sku)) {
+      const hit = byUpperSku.get(v);
+      if (hit) { chosen = hit; break; }
+    }
+    if (chosen && !usedIds.has(chosen.id)) {
+      // Sobrescreve a marca detectada pelo nome do produto pela marca da
+      // tabela de aplicação — fonte da verdade para o cruzamento.
+      out.push({ ...chosen, brand });
+      usedIds.add(chosen.id);
+    }
+  }
+  return out;
 }
