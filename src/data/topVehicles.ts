@@ -3,8 +3,8 @@
 //
 // IMPORTANTE: este arquivo NÃO altera a tabela de aplicação (fitments).
 // Define apenas, por veículo, os SKUs corretos para versão padrão e versão
-// Start/Stop, e a partir de que ano o modelo passou a ter Start/Stop, para
-// que o cliente escolha a bateria certa direto no atalho.
+// Start/Stop, para o cliente escolher a bateria certa direto no atalho.
+// Atualizado conforme planilha "123 HELIAR CORRETA - Aplicações".
 
 export type TopVehicle = {
   brand: string;
@@ -27,8 +27,9 @@ export const TOP_VEHICLES: TopVehicle[] = [
     model: "Onix",
     query: "Chevrolet Onix",
     label: "Onix",
-    standardSkus: ["M60GD", "Z60D", "H60DD", "EXF60DPD"],
-    startStopSkus: ["EFB60HD", "HEFB60HD", "MF60AD", "EXF60DPD"],
+    // Manual: HE50GD/M50ED/Z50ED. Automático 2020+: H75PD/M75LD/Z70D/EXF75ND.
+    standardSkus: ["M50ED", "Z50ED", "HE50GD"],
+    startStopSkus: ["M75LD", "Z70D", "H75PD", "EXF75ND"],
     startStopFromYear: 2020,
   },
   {
@@ -45,9 +46,9 @@ export const TOP_VEHICLES: TopVehicle[] = [
     model: "Strada",
     query: "Fiat Strada",
     label: "Strada",
-    standardSkus: ["M60AD", "Z60D", "HE60HD", "EXF60DPD"],
+    standardSkus: ["M50ED", "Z50ED", "HE50GD"],
     startStopSkus: ["MF60AD", "HEFB60HD"],
-    startStopFromYear: 2021,
+    startStopFromYear: 2020,
   },
   {
     brand: "Volkswagen",
@@ -73,13 +74,17 @@ export const TOP_VEHICLES: TopVehicle[] = [
     query: "Fiat Mobi",
     label: "Mobi",
     standardSkus: ["M50ED", "Z50ED", "HE50GD"],
+    startStopSkus: ["MF60AD", "HEFB60HD"],
+    startStopFromYear: 2021,
   },
   {
     brand: "Renault",
     model: "Kwid",
     query: "Renault Kwid",
     label: "Kwid",
-    standardSkus: ["M40SD", "Z45D", "H40JD", "EXF40JD"],
+    standardSkus: ["M50ED", "Z50ED", "HE50GD"],
+    startStopSkus: ["MF60AD", "HEFB60HD"],
+    startStopFromYear: 2022,
   },
   {
     brand: "Toyota",
@@ -93,7 +98,7 @@ export const TOP_VEHICLES: TopVehicle[] = [
     model: "T-Cross",
     query: "Volkswagen T-Cross",
     label: "T-Cross",
-    standardSkus: ["M60AD", "Z60D", "HE60HD", "EXF60DPD"],
+    standardSkus: ["M50ED", "Z50ED", "HE50GD"],
     startStopSkus: ["MF60AD", "HEFB60HD"],
     startStopFromYear: 2018,
   },
@@ -120,6 +125,7 @@ export const TOP_VEHICLES: TopVehicle[] = [
     model: "Hilux",
     query: "Toyota Hilux",
     label: "Hilux",
+    // Diesel 2017+: 75Ah. Flex: 60Ah.
     standardSkus: ["M75LD", "Z70D", "H75PD", "EXF75ND"],
   },
 ];
