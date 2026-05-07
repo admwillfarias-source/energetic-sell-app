@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useQueries, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search, MapPin } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -62,47 +62,26 @@ export default function Resultado() {
 
   const effectiveCodes = vehicle ? strictVehicleCodes : codes;
 
-  // ===== Carregamento progressivo: cada SKU vira uma query separada.
-  // Os cards aparecem assim que cada produto chega, sem esperar a lista toda.
-  const perSkuQueries = useQueries({
-    queries: (vehicle ? effectiveCodes : []).map((sku) => ({
-      queryKey: ["wc-product-sku", sku],
-      queryFn: async () => {
-        const list = await fetchBatteries({ codes: [sku], perPage: 1 });
-        return list.find((b) => (b.sku ?? "").toUpperCase() === sku.toUpperCase()) ?? null;
-      },
-      enabled: !!vehicle && catalogReady && !!sku,
-      staleTime: 5 * 60 * 1000,
-    })),
-  });
-
-  const fallbackQuery = useQuery({
-    queryKey: ["resultado-fallback", { codes: effectiveCodes }],
+  // Uma única query batched para TODOS os SKUs do veículo. A edge function
+  // já consolida múltiplos SKUs em 1 request ao WooCommerce, evitando 429.
+  const batchQuery = useQuery({
+    queryKey: ["resultado-batch", { codes: effectiveCodes, vehicle: !!vehicle }],
     queryFn: () =>
-      fetchBatteries({
-        codes: effectiveCodes.length ? effectiveCodes : undefined,
-        perPage: 30,
-      }),
-    enabled: !vehicle && effectiveCodes.length > 0,
+      vehicle
+        ? fetchBatteriesByVehicle(effectiveCodes)
+        : fetchBatteries({
+            codes: effectiveCodes.length ? effectiveCodes : undefined,
+            perPage: 30,
+          }),
+    enabled: vehicle ? catalogReady && effectiveCodes.length > 0 : effectiveCodes.length > 0,
     staleTime: 5 * 60 * 1000,
+    retry: 1,
   });
 
-  const results: Battery[] = vehicle
-    ? perSkuQueries
-        .map((q) => q.data)
-        .filter((b): b is Battery => !!b)
-    : fallbackQuery.data ?? [];
-
-  const isLoading = vehicle
-    ? perSkuQueries.length > 0 && perSkuQueries.every((q) => q.isLoading)
-    : fallbackQuery.isLoading;
-  const isError = vehicle
-    ? perSkuQueries.length > 0 && perSkuQueries.every((q) => q.isError)
-    : fallbackQuery.isError;
-  const refetch = () => {
-    if (vehicle) perSkuQueries.forEach((q) => q.refetch());
-    else fallbackQuery.refetch();
-  };
+  const results: Battery[] = batchQuery.data ?? [];
+  const isLoading = batchQuery.isLoading;
+  const isError = batchQuery.isError;
+  const refetch = () => batchQuery.refetch();
 
   const isResultLoading = isLoading || (!!vehicle && !catalogReady);
 
@@ -349,8 +328,8 @@ export default function Resultado() {
           {/* Lista — carregamento progressivo: cards aparecem assim que cada
               SKU chega; skeletons preenchem os pendentes. */}
           {(() => {
-            const stillPending = vehicle
-              ? perSkuQueries.filter((q) => q.isLoading).length
+            const stillPending = vehicle && isLoading
+              ? Math.max(0, effectiveCodes.length - results.length)
               : 0;
             if (isResultLoading && sorted.length === 0) {
               return (
