@@ -11,6 +11,17 @@
     <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
     <link rel="preconnect" href="https://mkkehvaclefoxkdlcmqm.supabase.co" crossorigin />
 
+    <!-- LCP: preload responsivo do hero (path estável em /public, sem hash) -->
+    <link
+      rel="preload"
+      as="image"
+      href="/hero-bg-sm.webp"
+      imagesrcset="/hero-bg-sm.webp 768w, /hero-bg.webp 1600w"
+      imagesizes="100vw"
+      fetchpriority="high"
+      type="image/webp"
+    />
+
     <!-- dataLayer + gtag stub (carregamento real em src/lib/loadTracking.ts, diferido) -->
     <script>
       window.dataLayer = window.dataLayer || [];

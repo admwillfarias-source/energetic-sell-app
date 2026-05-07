@@ -19,8 +19,10 @@ const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
 const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 
 
-import heroBg from "@/assets/hero-bg.webp";
-import heroBgSm from "@/assets/hero-bg-sm.webp";
+// Hero LCP: paths estáveis em /public (sem hash) — combinam com o
+// <link rel="preload"> do index.html para zero "Resource load delay".
+const heroBg = "/hero-bg.webp";
+const heroBgSm = "/hero-bg-sm.webp";
 
 function SearchPlaceholder({
   onActivate,
@@ -119,7 +121,8 @@ export default function HeroSection() {
             className="w-full h-full object-cover"
             width={1200}
             height={900}
-            fetchPriority="high"
+            // @ts-expect-error: fetchpriority é atributo HTML válido (lowercase)
+            fetchpriority="high"
             decoding="async"
             loading="eager"
           />
