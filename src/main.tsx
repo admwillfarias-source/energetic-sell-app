@@ -1,15 +1,27 @@
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
-import "@fontsource/inter/400.css";
-import "@fontsource/inter/600.css";
-import "@fontsource/plus-jakarta-sans/700.css";
-import "@fontsource/plus-jakarta-sans/800.css";
 import "./index.css";
 import heroBg from "@/assets/hero-bg.webp";
 import heroBgSm from "@/assets/hero-bg-sm.webp";
 import { startLcpTracking, markEvent } from "@/lib/perfMetrics";
 import { initDeferredTracking } from "@/lib/loadTracking";
+
+// Fontes carregadas de forma diferida — não bloqueiam o CSS crítico.
+// O fallback system-ui (definido em index.css) é mostrado via font-display: swap.
+function loadFontsDeferred() {
+  const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+  const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 200));
+  schedule(() => {
+    Promise.all([
+      import("@fontsource/inter/400.css"),
+      import("@fontsource/inter/600.css"),
+      import("@fontsource/plus-jakarta-sans/700.css"),
+      import("@fontsource/plus-jakarta-sans/800.css"),
+    ]).catch(() => {});
+  }, { timeout: 2000 });
+}
+loadFontsDeferred();
 
 // Inicia o tracking de Web Vitals o quanto antes
 startLcpTracking();
