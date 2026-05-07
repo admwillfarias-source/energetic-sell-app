@@ -77,11 +77,21 @@ function normalize(s: string): string {
  */
 export function getStrictVehicleFitment(label: string): Fitment | null {
   const normalized = normalize(label);
-  const yearMatch = normalized.match(/\b(19|20)\d{2}\b/);
-  if (!yearMatch) return null;
-
-  const year = Number(yearMatch[0]);
-  const withoutYear = normalize(normalized.replace(yearMatch[0], ""));
+  // Aceita ano único ("2018") ou intervalo ("2018-2021", "2018 a 2021").
+  // Quando vier intervalo, usamos o ano final (mais recente) para casar com
+  // a tabela e removemos AMBOS os anos da string antes de comparar o modelo.
+  const rangeMatch = normalized.match(/\b((?:19|20)\d{2})\s*(?:-|–|—|a|ate|até)\s*((?:19|20)\d{2})\b/);
+  let year: number;
+  let withoutYear: string;
+  if (rangeMatch) {
+    year = Number(rangeMatch[2]);
+    withoutYear = normalize(normalized.replace(rangeMatch[0], ""));
+  } else {
+    const yearMatch = normalized.match(/\b(19|20)\d{2}\b/);
+    if (!yearMatch) return null;
+    year = Number(yearMatch[0]);
+    withoutYear = normalize(normalized.replace(yearMatch[0], ""));
+  }
 
   type Match = { f: Fitment; exact: boolean; modelLen: number };
   const matches: Match[] = [];
