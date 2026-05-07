@@ -302,6 +302,12 @@ export default function VehicleAutocomplete({
           Nenhum veículo encontrado. Tente outra grafia ou inclua o ano.
         </div>
       )}
+
+      <YearPickerDialog
+        suggestion={yearPicker}
+        onClose={() => setYearPicker(null)}
+        onPick={(label, codes) => { setYearPicker(null); navigateToResult(label, codes); }}
+      />
     </div>
   );
 
