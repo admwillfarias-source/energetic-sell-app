@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search, MapPin } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
@@ -13,7 +13,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { fetchBatteriesByVehicle, fetchBatteries, type VehicleBrand } from "@/lib/api/batteries";
+import { fetchBatteriesByVehicle, fetchBatteries } from "@/lib/api/batteries";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { getStrictVehicleCodes } from "@/lib/fitments";
 import { BatteryMouraCard } from "@/components/BatteryMouraCard";
