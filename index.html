@@ -22,6 +22,32 @@
       type="image/webp"
     />
 
+    <!-- CSS crítico inline: pinta hero acima da dobra sem esperar o bundle CSS -->
+    <style>
+      *,*::before,*::after{box-sizing:border-box}
+      html,body{margin:0;padding:0}
+      :root{
+        --background:0 0% 98%;--foreground:0 0% 8%;
+        --card:0 0% 100%;--card-foreground:0 0% 8%;
+        --primary:0 85% 46%;--primary-foreground:0 0% 100%;
+        --secondary:0 0% 10%;--secondary-foreground:0 0% 100%;
+        --muted-foreground:0 0% 35%;
+        --accent:45 100% 42%;--accent-foreground:0 0% 5%;
+        --border:0 0% 88%;--ring:0 85% 46%;--radius:0.5rem;
+        --awr-green:142 70% 40%;
+      }
+      body{
+        background:hsl(var(--background));color:hsl(var(--foreground));
+        font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+        -webkit-font-smoothing:antialiased;
+        font-size:16px;line-height:1.5;
+      }
+      #root{min-height:100vh}
+      h1,h2,h3{font-family:"Plus Jakarta Sans",Inter,system-ui,sans-serif;letter-spacing:-0.02em;margin:0}
+      section#inicio{position:relative;display:flex;align-items:center;min-height:80vh;padding-top:64px;background:hsl(var(--secondary))}
+      section#inicio>div:first-child{position:absolute;inset:0;z-index:0;background:hsl(var(--secondary))}
+    </style>
+
     <!-- dataLayer + gtag stub (carregamento real em src/lib/loadTracking.ts, diferido) -->
     <script>
       window.dataLayer = window.dataLayer || [];
