@@ -29,10 +29,13 @@ const YEARS = Array.from({ length: 10 }, (_, i) => CURRENT_YEAR - i);
 
 const TRUCK_MODELS = new Set(["Strada", "Hilux"]);
 
+type StartStopChoice = "standard" | "start-stop";
+
 export default function SearchOverlay({ open, onOpenChange }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [picked, setPicked] = useState<TopVehicle | null>(null);
+  const [pickedYear, setPickedYear] = useState<number | null>(null);
   const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
@@ -55,22 +58,76 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
       });
     } else {
       setPicked(null);
+      setPickedYear(null);
       setResolving(false);
     }
   }, [open]);
 
-  
+  const finishWithCodes = (
+    vehicle: TopVehicle,
+    year: number,
+    codes: string[],
+    suffix = "",
+  ) => {
+    const vehicleLabel = `${vehicle.brand} ${vehicle.model} ${year}${suffix}`;
+    queryClient
+      .prefetchQuery({
+        queryKey: ["resultado", { codes, vehicle: vehicleLabel }],
+        queryFn: () => fetchBatteriesByVehicle(codes, {}),
+        staleTime: 5 * 60 * 1000,
+      })
+      .then(() => {
+        markEvent("result_prefetch_done");
+        try {
+          measureBetween("result_load_ms", "result_navigate_start", "result_prefetch_done");
+        } catch {
+          // ignore
+        }
+      })
+      .catch(() => {});
 
-  const goWithYear = async (vehicle: TopVehicle, year: number) => {
+    try {
+      sessionStorage.setItem("lastVehicleSearch", vehicleLabel);
+    } catch {
+      // ignore
+    }
+    onOpenChange(false);
+    navigate(
+      `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(vehicleLabel)}`,
+    );
+  };
+
+  const handleYearClick = (vehicle: TopVehicle, year: number) => {
+    const hasStartStop =
+      !!vehicle.startStopSkus?.length &&
+      typeof vehicle.startStopFromYear === "number" &&
+      year >= vehicle.startStopFromYear;
+    if (hasStartStop) {
+      // Mostra a tela de Start/Stop antes de navegar.
+      setPicked({ ...vehicle });
+      setPickedYear(year);
+      return;
+    }
+    chooseAndGo(vehicle, year, "standard");
+  };
+
+  const chooseAndGo = async (
+    vehicle: TopVehicle,
+    year: number,
+    choice: StartStopChoice,
+  ) => {
     setResolving(true);
     markEvent("result_navigate_start");
     try {
       await ensureCatalogLoaded();
-      const vehicleLabel = `${vehicle.brand} ${vehicle.model} ${year}`;
-      // Usa somente os códigos cadastrados na tabela de aplicação para este
-      // modelo/ano, sem ampliar por busca fuzzy, equivalência ou cruzamento.
-      const codes = getStrictVehicleCodes(vehicleLabel);
-      if (codes.length === 0) {
+      const codes =
+        choice === "start-stop" && vehicle.startStopSkus?.length
+          ? vehicle.startStopSkus
+          : vehicle.standardSkus?.length
+            ? vehicle.standardSkus
+            : getStrictVehicleCodes(`${vehicle.brand} ${vehicle.model} ${year}`);
+
+      if (!codes || codes.length === 0) {
         toast({
           title: "Sem aplicação cadastrada",
           description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}. Tente outro ano ou digite o modelo do carro.`,
@@ -78,37 +135,8 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
         setResolving(false);
         return;
       }
-
-      // Prefetch dispara em paralelo — a página /resultado consome o cache.
-      queryClient
-        .prefetchQuery({
-          queryKey: ["resultado", { codes, vehicle: vehicleLabel }],
-          queryFn: () => fetchBatteriesByVehicle(codes, {}),
-          staleTime: 5 * 60 * 1000,
-        })
-        .then(() => {
-          markEvent("result_prefetch_done");
-          try {
-            measureBetween(
-              "result_load_ms",
-              "result_navigate_start",
-              "result_prefetch_done",
-            );
-          } catch {
-            // ignore
-          }
-        })
-        .catch(() => {});
-
-      try {
-        sessionStorage.setItem("lastVehicleSearch", vehicleLabel);
-      } catch {
-        // ignore
-      }
-      onOpenChange(false);
-      navigate(
-        `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(vehicleLabel)}`,
-      );
+      const suffix = choice === "start-stop" ? " Start/Stop" : "";
+      finishWithCodes(vehicle, year, codes, suffix);
     } finally {
       setResolving(false);
     }
@@ -192,7 +220,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
             </>
           )}
 
-          {picked && (
+          {picked && pickedYear === null && (
             <div>
               <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
                 {TRUCK_MODELS.has(picked.model) ? (
@@ -212,7 +240,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
                     key={y}
                     variant="outline"
                     disabled={resolving}
-                    onClick={() => goWithYear(picked, y)}
+                    onClick={() => handleYearClick(picked, y)}
                     className={cn(
                       "h-12 text-base font-bold hover:border-primary hover:bg-primary hover:text-primary-foreground",
                     )}
@@ -222,13 +250,76 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
                 ))}
               </div>
 
-              <p className="mt-4 text-center text-xs text-muted-foreground">
+              {picked.startStopFromYear && (
+                <p className="mt-4 text-center text-[11px] text-muted-foreground">
+                  A partir de {picked.startStopFromYear}, perguntaremos se o seu {picked.label} tem
+                  tecnologia <span className="font-semibold text-foreground">Start/Stop</span> para
+                  indicar a bateria correta (EFB/AGM).
+                </p>
+              )}
+
+              <p className="mt-3 text-center text-xs text-muted-foreground">
                 Não é o ano certo?{" "}
                 <button
                   onClick={() => setPicked(null)}
                   className="font-semibold text-primary underline-offset-2 hover:underline"
                 >
                   Voltar e digitar o modelo
+                </button>
+              </p>
+            </div>
+          )}
+
+          {picked && pickedYear !== null && (
+            <div>
+              <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
+                {TRUCK_MODELS.has(picked.model) ? (
+                  <Truck className="h-6 w-6 text-primary" />
+                ) : (
+                  <Car className="h-6 w-6 text-primary" />
+                )}
+                <div>
+                  <div className="font-semibold leading-tight">
+                    {picked.brand} {picked.label} {pickedYear}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Seu carro tem sistema Start/Stop?
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button
+                  variant="outline"
+                  disabled={resolving}
+                  onClick={() => chooseAndGo(picked, pickedYear, "standard")}
+                  className="h-14 flex-col gap-0.5 hover:border-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  <span className="text-sm font-bold">Não tem Start/Stop</span>
+                  <span className="text-[11px] opacity-80">Bateria convencional</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  disabled={resolving}
+                  onClick={() => chooseAndGo(picked, pickedYear, "start-stop")}
+                  className="h-14 flex-col gap-0.5 hover:border-primary hover:bg-primary hover:text-primary-foreground"
+                >
+                  <span className="text-sm font-bold">Tem Start/Stop</span>
+                  <span className="text-[11px] opacity-80">Bateria EFB/AGM</span>
+                </Button>
+              </div>
+
+              <p className="mt-3 text-center text-[11px] text-muted-foreground">
+                O sistema Start/Stop desliga o motor automaticamente em paradas curtas e exige
+                bateria reforçada.
+              </p>
+
+              <p className="mt-3 text-center text-xs text-muted-foreground">
+                <button
+                  onClick={() => setPickedYear(null)}
+                  className="font-semibold text-primary underline-offset-2 hover:underline"
+                >
+                  ← Trocar o ano
                 </button>
               </p>
             </div>
