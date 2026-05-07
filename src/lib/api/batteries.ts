@@ -1,5 +1,8 @@
 import type { Battery } from "@/data/batteries";
-import { supabase } from "@/integrations/supabase/client";
+
+// Lazy import: o client supabase (~128KB) não entra no chunk inicial.
+const getSupabase = () =>
+  import("@/integrations/supabase/client").then((m) => m.supabase);
 
 type WCImage = { src: string; thumbnail?: string; alt?: string };
 type WCCategory = { id: number; name: string; slug: string };
