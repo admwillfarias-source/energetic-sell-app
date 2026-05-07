@@ -2,8 +2,6 @@ import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
-import heroBg from "@/assets/hero-bg.webp";
-import heroBgSm from "@/assets/hero-bg-sm.webp";
 import { startLcpTracking, markEvent } from "@/lib/perfMetrics";
 import { initDeferredTracking } from "@/lib/loadTracking";
 
@@ -27,17 +25,8 @@ loadFontsDeferred();
 startLcpTracking();
 markEvent("app_boot");
 
-// Preload hero LCP com URL hasheada (Vite resolve em build)
-const preloadHero = () => {
-  const isMobile = window.matchMedia("(max-width: 768px)").matches;
-  const link = document.createElement("link");
-  link.rel = "preload";
-  link.as = "image";
-  link.href = isMobile ? heroBgSm : heroBg;
-  link.fetchPriority = "high" as never;
-  document.head.appendChild(link);
-};
-preloadHero();
+// Preload do hero agora vive em index.html (paths estáveis em /public)
+// para que o navegador o resolva antes do parse do JS bundle.
 
 createRoot(document.getElementById("root")!).render(
   <HelmetProvider>
