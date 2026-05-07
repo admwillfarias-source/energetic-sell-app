@@ -1,44 +1,32 @@
-## Passo 2 (revisado) — CSS crítico inline + defer do bundle CSS + fontes
+## Passo 3 — LCP (refinamentos)
 
-O Passo 2 anterior já cuidou das fontes (carregamento via `requestIdleCallback` + fallback `system-ui`). Falta agora o que mais pesa no FCP: o **CSS bundle do Vite (`/assets/index-*.css`) é render-blocking**. Esse passo ataca isso.
+A maior parte do Passo 3 já foi feita em iterações anteriores: o hero está em `/public` com paths estáveis, tem `<link rel="preload" as="image" imagesrcset imagesizes fetchpriority="high">` no `<head>` (resolvido antes do parse do JS), `<picture>` com `source` mobile, `loading="eager"`, `decoding="async"`, `width`/`height` e `fetchpriority="high"` no `<img>`. O preload do hero está **antes** de qualquer `<script>` no `index.html`, então o "Resource load delay" de 8.59s relatado é de uma medição anterior aos passos 1–2; mesmo assim ainda dá pra ganhar tempo:
 
-### 1. Inline de CSS crítico no `<head>` do `index.html`
-Adicionar um `<style>` inline (~1.5 KB) com o mínimo para pintar o hero acima da dobra no mobile:
-- Reset básico (`*,*::before,*::after { box-sizing:border-box }`, `body { margin:0 }`).
-- Tokens HSL essenciais (`--background`, `--foreground`, `--primary`, `--primary-foreground`, `--secondary`, `--secondary-foreground`, `--accent`, `--accent-foreground`, `--card`, `--muted-foreground`, `--border`, `--ring`, `--radius`).
-- `body { background: hsl(var(--background)); color: hsl(var(--foreground)); font-family: Inter, system-ui, -apple-system, sans-serif; -webkit-font-smoothing: antialiased; }`.
-- Estilos da seção hero: `section#inicio` ocupando `min-height:80vh` com `padding-top:64px` + container central, h1 grande com `font-family: "Plus Jakarta Sans", Inter, system-ui` e `min-height` reservado (evita CLS quando a fonte web entra).
-- Caixa de busca (`.rounded-2xl bg-card p-4 shadow-lg`) em altura fixa para não shiftar.
-- `#root { min-height: 100vh }` para não pintar branco.
+### 1. Reduzir bytes do hero (mobile cai a ~20 KB)
+- Recomprimir `public/hero-bg-sm.webp` (hoje 43 KB) com `cwebp -q 70 -m 6 -sharp_yuv` → alvo ~20–25 KB.
+- Recomprimir `public/hero-bg.webp` (hoje 130 KB) com `cwebp -q 72` → alvo ~70–90 KB.
+- Gerar versão **AVIF** correspondente (`hero-bg-sm.avif`, `hero-bg.avif`) com `avifenc --min 30 --max 40 --speed 6` → tipicamente 30–40% menor que WebP. Adicionar primeiro `<source type="image/avif">` no `<picture>` e no `imagesrcset` do preload (via `type="image/avif"` no `<link>`; navegadores que não suportam AVIF ignoram).
 
-Tudo escrito em CSS puro (sem dependência do Tailwind), apenas para a primeira pintura. O Tailwind/CSS principal continua governando o resto da página assim que carrega.
+### 2. Garantir que o preload é o primeiro recurso pesado
+- Mover o `<link rel="preload" as="image">` do hero para **antes** de qualquer `dns-prefetch`/`preconnect` no `<head>` (ordem importa para a fila de prioridade do navegador).
+- Confirmar que nenhum `<script>` bloqueante apareceu antes dele.
 
-### 2. Defer do bundle CSS principal
-Hoje o Vite injeta `<link rel="stylesheet" href="/assets/index-XXXX.css">` automaticamente — render-blocking. Como o nome tem hash e é inserido pelo bundler, não dá para editar à mão no `index.html`. A solução é um pequeno **plugin Vite** dentro de `vite.config.ts` que, no hook `transformIndexHtml`, reescreve a tag emitida para:
+### 3. Eliminar o "Element render delay" de 1.91s
+O elemento LCP só pinta depois do React montar o `<HeroSection>`. Para reduzir:
+- Renderizar **um placeholder estático do hero direto no `index.html`** (dentro de `#root` ou em `body`) com a mesma `<picture>` e os badges/título principais em HTML puro. Quando o React hidrata, substitui. Ganho típico: 800–1500 ms de LCP em mobile.
+- Alternativa mais leve: garantir que o CSS crítico (já inline no Passo 2) reserva exatamente as dimensões do hero, e que o `<img>` é descoberto pelo preload scanner — já feito.
 
-```html
-<link rel="preload" as="style" href="...css" onload="this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="...css"></noscript>
-```
-
-Isso libera o FCP enquanto o CSS completo baixa em paralelo. Alternativa mais simples (sem plugin): usar `media="print" onload="this.media='all'"`. Mesma ideia, mais compatível.
-
-### 3. Ajustes finos nas fontes (já parcialmente feitos)
-- Confirmar que `@fontsource` (já carregado em `requestIdleCallback`) usa `font-display: swap` por padrão — sim, é o default do pacote, nada a fazer.
-- Adicionar `font-size-adjust` ou ajustar `letter-spacing` no fallback `system-ui` se o CLS de fonte continuar visível depois (mensurar antes).
-- Reduzir variantes? Já estamos em 4 (Inter 400/600 + Plus Jakarta 700/800). Manter — todas são usadas.
+A opção do placeholder estático é mais invasiva (precisa duplicar markup do hero em HTML estático). Recomendo só fazer se Passos 1–2 medidos não baixarem o LCP para <2.5s.
 
 ### 4. Validação
-- Verificar visualmente no preview mobile que o hero pinta sem flash de não-estilizado.
-- Conferir no DevTools Network que o CSS principal carrega como `preload` → `stylesheet` (não-blocking).
-- Rodar `scripts/lighthouse.mjs` mobile e comparar FCP/LCP.
+- Após compressão, rodar `scripts/lighthouse.mjs` mobile.
+- Conferir no Network panel que `hero-bg-sm.avif`/`.webp` aparece como **Highest priority** e começa antes de qualquer `.js` chunk.
+- Critério: LCP < 2.5s mobile.
 
 ### Arquivos impactados
-- `index.html` — inserir `<style>` crítico no `<head>`.
-- `vite.config.ts` — adicionar plugin que reescreve a tag `<link rel="stylesheet">` do bundle para preload+swap.
-- (Sem mudanças em componentes React.)
+- `public/hero-bg-sm.webp`, `public/hero-bg.webp` — recomprimir.
+- `public/hero-bg-sm.avif`, `public/hero-bg.avif` — novos.
+- `index.html` — adicionar segundo `<link rel="preload" type="image/avif">` e reordenar.
+- `src/components/HeroSection.tsx` — adicionar `<source type="image/avif">` no `<picture>`.
 
-### Detalhes técnicos
-O plugin Vite (em `transformIndexHtml`, fase `post`) procura `<link rel="stylesheet" crossorigin href="/assets/index-...css">` no HTML emitido pelo build e o substitui por `<link rel="preload" as="style" .../><noscript>...</noscript>` mais um pequeno `onload` inline. Em dev (sem hash), o plugin não faz nada — o Vite serve CSS via HMR e é instantâneo.
-
-Confirmar antes de implementar.
+Confirmar antes de implementar. Caso queira pular direto para a opção radical (placeholder HTML estático para zerar o "Element render delay"), me avise.
