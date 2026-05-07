@@ -72,14 +72,13 @@ function normalize(s: string): string {
 }
 
 /**
- * Recalcula os SKUs permitidos para um rótulo de veículo usando somente a
- * tabela de aplicações. Isso impede que códigos extras vindos da URL/cache
- * sejam exibidos para outro modelo/ano.
+ * Encontra a melhor linha (fitment) da tabela para um rótulo de veículo.
+ * Aplica match exato ou prefixo do modelo, dentro do intervalo de anos.
  */
-export function getStrictVehicleCodes(label: string): string[] {
+export function getStrictVehicleFitment(label: string): Fitment | null {
   const normalized = normalize(label);
   const yearMatch = normalized.match(/\b(19|20)\d{2}\b/);
-  if (!yearMatch) return [];
+  if (!yearMatch) return null;
 
   const year = Number(yearMatch[0]);
   const withoutYear = normalize(normalized.replace(yearMatch[0], ""));
@@ -100,18 +99,42 @@ export function getStrictVehicleCodes(label: string): string[] {
     matches.push({ f, exact: sameModel, modelLen: model.length });
   }
 
-  if (matches.length === 0) return [];
+  if (matches.length === 0) return null;
 
-  // Prefere match exato; senão, pega o modelo mais "base" (mais curto).
   matches.sort((a, b) => {
     if (a.exact !== b.exact) return a.exact ? -1 : 1;
     return a.modelLen - b.modelLen;
   });
 
-  // Retorna apenas os SKUs (até 4 marcas + code) de UM único fitment, para
-  // limitar a 4 baterias por carro conforme tabela de aplicação.
-  const best = matches[0].f;
-  const ordered = [best.skuMoura, best.skuZetta, best.skuHeliar, best.skuExcell, best.code];
+  return matches[0].f;
+}
+
+/**
+ * Mapeia, por marca de bateria, o SKU homologado na tabela para o veículo.
+ * Garante que o produto exibido corresponde EXATAMENTE ao SKU cadastrado
+ * para cada marca (não há "adivinhação" pela descrição do WooCommerce).
+ */
+export type BrandSkuMap = Partial<Record<"Moura" | "Heliar" | "Zetta" | "Excell", string>>;
+
+export function getStrictVehicleSkuMap(label: string): BrandSkuMap {
+  const f = getStrictVehicleFitment(label);
+  if (!f) return {};
+  const map: BrandSkuMap = {};
+  if (f.skuMoura?.trim()) map.Moura = f.skuMoura.trim().toUpperCase();
+  if (f.skuHeliar?.trim()) map.Heliar = f.skuHeliar.trim().toUpperCase();
+  if (f.skuZetta?.trim()) map.Zetta = f.skuZetta.trim().toUpperCase();
+  if (f.skuExcell?.trim()) map.Excell = f.skuExcell.trim().toUpperCase();
+  return map;
+}
+
+/**
+ * Mantido por compatibilidade — retorna apenas a lista de SKUs únicos do
+ * fitment cadastrado para o veículo (ordenada por Moura, Zetta, Heliar, Excell).
+ */
+export function getStrictVehicleCodes(label: string): string[] {
+  const f = getStrictVehicleFitment(label);
+  if (!f) return [];
+  const ordered = [f.skuMoura, f.skuZetta, f.skuHeliar, f.skuExcell, f.code];
   const out: string[] = [];
   const seen = new Set<string>();
   for (const s of ordered) {
