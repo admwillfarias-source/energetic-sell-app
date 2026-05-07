@@ -190,52 +190,63 @@ export default function Resultado() {
       ]
     : [];
 
-  // ===== JSON-LD =====
-  const jsonLd = useMemo(() => {
-    if (!vehicle) return [organizationLd()];
-
-    const breadcrumb = breadcrumbLd([
-      { name: "Início", url: SITE_URL },
-      { name: "Baterias", url: `${SITE_URL}/#catalogo` },
-      { name: `Bateria para ${vehicle}`, url: canonical },
-    ]);
-
-    const itemList = {
-      "@context": "https://schema.org",
-      "@type": "ItemList",
-      name: `Baterias compatíveis com ${vehicle}`,
-      numberOfItems: sorted.length,
-      itemListElement: sorted.map((b, i) => ({
-        "@type": "ListItem",
-        position: i + 1,
-        item: {
-          "@type": "Product",
-          name: b.name,
-          brand: { "@type": "Brand", name: b.brand },
-          ...(b.sku ? { sku: b.sku } : {}),
-          ...(b.image ? { image: b.image } : {}),
-          url: b.permalink || canonical,
-          offers: {
-            "@type": "Offer",
-            priceCurrency: "BRL",
-            price: b.price,
-            availability: "https://schema.org/InStock",
+  // ===== JSON-LD (deferido para fora do paint inicial) =====
+  const [jsonLd, setJsonLd] = useState<Record<string, unknown>[]>([]);
+  useEffect(() => {
+    const build = () => {
+      if (!vehicle) {
+        setJsonLd([organizationLd()]);
+        return;
+      }
+      const breadcrumb = breadcrumbLd([
+        { name: "Início", url: SITE_URL },
+        { name: "Baterias", url: `${SITE_URL}/#catalogo` },
+        { name: `Bateria para ${vehicle}`, url: canonical },
+      ]);
+      const itemList = {
+        "@context": "https://schema.org",
+        "@type": "ItemList",
+        name: `Baterias compatíveis com ${vehicle}`,
+        numberOfItems: sorted.length,
+        itemListElement: sorted.map((b, i) => ({
+          "@type": "ListItem",
+          position: i + 1,
+          item: {
+            "@type": "Product",
+            name: b.name,
+            brand: { "@type": "Brand", name: b.brand },
+            ...(b.sku ? { sku: b.sku } : {}),
+            ...(b.image ? { image: b.image } : {}),
             url: b.permalink || canonical,
+            offers: {
+              "@type": "Offer",
+              priceCurrency: "BRL",
+              price: b.price,
+              availability: "https://schema.org/InStock",
+              url: b.permalink || canonical,
+            },
           },
-        },
-      })),
+        })),
+      };
+      const faqPage = faqLd(faq);
+      const localBusiness = localBusinessLd({
+        url: canonical,
+        city: "Porto Alegre",
+        state: "RS",
+        areas: cityPages.map((c) => ({ name: c.name, deliveryTime: c.deliveryTime })),
+      });
+      setJsonLd(
+        [breadcrumb, itemList, faqPage, localBusiness, organizationLd()].filter(
+          Boolean,
+        ) as Record<string, unknown>[],
+      );
     };
-
-    const faqPage = faqLd(faq);
-
-    const localBusiness = localBusinessLd({
-      url: canonical,
-      city: "Porto Alegre",
-      state: "RS",
-      areas: cityPages.map((c) => ({ name: c.name, deliveryTime: c.deliveryTime })),
-    });
-
-    return [breadcrumb, itemList, faqPage, localBusiness, organizationLd()].filter(Boolean) as Record<string, unknown>[];
+    const w = window as unknown as {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+    };
+    const idle = w.requestIdleCallback;
+    if (idle) idle(build, { timeout: 2000 });
+    else setTimeout(build, 200);
   }, [vehicle, sorted, canonical, faq]);
 
   // Cidades destacadas para linkagem interna
