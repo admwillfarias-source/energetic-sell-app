@@ -290,7 +290,8 @@ export async function fetchBatteriesByVehicle(
   }
 
   const list = await fetchBatteries({ codes: Array.from(wanted), perPage: 30 });
-  const filtered = list.filter((p) => !!p.sku && wanted.has(p.sku.toUpperCase()));
-
-  return filtered.sort((a, b) => b.price - a.price);
+  // Não filtramos por SKU exato: a edge function já consulta o WooCommerce
+  // pelos SKUs informados. Se a loja retornar variações de nomenclatura
+  // (ex.: HEFB60HD vs EFB60HD), elas devem aparecer assim mesmo.
+  return list.sort((a, b) => b.price - a.price);
 }
