@@ -346,44 +346,64 @@ export default function Resultado() {
             </div>
           </div>
 
-          {/* Lista */}
-          {isResultLoading ? (
-            <div className="grid gap-4">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-44 rounded-2xl" />
-              ))}
-            </div>
-          ) : isError ? (
-            <div className="rounded-2xl border border-dashed border-destructive/40 bg-destructive/5 p-10 text-center">
-              <p className="text-muted-foreground">Não foi possível carregar as baterias.</p>
-              <Button onClick={() => refetch()} variant="outline" className="mt-4">
-                Tentar novamente
-              </Button>
-            </div>
-          ) : sorted.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
-              <Search className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
-              <p className="font-medium">Nenhuma bateria encontrada para essa busca.</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Tente outra grafia, inclua o ano ou fale com a gente no WhatsApp.
-              </p>
-              <Button asChild className="mt-4">
-                <Link to="/">Nova busca</Link>
-              </Button>
-            </div>
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-              {sorted.map((b, i) => (
-                <BatteryMouraCard
-                  key={b.id}
-                  battery={b}
-                  highlight={i === 0}
-                  vehicleLabel={vehicle}
-                  priority={i < 2}
-                />
-              ))}
-            </div>
-          )}
+          {/* Lista — carregamento progressivo: cards aparecem assim que cada
+              SKU chega; skeletons preenchem os pendentes. */}
+          {(() => {
+            const stillPending = vehicle
+              ? perSkuQueries.filter((q) => q.isLoading).length
+              : 0;
+            if (isResultLoading && sorted.length === 0) {
+              return (
+                <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                  {Array.from({ length: Math.max(effectiveCodes.length || 3, 3) }).map((_, i) => (
+                    <Skeleton key={i} className="h-[420px] rounded-2xl" />
+                  ))}
+                </div>
+              );
+            }
+            if (isError && sorted.length === 0) {
+              return (
+                <div className="rounded-2xl border border-dashed border-destructive/40 bg-destructive/5 p-10 text-center">
+                  <p className="text-muted-foreground">Não foi possível carregar as baterias.</p>
+                  <Button onClick={() => refetch()} variant="outline" className="mt-4">
+                    Tentar novamente
+                  </Button>
+                </div>
+              );
+            }
+            if (sorted.length === 0) {
+              return (
+                <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
+                  <Search className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
+                  <p className="font-medium">Nenhuma bateria encontrada para essa busca.</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Tente outra grafia, inclua o ano ou fale com a gente no WhatsApp.
+                  </p>
+                  <Button asChild className="mt-4">
+                    <Link to="/">Nova busca</Link>
+                  </Button>
+                </div>
+              );
+            }
+            const remainingSlots = Math.max(0, 4 - sorted.length);
+            const pendingSkeletons = vehicle ? Math.min(stillPending, remainingSlots) : 0;
+            return (
+              <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
+                {sorted.map((b, i) => (
+                  <BatteryMouraCard
+                    key={b.id}
+                    battery={b}
+                    highlight={i === 0}
+                    vehicleLabel={vehicle}
+                    priority={i < 2}
+                  />
+                ))}
+                {Array.from({ length: pendingSkeletons }).map((_, i) => (
+                  <Skeleton key={`pending-${i}`} className="h-[420px] rounded-2xl" />
+                ))}
+              </div>
+            );
+          })()}
 
           {/* ===== Conteúdo SEO on-page ===== */}
           {vehicle && hasResults && (
