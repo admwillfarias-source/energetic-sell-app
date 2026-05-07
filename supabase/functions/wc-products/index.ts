@@ -28,11 +28,26 @@ function cacheSet(key: string, body: string): void {
   memCache.set(key, { at: Date.now(), body });
 }
 
-async function fetchJson(url: string): Promise<unknown[]> {
-  const res = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!res.ok) return [];
-  const data = await res.json();
-  return Array.isArray(data) ? data : [];
+async function fetchJson(url: string, attempt = 0): Promise<unknown[]> {
+  try {
+    const res = await fetch(url, { headers: { Accept: "application/json" } });
+    if (res.status === 429 && attempt < 2) {
+      const wait = 400 * (attempt + 1);
+      await new Promise((r) => setTimeout(r, wait));
+      return fetchJson(url, attempt + 1);
+    }
+    if (!res.ok) {
+      console.warn("wc upstream non-ok:", res.status, url);
+      return [];
+    }
+    const ct = res.headers.get("content-type") ?? "";
+    if (!ct.includes("application/json")) return [];
+    const data = await res.json();
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.warn("wc fetch error:", (e as Error).message);
+    return [];
+  }
 }
 
 // Heurística: termos sem espaço e curtos (<=14) que parecem código → SKU.
@@ -150,11 +165,8 @@ Deno.serve(async (req) => {
     } else {
       const target = new URL(WC_BASE);
       target.searchParams.set("per_page", perPage);
-      const res = await fetch(target.toString(), {
-        headers: { Accept: "application/json" },
-      });
-      body = await res.text();
-      status = res.status;
+      const arr = await fetchJson(target.toString());
+      body = JSON.stringify(arr);
     }
 
     if (status === 200) cacheSet(cacheKey, body);
@@ -171,8 +183,8 @@ Deno.serve(async (req) => {
   } catch (error) {
     const msg = error instanceof Error ? error.message : "Unknown error";
     console.error("wc-products error:", msg);
-    return new Response(JSON.stringify({ error: msg }), {
-      status: 500,
+    return new Response(JSON.stringify([]), {
+      status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
