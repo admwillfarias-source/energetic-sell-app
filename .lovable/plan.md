@@ -1,51 +1,120 @@
-## Objetivo
+# Conversão AWR Baterias → Tema WordPress + Elementor + WooCommerce
 
-Reduzir tarefas longas na main thread e o tamanho do JS no caminho crítico, focando na página `/resultado` e no boot global.
+## Objetivo da entrega
 
-## Mudanças
+Gerar um **pacote de especificação técnica + scaffolding** para um desenvolvedor WordPress replicar o app atual como tema nativo (sem iframe, sem React), usando Elementor Pro + WooCommerce + um plugin auxiliar para a busca encadeada Marca → Modelo → Ano → Amperagem.
 
-### 1. Code-split do Supabase client
-Hoje `src/integrations/supabase/client.ts` é importado eagerly por vários módulos, puxando 128 KB de JS no boot.
+O entregável final será um arquivo `awr-wordpress-spec.zip` em `/mnt/documents/awr-wordpress/` contendo:
 
-- Auditar todos os arquivos que importam `@/integrations/supabase/client` no caminho crítico (Index, Resultado, Header).
-- Onde o uso é só dentro de `useEffect` / handlers, trocar por `const { supabase } = await import("@/integrations/supabase/client")` dentro da função.
-- Onde o uso é em provider global (auth), manter — mas garantir que o provider em si seja lazy se possível.
+```
+awr-wordpress/
+├── README.md                          ← visão geral + ordem de execução
+├── 01-briefing-dev.md                 ← prompt completo para dev/agência
+├── 02-design-tokens.md                ← cores, fontes, espaçamentos, breakpoints
+├── 03-estrutura-paginas.md            ← wireframe textual de cada página
+├── 04-woocommerce-setup.md            ← atributos, taxonomias, campos extras, exemplo CSV
+├── 05-busca-encadeada.md              ← spec funcional + endpoints AJAX
+├── 06-elementor-templates.md          ← lista de templates + widgets HTML personalizados
+├── 07-integracao-whatsapp.md          ← formato de mensagem, links wa.me
+├── 08-seo-performance.md              ← checklist Core Web Vitals + schema.org
+├── plugin-awr-search/                 ← plugin WP funcional (busca AJAX + shortcodes)
+│   ├── awr-search.php
+│   ├── includes/
+│   │   ├── class-awr-rest.php         ← endpoints /wp-json/awr/v1/...
+│   │   ├── class-awr-shortcodes.php   ← [awr_search_modal] [awr_results]
+│   │   └── class-awr-import.php       ← importador do fitments.csv
+│   └── assets/
+│       ├── awr-search.js              ← reaproveitado do export anterior
+│       └── awr-search.css
+├── theme-child-hello-elementor/       ← child theme base
+│   ├── style.css
+│   ├── functions.php
+│   └── awr-tokens.css                 ← variáveis CSS do design system
+├── data/
+│   ├── fitments-sample.csv            ← export Supabase → CSV WP All Import
+│   └── produtos-sample.csv            ← template WooCommerce
+└── elementor-templates/
+    ├── home.json                      ← template Elementor exportado (estrutura)
+    ├── catalogo.json
+    ├── single-product.json
+    └── header-footer.json
+```
 
-### 2. Lazy-load das seções abaixo da dobra em `Resultado.tsx`
-Arquivo tem 466 linhas e renderiza tudo na primeira pintura.
+## Arquitetura proposta
 
-- Extrair em componentes separados:
-  - `ResultadoFAQ.tsx` (bloco FAQ)
-  - `ResultadoCidades.tsx` (featured cities)
-  - `ResultadoJsonLd.tsx` (geração + injeção de JSON-LD)
-- Carregar via `React.lazy` + `<Suspense fallback={null}>` dentro de `Resultado.tsx`.
-- O JSON-LD não bloqueia render — pode ser montado em `requestIdleCallback`.
+```text
+WordPress + Hello Elementor (child)
+        │
+        ├── WooCommerce ........... produtos (baterias) + atributos globais
+        │     ├── pa_marca-carro
+        │     ├── pa_modelo-carro
+        │     ├── pa_ano
+        │     └── pa_amperagem
+        │
+        ├── Plugin awr-search ..... CPT "fitment" (mapeamento carro→SKU)
+        │     ├── REST: /awr/v1/search?q=onix
+        │     ├── REST: /awr/v1/years?model=onix
+        │     ├── REST: /awr/v1/products?model=onix&year=2018
+        │     └── Shortcode [awr_search] [awr_results]
+        │
+        ├── Elementor Pro ......... Theme Builder (header, footer, single, archive)
+        │     └── Loop Builder ..... cards de produto
+        │
+        └── awr-tokens.css ........ design system (reaproveitado do export anterior)
+```
 
-### 3. Diferir construção do JSON-LD pesado
-O `useMemo` de `jsonLd` (breadcrumb + itemList + faqPage + localBusiness + organization) roda no render inicial.
+## Páginas e templates
 
-- Mover para `useEffect` + `requestIdleCallback`, guardando em state. Não afeta SEO porque o crawler do Google espera scripts injetados após load.
+| Página | Tipo | Construção |
+|---|---|---|
+| Home | Page (Elementor) | Hero + 3 passos + Mais vendidas (Loop) + Benefícios + Como funciona + Depoimentos + Mais buscados + Marcas + FAQ |
+| Catálogo | Archive WooCommerce | Loop Builder + filtros (FacetWP ou equivalente) |
+| Produto único | Single WooCommerce | Galeria + preço (à vista/parcelado) + benefícios + WhatsApp CTA |
+| Serviços | Page | Elementor puro |
+| Contato | Page | Form (Elementor Forms) + mapa + WhatsApp |
+| Resultados busca | Page (`/resultado`) | `[awr_results]` renderiza cards via JS |
 
-### 4. Instrumentação de medição
-- Adicionar `markEvent("resultado_mounted")` no topo do `useEffect` inicial de `Resultado.tsx`.
-- Adicionar `measureBetween("boot_to_resultado", "app_boot", "resultado_mounted")` logo após.
-- Resultado fica visível em `window.__perfReport()` no console.
+## Busca encadeada — fluxo
 
-## Fora do escopo agora
+```text
+[input: "onix"]
+        │ keyup ≥2 chars
+        ▼
+GET /wp-json/awr/v1/search?q=onix
+        │ retorna [{brand, model, years:[2012..2020]}]
+        ▼
+[chips de anos clicáveis]
+        │ click 2018
+        ▼
+GET /wp-json/awr/v1/products?model=onix&year=2018
+        │ retorna SKUs do fitment → consulta WC products
+        ▼
+[cards renderizados em [data-awr-results]]
+```
 
-- **lucide-react**: o pacote já é tree-shakable nativamente quando se usa `import { X } from "lucide-react"` (que é o padrão do projeto). O bundle de 157 KB visto no profile é o **dev server do Vite** servindo o módulo inteiro — em produção o tree-shake elimina ícones não usados. Não precisa mexer.
-- **Reescrever a página inteira** — mantemos a estrutura atual, só extraímos seções.
+A lógica JS já existe no export anterior (`awr-search.js`) — será adaptada para consumir `/wp-json/awr/v1/*` em vez de Supabase.
 
-## Validação
+## Plugins recomendados
 
-1. Rodar Lighthouse mobile na URL publicada (`energetic-sell-app.lovable.app/resultado?...`) — não no preview dev.
-2. Comparar antes/depois nos diagnósticos:
-   - "Avoid long main-thread tasks" — número de long tasks deve cair.
-   - "Reduce unused JavaScript" — bytes do supabase saem do initial load.
-3. No console: `window.__perfReport()` mostra o measure `boot_to_resultado`.
+- **Elementor Pro** (Theme Builder + Loop Builder + Forms)
+- **WooCommerce** (produtos + atributos)
+- **WP All Import Pro** (importar `fitments.csv` e `produtos.csv`)
+- **FacetWP** ou **Search & Filter Pro** (filtros do catálogo)
+- **Rank Math** (SEO + schema Product)
+- **WP Rocket** + **Perfmatters** (performance / Core Web Vitals)
 
-## Impacto esperado
+## Migração de dados
 
-- TBT: -200 a -400 ms.
-- LCP em `/resultado`: -300 a -800 ms.
-- Performance Score mobile: +5 a +10 pontos.
+1. Export Supabase `fitments` → CSV → import via WP All Import como CPT `awr_fitment` (campos: brand, model, year_start, year_end, sku_moura, sku_heliar, sku_zetta, sku_excell).
+2. Produtos: planilha WooCommerce com atributos globais preenchidos + ACF para "Tempo de entrega", "Garantia", "Benefícios" (repeater).
+3. Mapeamento SKU fitment ↔ produto WC: usar campo `_sku` nativo.
+
+## O que NÃO está no escopo deste plano
+
+- Implementação real do tema dentro deste projeto Lovable (este projeto continua sendo o app React).
+- Compra/instalação de licenças (Elementor Pro, FacetWP).
+- Migração de imagens/conteúdo dos produtos reais (template/exemplo apenas).
+
+## Próximo passo após aprovação
+
+Gero todos os arquivos do pacote acima em `/mnt/documents/awr-wordpress/`, incluindo o plugin `awr-search` funcional pronto para zip+upload no WP, e devolvo o ZIP final como `<lov-artifact>`.
