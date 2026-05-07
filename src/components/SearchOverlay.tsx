@@ -12,7 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import VehicleAutocomplete from "@/components/VehicleAutocomplete";
 import { TOP_VEHICLES, type TopVehicle } from "@/data/topVehicles";
-import { getStrictVehicleCodes } from "@/lib/fitments";
+import { getStrictVehicleCodes, getVehicleVariants, type VehicleVariant } from "@/lib/fitments";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { fetchBatteriesByVehicle } from "@/lib/api/batteries";
 import { toast } from "@/hooks/use-toast";
@@ -36,6 +36,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
   const queryClient = useQueryClient();
   const [picked, setPicked] = useState<TopVehicle | null>(null);
   const [pickedYear, setPickedYear] = useState<number | null>(null);
+  const [variants, setVariants] = useState<VehicleVariant[] | null>(null);
   const [resolving, setResolving] = useState(false);
 
   useEffect(() => {
@@ -59,17 +60,15 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
     } else {
       setPicked(null);
       setPickedYear(null);
+      setVariants(null);
       setResolving(false);
     }
   }, [open]);
 
   const finishWithCodes = (
-    vehicle: TopVehicle,
-    year: number,
+    vehicleLabel: string,
     codes: string[],
-    suffix = "",
   ) => {
-    const vehicleLabel = `${vehicle.brand} ${vehicle.model} ${year}${suffix}`;
     queryClient
       .prefetchQuery({
         queryKey: ["resultado", { codes, vehicle: vehicleLabel }],
@@ -97,49 +96,43 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
     );
   };
 
-  const handleYearClick = (vehicle: TopVehicle, year: number) => {
-    const hasStartStop =
-      !!vehicle.startStopSkus?.length &&
-      typeof vehicle.startStopFromYear === "number" &&
-      year >= vehicle.startStopFromYear;
-    if (hasStartStop) {
-      // Mostra a tela de Start/Stop antes de navegar.
-      setPicked({ ...vehicle });
-      setPickedYear(year);
-      return;
-    }
-    chooseAndGo(vehicle, year, "standard");
-  };
-
-  const chooseAndGo = async (
-    vehicle: TopVehicle,
-    year: number,
-    choice: StartStopChoice,
-  ) => {
+  const handleYearClick = async (vehicle: TopVehicle, year: number) => {
     setResolving(true);
     markEvent("result_navigate_start");
     try {
       await ensureCatalogLoaded();
-      const codes =
-        choice === "start-stop" && vehicle.startStopSkus?.length
-          ? vehicle.startStopSkus
-          : vehicle.standardSkus?.length
-            ? vehicle.standardSkus
-            : getStrictVehicleCodes(`${vehicle.brand} ${vehicle.model} ${year}`);
+      const found = getVehicleVariants(vehicle.brand, vehicle.model, year);
+
+      if (found.length > 1) {
+        // Múltiplas linhas na tabela para o ano → pedir variante.
+        setPickedYear(year);
+        setVariants(found);
+        return;
+      }
+
+      // Apenas uma (ou nenhuma) variante na tabela para o ano.
+      const codes = found[0]?.skus
+        ?? vehicle.standardSkus
+        ?? getStrictVehicleCodes(`${vehicle.brand} ${vehicle.model} ${year}`);
 
       if (!codes || codes.length === 0) {
         toast({
           title: "Sem aplicação cadastrada",
           description: `Não encontramos bateria para ${vehicle.brand} ${vehicle.model} ${year}. Tente outro ano ou digite o modelo do carro.`,
         });
-        setResolving(false);
         return;
       }
-      const suffix = choice === "start-stop" ? " Start/Stop" : "";
-      finishWithCodes(vehicle, year, codes, suffix);
+      const suffix = found[0]?.hasStartStop ? " Start/Stop" : "";
+      finishWithCodes(`${vehicle.brand} ${vehicle.model} ${year}${suffix}`, codes);
     } finally {
       setResolving(false);
     }
+  };
+
+  const chooseVariant = (variant: VehicleVariant) => {
+    if (!picked || pickedYear === null) return;
+    const label = `${picked.brand} ${picked.model} ${pickedYear} ${variant.variantLabel}`.trim();
+    finishWithCodes(label, variant.skus);
   };
 
   return (
@@ -250,14 +243,6 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
                 ))}
               </div>
 
-              {picked.startStopFromYear && (
-                <p className="mt-4 text-center text-[11px] text-muted-foreground">
-                  A partir de {picked.startStopFromYear}, perguntaremos se o seu {picked.label} tem
-                  tecnologia <span className="font-semibold text-foreground">Start/Stop</span> para
-                  indicar a bateria correta (EFB/AGM).
-                </p>
-              )}
-
               <p className="mt-3 text-center text-xs text-muted-foreground">
                 Não é o ano certo?{" "}
                 <button
@@ -270,7 +255,7 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
             </div>
           )}
 
-          {picked && pickedYear !== null && (
+          {picked && pickedYear !== null && variants && variants.length > 0 && (
             <div>
               <div className="mb-4 flex items-center gap-3 rounded-xl border border-border bg-muted/40 p-3">
                 {TRUCK_MODELS.has(picked.model) ? (
@@ -283,40 +268,38 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
                     {picked.brand} {picked.label} {pickedYear}
                   </div>
                   <div className="text-xs text-muted-foreground">
-                    Seu carro tem sistema Start/Stop?
+                    Selecione a versão do seu veículo
                   </div>
                 </div>
               </div>
 
               <div className="grid gap-2 sm:grid-cols-2">
-                <Button
-                  variant="outline"
-                  disabled={resolving}
-                  onClick={() => chooseAndGo(picked, pickedYear, "standard")}
-                  className="h-14 flex-col gap-0.5 hover:border-primary hover:bg-primary hover:text-primary-foreground"
-                >
-                  <span className="text-sm font-bold">Não tem Start/Stop</span>
-                  <span className="text-[11px] opacity-80">Bateria convencional</span>
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={resolving}
-                  onClick={() => chooseAndGo(picked, pickedYear, "start-stop")}
-                  className="h-14 flex-col gap-0.5 hover:border-primary hover:bg-primary hover:text-primary-foreground"
-                >
-                  <span className="text-sm font-bold">Tem Start/Stop</span>
-                  <span className="text-[11px] opacity-80">Bateria EFB/AGM</span>
-                </Button>
+                {variants.map((v, i) => (
+                  <Button
+                    key={i}
+                    variant="outline"
+                    disabled={resolving}
+                    onClick={() => chooseVariant(v)}
+                    className="h-auto min-h-14 flex-col gap-0.5 py-2 text-left hover:border-primary hover:bg-primary hover:text-primary-foreground"
+                  >
+                    <span className="w-full text-sm font-bold leading-tight">
+                      {v.variantLabel}
+                    </span>
+                    {v.hasStartStop && (
+                      <span className="w-full text-[11px] opacity-80">
+                        Bateria EFB/AGM (Start/Stop)
+                      </span>
+                    )}
+                  </Button>
+                ))}
               </div>
-
-              <p className="mt-3 text-center text-[11px] text-muted-foreground">
-                O sistema Start/Stop desliga o motor automaticamente em paradas curtas e exige
-                bateria reforçada.
-              </p>
 
               <p className="mt-3 text-center text-xs text-muted-foreground">
                 <button
-                  onClick={() => setPickedYear(null)}
+                  onClick={() => {
+                    setPickedYear(null);
+                    setVariants(null);
+                  }}
                   className="font-semibold text-primary underline-offset-2 hover:underline"
                 >
                   ← Trocar o ano

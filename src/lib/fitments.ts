@@ -124,6 +124,77 @@ export function getStrictVehicleCodes(label: string): string[] {
   return out;
 }
 
+/** SKUs (Moura, Zetta, Heliar, Excell + code) deduplicados de um fitment. */
+export function fitmentSkus(f: Fitment): string[] {
+  const ordered = [f.skuMoura, f.skuZetta, f.skuHeliar, f.skuExcell, f.code];
+  const out: string[] = [];
+  const seen = new Set<string>();
+  for (const s of ordered) {
+    if (!s) continue;
+    const v = s.trim().toUpperCase();
+    if (!v || seen.has(v)) continue;
+    seen.add(v);
+    out.push(v);
+  }
+  return out;
+}
+
+export type VehicleVariant = {
+  fitment: Fitment;
+  /** Sufixo descritivo do modelo, ex.: "1.0", "Diesel", "com Start-Stop". */
+  variantLabel: string;
+  /** True se o nome do modelo indica explicitamente Start/Stop. */
+  hasStartStop: boolean;
+  skus: string[];
+};
+
+/**
+ * Retorna as variantes (linhas da tabela) que atendem a uma marca + nome
+ * base de modelo (ex.: "HB20", "Compass") em um ano específico.
+ * Usado para que, em "mais buscados", o cliente escolha entre HB20 1.0,
+ * HB20 1.6, HB20 Diamond Start-Stop, etc., quando houver múltiplas linhas.
+ */
+export function getVehicleVariants(
+  brand: string,
+  modelBase: string,
+  year: number,
+): VehicleVariant[] {
+  const brandN = normalize(brand);
+  const baseN = normalize(modelBase);
+  if (!brandN || !baseN) return [];
+
+  const out: VehicleVariant[] = [];
+  for (const f of getFitments()) {
+    if (year < f.yearStart || year > f.yearEnd) continue;
+    if (normalize(f.brand) !== brandN) continue;
+    const m = normalize(f.model);
+    // Match: começa com o modelo base seguido de espaço/parêntese/fim.
+    if (m !== baseN && !m.startsWith(`${baseN} `)) continue;
+
+    const skus = fitmentSkus(f);
+    if (!skus.length) continue;
+
+    // Sufixo legível: pega tudo após o nome base original.
+    const upperBase = modelBase.toUpperCase();
+    let suffix = f.model.toUpperCase().startsWith(upperBase)
+      ? f.model.slice(upperBase.length).trim()
+      : f.model;
+    suffix = suffix.replace(/^[-–—:]+\s*/, "").trim();
+
+    const ssRe = /start[\s-]*stop/i;
+    const semSS = /sem\s+start[\s-]*stop/i.test(f.model);
+    const comSS = !semSS && ssRe.test(f.model);
+
+    out.push({
+      fitment: f,
+      variantLabel: suffix || "Padrão",
+      hasStartStop: comSS,
+      skus,
+    });
+  }
+  return out;
+}
+
 /** Distância de Levenshtein limitada (early exit). */
 function levenshtein(a: string, b: string, max: number): number {
   if (Math.abs(a.length - b.length) > max) return max + 1;
