@@ -28,11 +28,19 @@
       type="image/webp"
     />
 
+    <!-- Preload das fontes do HERO (h1 Jakarta 800 + Inter 600/400 acima da dobra) -->
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/jakarta-800.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-600.woff2" crossorigin />
+    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-400.woff2" crossorigin />
+
     <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
     <link rel="preconnect" href="https://mkkehvaclefoxkdlcmqm.supabase.co" crossorigin />
 
     <!-- CSS crítico inline: pinta hero acima da dobra sem esperar o bundle CSS -->
     <style>
+      @font-face{font-family:"Plus Jakarta Sans";font-style:normal;font-weight:800;font-display:swap;src:url(/fonts/jakarta-800.woff2) format("woff2")}
+      @font-face{font-family:"Inter";font-style:normal;font-weight:600;font-display:swap;src:url(/fonts/inter-600.woff2) format("woff2")}
+      @font-face{font-family:"Inter";font-style:normal;font-weight:400;font-display:swap;src:url(/fonts/inter-400.woff2) format("woff2")}
       *,*::before,*::after{box-sizing:border-box}
       html,body{margin:0;padding:0}
       :root{
