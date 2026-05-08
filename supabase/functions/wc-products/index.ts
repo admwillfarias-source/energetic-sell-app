@@ -9,6 +9,31 @@ const WC_BASE = "https://awrbaterias.com.br/wp-json/wc/store/products";
 
 type WCProduct = { id: number; sku?: string; name?: string };
 
+// Mantém apenas os campos que o cliente realmente usa para mapear em Battery.
+// Reduz drasticamente o payload (descrições WP completas chegam a ~150KB).
+function slim(p: Record<string, unknown>): Record<string, unknown> {
+  const images = Array.isArray(p.images) && p.images.length
+    ? [{ src: (p.images[0] as Record<string, unknown>)?.src ?? "" }]
+    : [];
+  const cats = Array.isArray(p.categories)
+    ? (p.categories as Array<Record<string, unknown>>).map((c) => ({
+        id: c.id, name: c.name, slug: c.slug,
+      }))
+    : [];
+  return {
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    permalink: p.permalink,
+    sku: p.sku,
+    prices: p.prices,
+    images,
+    categories: cats,
+    short_description: p.short_description,
+    description: p.description,
+  };
+}
+
 // Cache em memória do isolate (TTL 5 min). Sobrevive entre invocações
 // enquanto o isolate estiver "quente" — corta latência da próxima busca
 // idêntica para ~5ms.
