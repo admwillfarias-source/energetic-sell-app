@@ -1,6 +1,11 @@
 // Carrega GTM + GA4 + Google Ads de forma diferida.
 // Dispara após primeira interação do usuário OU em idle/load + timeout,
 // o que ocorrer primeiro. Reduz drasticamente TBT/main-thread no LCP.
+//
+// Quando o app roda dentro de iframe (tema WP), pula a injeção: o parent
+// já carrega GTM/GA4/Ads. Para conversões, faz postMessage para o parent.
+
+import { isEmbedded } from "@/lib/isEmbedded";
 
 const GTM_ID = "GTM-5JTRM2L";
 const GA4_ID = "G-FJ1MK5SLS5";
