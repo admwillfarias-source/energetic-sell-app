@@ -4,7 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import SplashScreen from "@/components/SplashScreen";
+const SplashScreen = lazy(() => import("@/components/SplashScreen"));
 
 // Todas as outras páginas: lazy. Não viajam no bundle inicial da home.
 const Auth = lazy(() => import("./pages/Auth.tsx"));
@@ -36,7 +36,9 @@ const wrap = (el: React.ReactNode) => <Suspense fallback={<Fallback />}>{el}</Su
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <SplashScreen />
+      <Suspense fallback={null}>
+        <SplashScreen />
+      </Suspense>
       <Suspense fallback={null}>
         <LazyToaster />
       </Suspense>

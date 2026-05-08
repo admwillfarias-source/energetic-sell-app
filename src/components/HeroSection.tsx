@@ -22,7 +22,6 @@ const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 // Hero LCP: paths estáveis em /public (sem hash) — combinam com o
 // <link rel="preload"> do index.html para zero "Resource load delay".
 const heroBg = "/hero-bg.webp";
-const heroBgSm = "/hero-bg-sm.webp";
 
 function SearchPlaceholder({
   onActivate,
@@ -75,14 +74,14 @@ export default function HeroSection() {
     markEvent("hero_search_interactive");
   }, []);
 
-  // Pré-carrega o overlay (chunk + catálogo) em idle, sem bloquear o LCP,
-  // pra abrir instantâneo quando o cliente clicar no campo.
+  // Pré-carrega o overlay (chunk JS leve) em idle para abrir instantâneo no clique.
+  // O catálogo Supabase NÃO é pré-carregado aqui — ele compete com o LCP em mobile lento.
+  // O BatteryGrid carrega o catálogo sob demanda quando o usuário envia a busca.
   useEffect(() => {
     const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number };
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
     const id = schedule(() => {
       import("@/components/SearchOverlay");
-      import("@/lib/catalogStore").then((m) => m.ensureCatalogLoaded?.()).catch(() => {});
     });
     return () => {
       const cancel =
@@ -114,15 +113,23 @@ export default function HeroSection() {
     <section id="inicio" className="relative min-h-[80vh] flex items-center pt-16">
       <div className="absolute inset-0 z-0">
         <picture>
-          <source media="(max-width: 768px)" srcSet="/hero-bg-sm.avif" type="image/avif" />
-          <source media="(max-width: 768px)" srcSet={heroBgSm} type="image/webp" />
-          <source srcSet="/hero-bg.avif" type="image/avif" />
+          <source
+            srcSet="/hero-bg-sm.avif 768w, /hero-bg.avif 1600w"
+            sizes="100vw"
+            type="image/avif"
+          />
+          <source
+            srcSet="/hero-bg-sm.webp 768w, /hero-bg.webp 1600w"
+            sizes="100vw"
+            type="image/webp"
+          />
           <img
             src={heroBg}
             alt="Técnico instalando bateria automotiva AWR"
             className="w-full h-full object-cover"
             width={1200}
             height={900}
+            sizes="100vw"
             // @ts-expect-error: fetchpriority é atributo HTML válido (lowercase)
             fetchpriority="high"
             decoding="async"
