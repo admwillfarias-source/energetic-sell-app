@@ -14,6 +14,18 @@ type MetricEntry = {
 const METRICS: MetricEntry[] = [];
 const LISTENERS = new Set<() => void>();
 
+// Em produção, todo o tracking é no-op a menos que o usuário entre com ?perf=1.
+// Isso evita 5 PerformanceObservers competindo com o LCP na main thread.
+const ENABLED: boolean = (() => {
+  if (typeof window === "undefined") return false;
+  if (import.meta.env.DEV) return true;
+  try {
+    return new URLSearchParams(window.location.search).get("perf") === "1";
+  } catch {
+    return false;
+  }
+})();
+
 function notify() {
   LISTENERS.forEach((fn) => {
     try {
@@ -32,6 +44,7 @@ function upsert(name: string, entry: MetricEntry) {
 }
 
 export function markEvent(name: string) {
+  if (!ENABLED) return;
   if (typeof performance === "undefined") return;
   // Evita duplicados — só registra a primeira ocorrência de cada evento.
   if (METRICS.some((m) => m.name === name)) return;
@@ -75,6 +88,7 @@ let clsValue = 0;
 let inpValue = 0;
 
 export function startLcpTracking() {
+  if (!ENABLED) return;
   if (started || typeof PerformanceObserver === "undefined") return;
   started = true;
 

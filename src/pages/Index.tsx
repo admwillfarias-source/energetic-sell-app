@@ -3,7 +3,6 @@ import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import LazySection from "@/components/LazySection";
-import BatteryGridFallback from "@/components/BatteryGridFallback";
 import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
 
@@ -17,8 +16,10 @@ const BatteryGrid = lazy(() =>
 const HomeMiddle = lazy(() => import("@/components/home/HomeMiddle"));
 const HomeBottom = lazy(() => import("@/components/home/HomeBottom"));
 
-// PerfReport disponível em DEV sempre, e em prod via ?perf=1
-const PerfReport = lazy(() => import("@/components/PerfReport"));
+// Ferramentas de debug — só em DEV
+const PerfReport = import.meta.env.DEV
+  ? lazy(() => import("@/components/PerfReport"))
+  : null;
 const MobileDebugOverlay = import.meta.env.DEV
   ? lazy(() => import("@/components/MobileDebugOverlay"))
   : null;
@@ -78,7 +79,7 @@ const Index = () => {
         <main className="pt-[60px] lg:pt-0">
           <HeroSection />
           {hasSearch && (
-            <Suspense fallback={<BatteryGridFallback />}>
+            <Suspense fallback={null}>
               <BatteryGrid />
             </Suspense>
           )}
@@ -98,9 +99,11 @@ const Index = () => {
           </LazySection>
         </main>
 
-        <Suspense fallback={null}>
-          <PerfReport />
-        </Suspense>
+        {PerfReport && (
+          <Suspense fallback={null}>
+            <PerfReport />
+          </Suspense>
+        )}
         {MobileDebugOverlay && (
           <Suspense fallback={null}>
             <MobileDebugOverlay />
