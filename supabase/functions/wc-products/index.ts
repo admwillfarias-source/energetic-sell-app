@@ -11,6 +11,10 @@ type WCProduct = { id: number; sku?: string; name?: string };
 
 // Mantém apenas os campos que o cliente realmente usa para mapear em Battery.
 // Reduz drasticamente o payload (descrições WP completas chegam a ~150KB).
+function stripHtmlServer(html: unknown): string {
+  if (typeof html !== "string") return "";
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
 function slim(p: Record<string, unknown>): Record<string, unknown> {
   const images = Array.isArray(p.images) && p.images.length
     ? [{ src: (p.images[0] as Record<string, unknown>)?.src ?? "" }]
@@ -29,8 +33,8 @@ function slim(p: Record<string, unknown>): Record<string, unknown> {
     prices: p.prices,
     images,
     categories: cats,
-    short_description: p.short_description,
-    description: p.description,
+    short_description: stripHtmlServer(p.short_description),
+    description: stripHtmlServer(p.description),
   };
 }
 
