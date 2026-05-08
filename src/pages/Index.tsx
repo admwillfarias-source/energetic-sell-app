@@ -38,6 +38,13 @@ const MobileDebugOverlay = import.meta.env.DEV
 const SITE = "https://awrbaterias.com.br";
 
 const Index = () => {
+  // Só monta o BatteryGrid (chunk de busca/grid) se a URL pedir resultado.
+  const hasSearch = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const sp = new URLSearchParams(window.location.search);
+    return !!(sp.get("q") || sp.get("codes") || sp.get("v"));
+  }, []);
+
   const orgLd = {
     "@context": "https://schema.org",
     "@type": "AutomotiveBusiness",
@@ -82,7 +89,11 @@ const Index = () => {
         <Header />
         <main className="pt-[60px] lg:pt-0">
           <HeroSection />
-          <BatteryGrid />
+          {hasSearch && (
+            <Suspense fallback={null}>
+              <BatteryGrid />
+            </Suspense>
+          )}
           <LazySection minHeight="320px">
             <Suspense fallback={null}>
               <HowToOrder />
