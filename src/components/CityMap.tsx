@@ -40,14 +40,13 @@ export function CityMap({ stores, city, title, height = 320 }: Props) {
             src={buildEmbedSrc(s)}
             title={`${title} — ${s.name}`}
             loading="lazy"
-            decoding="async"
             referrerPolicy="no-referrer-when-downgrade"
             width="100%"
             height={height}
             className="w-full"
             style={{ height, border: 0 }}
             allowFullScreen
-            {...({ fetchpriority: "low" } as Record<string, string>)}
+            {...({ fetchpriority: "low", decoding: "async" } as Record<string, string>)}
           />
           <figcaption className="flex flex-col gap-1 p-3 text-sm">
             <span className="flex items-center gap-1.5 font-semibold">
