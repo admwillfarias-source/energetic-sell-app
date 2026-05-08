@@ -209,15 +209,15 @@ Deno.serve(async (req) => {
         }
       }
 
-      body = JSON.stringify(merged);
+      body = JSON.stringify(merged.map((p) => slim(p as Record<string, unknown>)));
     } else if (search) {
       const arr = await fetchByTerm(search, perPage);
-      body = JSON.stringify(arr);
+      body = JSON.stringify(arr.map((p) => slim(p as Record<string, unknown>)));
     } else {
       const target = new URL(WC_BASE);
       target.searchParams.set("per_page", perPage);
       const arr = await fetchJson(target.toString());
-      body = JSON.stringify(arr);
+      body = JSON.stringify(arr.map((p) => slim(p as Record<string, unknown>)));
     }
 
     if (status === 200) cacheSet(cacheKey, body);
