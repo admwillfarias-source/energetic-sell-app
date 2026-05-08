@@ -69,6 +69,31 @@ function loadAll() {
 export function initDeferredTracking() {
   if (typeof window === "undefined") return;
 
+  // Em iframe (tema WP), o parent já tem GTM/GA4/Ads. Não duplica.
+  // Conversões ainda funcionam: postMessage para o parent disparar.
+  if (isEmbedded()) {
+    const w = window as unknown as {
+      gtag_report_conversion?: (url?: string) => boolean;
+    };
+    w.gtag_report_conversion = function (url?: string) {
+      try {
+        window.parent.postMessage(
+          { type: "awr_conversion", url: url ?? null },
+          "*",
+        );
+      } catch {
+        /* noop */
+      }
+      if (typeof url !== "undefined") {
+        setTimeout(() => {
+          window.location.href = url!;
+        }, 80);
+      }
+      return false;
+    };
+    return;
+  }
+
   // Gate: só liberamos o tracking depois que o LCP terminou,
   // para não competir com a renderização do herói.
   let lcpDone = false;
