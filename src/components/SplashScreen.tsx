@@ -10,6 +10,7 @@ export default function SplashScreen() {
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
+    if (!visible) return;
     const t1 = setTimeout(() => setFade(true), 180);
     const t2 = setTimeout(() => {
       setVisible(false);
@@ -19,7 +20,7 @@ export default function SplashScreen() {
       clearTimeout(t1);
       clearTimeout(t2);
     };
-  }, []);
+  }, [visible]);
 
   if (!visible) return null;
 
