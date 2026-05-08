@@ -4,6 +4,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { startLcpTracking, markEvent } from "@/lib/perfMetrics";
 import { initDeferredTracking } from "@/lib/loadTracking";
+import { isEmbedded } from "@/lib/isEmbedded";
 
 // Fontes carregadas de forma diferida e NÃO bloqueante.
 // Pegamos as URLs hashadas dos CSS do @fontsource via ?url (não injeta <link>),
