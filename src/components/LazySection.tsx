@@ -6,16 +6,9 @@ interface Props {
   minHeight?: string;
 }
 
-const isAuditEnv = (): boolean => {
-  if (typeof window === "undefined") return false;
-  const ua = navigator.userAgent || "";
-  if (/Lighthouse|Chrome-Lighthouse|HeadlessChrome|PageSpeed|Googlebot/i.test(ua)) return true;
-  return false;
-};
-
 export default function LazySection({ children, rootMargin = "300px", minHeight = "120px" }: Props) {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(() => isAuditEnv());
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (visible) return;

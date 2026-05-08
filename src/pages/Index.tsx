@@ -1,9 +1,8 @@
-import { lazy, Suspense, useMemo } from "react";
+import { lazy, Suspense, useEffect, useMemo } from "react";
 import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import LazySection from "@/components/LazySection";
-import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
 
 // Bloco 1 (above the fold): Header + HeroSection + (BatteryGrid se houver busca)
@@ -66,14 +65,27 @@ const Index = () => {
     },
   };
 
+  // Injeta JSON-LD organização no <head> em idle, fora do caminho crítico do LCP.
+  useEffect(() => {
+    if (typeof document === "undefined") return;
+    if (document.getElementById("ld-org")) return;
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
+    const id = schedule(() => {
+      const s = document.createElement("script");
+      s.type = "application/ld+json";
+      s.id = "ld-org";
+      s.text = JSON.stringify(orgLd);
+      document.head.appendChild(s);
+    }, { timeout: 4000 });
+    return () => {
+      const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+      if (cancel) cancel(id as number);
+    };
+  }, []);
+
   return (
     <CartProvider>
-      <SEO
-        title="AWR Baterias | Entrega e Instalação em Porto Alegre, Canoas, São Leopoldo e RS"
-        description="Bateria automotiva com entrega e instalação grátis em Porto Alegre, Canoas, Gravataí, Cachoeirinha, Esteio, Novo Hamburgo, São Leopoldo, Sapucaia, Ivoti, Campo Bom, Estância Velha, Nova Santa Rita, Alvorada e Viamão. Moura, Heliar, Zetta, Excell. 10x sem juros, garantia de fábrica."
-        canonical={SITE}
-        jsonLd={orgLd}
-      />
       <div className="min-h-screen bg-background">
         <Header />
         <main className="pt-[60px] lg:pt-0">
