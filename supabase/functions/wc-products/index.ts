@@ -9,6 +9,35 @@ const WC_BASE = "https://awrbaterias.com.br/wp-json/wc/store/products";
 
 type WCProduct = { id: number; sku?: string; name?: string };
 
+// Mantém apenas os campos que o cliente realmente usa para mapear em Battery.
+// Reduz drasticamente o payload (descrições WP completas chegam a ~150KB).
+function stripHtmlServer(html: unknown): string {
+  if (typeof html !== "string") return "";
+  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+}
+function slim(p: Record<string, unknown>): Record<string, unknown> {
+  const images = Array.isArray(p.images) && p.images.length
+    ? [{ src: (p.images[0] as Record<string, unknown>)?.src ?? "" }]
+    : [];
+  const cats = Array.isArray(p.categories)
+    ? (p.categories as Array<Record<string, unknown>>).map((c) => ({
+        id: c.id, name: c.name, slug: c.slug,
+      }))
+    : [];
+  return {
+    id: p.id,
+    name: p.name,
+    slug: p.slug,
+    permalink: p.permalink,
+    sku: p.sku,
+    prices: p.prices,
+    images,
+    categories: cats,
+    short_description: stripHtmlServer(p.short_description),
+    description: stripHtmlServer(p.description),
+  };
+}
+
 // Cache em memória do isolate (TTL 5 min). Sobrevive entre invocações
 // enquanto o isolate estiver "quente" — corta latência da próxima busca
 // idêntica para ~5ms.
@@ -184,15 +213,15 @@ Deno.serve(async (req) => {
         }
       }
 
-      body = JSON.stringify(merged);
+      body = JSON.stringify(merged.map((p) => slim(p as Record<string, unknown>)));
     } else if (search) {
       const arr = await fetchByTerm(search, perPage);
-      body = JSON.stringify(arr);
+      body = JSON.stringify(arr.map((p) => slim(p as Record<string, unknown>)));
     } else {
       const target = new URL(WC_BASE);
       target.searchParams.set("per_page", perPage);
       const arr = await fetchJson(target.toString());
-      body = JSON.stringify(arr);
+      body = JSON.stringify(arr.map((p) => slim(p as Record<string, unknown>)));
     }
 
     if (status === 200) cacheSet(cacheKey, body);

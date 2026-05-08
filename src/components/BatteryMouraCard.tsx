@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { ShieldCheck, Truck, CreditCard, MessageCircle, Tag } from "lucide-react";
 import { Battery } from "@/data/batteries";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,7 @@ type Props = {
   priority?: boolean;
 };
 
-export function BatteryMouraCard({
+function BatteryMouraCardImpl({
   battery,
   vehicleLabel,
   city = "Porto Alegre, RS",
@@ -138,3 +139,6 @@ export function BatteryMouraCard({
     </article>
   );
 }
+
+export const BatteryMouraCard = memo(BatteryMouraCardImpl);
+
