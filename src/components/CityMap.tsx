@@ -42,7 +42,6 @@ export function CityMap({ stores, city, title, height = 320 }: Props) {
             loading="lazy"
             // @ts-expect-error fetchpriority é válido em iframes nos browsers Chromium
             fetchpriority="low"
-            // @ts-expect-error decoding em iframe é tratado por browsers modernos
             decoding="async"
             referrerPolicy="no-referrer-when-downgrade"
             width="100%"
