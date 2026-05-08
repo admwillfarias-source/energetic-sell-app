@@ -188,7 +188,7 @@ export default function HeroSection() {
             </span>
           </div>
 
-          <div className="mb-6 rounded-2xl bg-card p-4 shadow-lg md:p-5">
+          <div className="mb-6 rounded-2xl bg-card p-4 shadow-lg md:p-5 min-h-[88px] md:min-h-[92px]">
             <SearchPlaceholder
               onActivate={() => setOverlayOpen(true)}
               initialValue={initialQuery}
