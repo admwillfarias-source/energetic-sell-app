@@ -9,6 +9,7 @@ import LazySection from "@/components/LazySection";
 const BatteryGrid = lazy(() =>
   import("@/components/BatteryGrid").then((m) => ({ default: m.BatteryGrid })),
 );
+const BatteryGridFallback = lazy(() => import("@/components/BatteryGridFallback"));
 import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
 const BestSellers = lazy(() => import("@/components/BestSellers"));
@@ -90,7 +91,7 @@ const Index = () => {
         <main className="pt-[60px] lg:pt-0">
           <HeroSection />
           {hasSearch && (
-            <Suspense fallback={null}>
+            <Suspense fallback={<BatteryGridFallback />}>
               <BatteryGrid />
             </Suspense>
           )}
