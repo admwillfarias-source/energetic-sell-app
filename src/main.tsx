@@ -56,4 +56,11 @@ createRoot(document.getElementById("root")!).render(
 );
 
 // Inicializa GTM/GA4/Ads de forma diferida (após interação ou idle).
-initDeferredTracking();
+// Posterga o registro dos próprios listeners para idle, liberando o caminho do LCP.
+{
+  const w = window as unknown as {
+    requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+  };
+  const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
+  schedule(() => initDeferredTracking(), { timeout: 3000 });
+}
