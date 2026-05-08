@@ -1,9 +1,12 @@
 import { useEffect, useState } from "react";
 import splashImg from "@/assets/splash-3-passos.jpeg";
 import { markEvent } from "@/lib/perfMetrics";
+import { isEmbedded } from "@/lib/isEmbedded";
 
 export default function SplashScreen() {
-  const [visible, setVisible] = useState(true);
+  // Quando embedado em iframe (tema WP), o parent já mostrou seu chrome —
+  // mostrar o splash branco causa flash duplo e atrasa o LCP do iframe.
+  const [visible, setVisible] = useState(() => !isEmbedded());
   const [fade, setFade] = useState(false);
 
   useEffect(() => {
