@@ -1,4 +1,5 @@
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 import { startLcpTracking, markEvent } from "@/lib/perfMetrics";
@@ -48,7 +49,11 @@ markEvent("app_boot");
 // Preload do hero agora vive em index.html (paths estáveis em /public)
 // para que o navegador o resolva antes do parse do JS bundle.
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <HelmetProvider>
+    <App />
+  </HelmetProvider>,
+);
 
 // Inicializa GTM/GA4/Ads de forma diferida (após interação ou idle).
 // Posterga o registro dos próprios listeners para idle, liberando o caminho do LCP.
