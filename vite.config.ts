@@ -43,6 +43,8 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       output: {
         manualChunks(id) {
+          if (id.includes("/components/home/HomeMiddle")) return "home-middle";
+          if (id.includes("/components/home/HomeBottom")) return "home-bottom";
           if (!id.includes("node_modules")) return;
           if (
             id.includes("/react-dom/") ||

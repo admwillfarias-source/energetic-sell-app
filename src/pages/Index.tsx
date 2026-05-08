@@ -3,32 +3,19 @@ import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import LazySection from "@/components/LazySection";
-
-// BatteryGrid só renderiza quando há ?q= / ?codes= / ?v= na URL.
-// Lazy + guard evita carregar Slider/Checkbox/react-query/fitments no bundle inicial.
-const BatteryGrid = lazy(() =>
-  import("@/components/BatteryGrid").then((m) => ({ default: m.BatteryGrid })),
-);
 import BatteryGridFallback from "@/components/BatteryGridFallback";
 import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
-const BestSellers = lazy(() => import("@/components/BestSellers"));
 
-const Benefits = lazy(() => import("@/components/Benefits").then((m) => ({ default: m.Benefits })));
-const HowItWorks = lazy(() =>
-  import("@/components/HowItWorks").then((m) => ({ default: m.HowItWorks })),
+// Bloco 1 (above the fold): Header + HeroSection + (BatteryGrid se houver busca)
+// Bloco 2 (middle): HowToOrder, BestSellers, Benefits, HowItWorks, Testimonials
+// Bloco 3 (bottom): QuickNavigation, ManufacturerLogos, FaqHome, Footer, CartDrawer, MobileActionBar, FloatingWhatsApp
+
+const BatteryGrid = lazy(() =>
+  import("@/components/BatteryGrid").then((m) => ({ default: m.BatteryGrid })),
 );
-const HowToOrder = lazy(() => import("@/components/HowToOrder"));
-const MobileActionBar = lazy(() => import("@/components/MobileActionBar"));
-const Testimonials = lazy(() => import("@/components/Testimonials"));
-const FaqHome = lazy(() => import("@/components/FaqHome"));
-const FloatingWhatsApp = lazy(() => import("@/components/FloatingWhatsApp"));
-const QuickNavigation = lazy(() => import("@/components/QuickNavigation"));
-const ManufacturerLogos = lazy(() => import("@/components/ManufacturerLogos"));
-const Footer = lazy(() => import("@/components/Footer").then((m) => ({ default: m.Footer })));
-const CartDrawer = lazy(() =>
-  import("@/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
-);
+const HomeMiddle = lazy(() => import("@/components/home/HomeMiddle"));
+const HomeBottom = lazy(() => import("@/components/home/HomeBottom"));
 
 // PerfReport disponível em DEV sempre, e em prod via ?perf=1
 const PerfReport = lazy(() => import("@/components/PerfReport"));
@@ -95,62 +82,21 @@ const Index = () => {
               <BatteryGrid />
             </Suspense>
           )}
-          <LazySection minHeight="320px">
+
+          {/* Bloco 2: meio da página, monta ao se aproximar */}
+          <LazySection minHeight="1980px" rootMargin="200px">
             <Suspense fallback={null}>
-              <HowToOrder />
+              <HomeMiddle />
             </Suspense>
           </LazySection>
-          <LazySection minHeight="500px">
+
+          {/* Bloco 3: rodapé + flutuantes, monta perto do fim */}
+          <LazySection minHeight="1120px" rootMargin="100px">
             <Suspense fallback={null}>
-              <BestSellers />
-            </Suspense>
-          </LazySection>
-          <LazySection minHeight="400px">
-            <Suspense fallback={null}>
-              <Benefits />
-            </Suspense>
-          </LazySection>
-          <LazySection minHeight="400px">
-            <Suspense fallback={null}>
-              <HowItWorks />
-            </Suspense>
-          </LazySection>
-          <LazySection minHeight="360px">
-            <Suspense fallback={null}>
-              <Testimonials />
-            </Suspense>
-          </LazySection>
-          <LazySection minHeight="300px">
-            <Suspense fallback={null}>
-              <QuickNavigation />
-            </Suspense>
-          </LazySection>
-          <LazySection minHeight="200px">
-            <Suspense fallback={null}>
-              <ManufacturerLogos />
-            </Suspense>
-          </LazySection>
-          <LazySection minHeight="320px">
-            <Suspense fallback={null}>
-              <FaqHome />
+              <HomeBottom />
             </Suspense>
           </LazySection>
         </main>
-        <LazySection minHeight="300px">
-          <Suspense fallback={null}>
-            <Footer />
-          </Suspense>
-        </LazySection>
-        <Suspense fallback={null}>
-          <CartDrawer />
-        </Suspense>
-        <Suspense fallback={null}>
-          <MobileActionBar />
-        </Suspense>
-        <Suspense fallback={null}>
-          <FloatingWhatsApp />
-        </Suspense>
-        
 
         <Suspense fallback={null}>
           <PerfReport />
