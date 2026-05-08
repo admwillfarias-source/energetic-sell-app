@@ -22,7 +22,6 @@ const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 // Hero LCP: paths estáveis em /public (sem hash) — combinam com o
 // <link rel="preload"> do index.html para zero "Resource load delay".
 const heroBg = "/hero-bg.webp";
-const heroBgSm = "/hero-bg-sm.webp";
 
 function SearchPlaceholder({
   onActivate,
