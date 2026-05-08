@@ -139,3 +139,6 @@ function BatteryMouraCardImpl({
     </article>
   );
 }
+
+export const BatteryMouraCard = memo(BatteryMouraCardImpl);
+
