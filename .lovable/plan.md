@@ -1,78 +1,72 @@
-# Plano: dividir a home em 3 blocos com carregamento sob demanda (sem iframes)
+## Limpeza de código que pesa na abertura
 
-## Por que NÃO usar iframes
+Auditando os artefatos das otimizações anteriores, identifiquei 4 itens que **estão custando mais do que entregam** na carga inicial. Removê-los reduz JS no bundle, observadores na main thread e atrasos visuais.
 
-Cada iframe baixa um React + bundle CSS + fontes próprios. 3 iframes = ~3× o JS/CSS, perde estado compartilhado (carrinho, busca, scroll), quebra SEO e analytics. O ganho que você quer (carregar partes só quando o usuário rolar até elas) é exatamente o que `IntersectionObserver` + `React.lazy` já fazem — sem nenhuma das desvantagens.
+### 1. Remover o `SplashScreen` (maior ganho perceptual)
 
-A home já tem um `LazySection` (`src/components/LazySection.tsx`) que monta cada bloco via observer com `rootMargin: 300px`. Vou agrupar a página em **3 blocos lógicos** e endurecer o lazy.
+**Problema:** Mostra um overlay branco com imagem por **~380ms** (180ms até iniciar fade + 200ms de fade), cobrindo o hero que já está com preload AVIF/WebP + CSS crítico inline. Ou seja: o hero está pronto, mas o splash o esconde de propósito.
 
-## Os 3 blocos
+**Ação:**
+- Apagar `src/components/SplashScreen.tsx` e `src/components/SplashFallback.tsx`
+- Remover do `src/App.tsx` (import lazy + Suspense + render)
+- Remover marcador `splash_hidden` (deixa de existir, sem efeito)
 
-| Bloco | O que entra | Como carrega |
-|---|---|---|
-| **1 — Above the fold (eager)** | `Header`, `HeroSection`, `BatteryGrid` (só quando há `?q=/codes/v=`) | Eager, no chunk inicial. É o LCP. |
-| **2 — Middle (lazy ao chegar perto)** | `HowToOrder`, `BestSellers`, `Benefits`, `HowItWorks`, `Testimonials` | Um único `LazySection` agrupado, dispara ao usuário se aproximar (rootMargin 200px). Chunk único `home-middle`. |
-| **3 — Bottom (lazy só quando próximo)** | `QuickNavigation`, `ManufacturerLogos`, `FaqHome`, `Footer`, `CartDrawer`, `MobileActionBar`, `FloatingWhatsApp` | `LazySection` separado com rootMargin 100px. Chunk único `home-bottom`. Componentes flutuantes (CartDrawer/Mobile/WhatsApp) são montados quando o bottom entra. |
+**Ganho:** ~380ms no FCP perceptual + 1 chunk lazy a menos + 1 import de imagem (`splash-3-passos.jpeg`) eliminado.
 
-Resultado: o navegador baixa só o chunk do bloco 1 no primeiro paint. Ao rolar, dispara o chunk do bloco 2; ao chegar perto do rodapé, o bloco 3.
+### 2. Tornar `perfMetrics` no-op em produção (a menos que `?perf=1`)
 
-## Arquivos a criar
+**Problema:** `startLcpTracking()` roda **sempre** em prod e instala 5 `PerformanceObserver` (paint, LCP, CLS, INP, longtask). Isso adiciona trabalho contínuo na main thread sem benefício para o usuário final — só serve para debug.
 
-- `src/components/home/HomeMiddle.tsx` — agrupa os 5 componentes do bloco 2 em um único arquivo. Vira um único chunk lazy.
-- `src/components/home/HomeBottom.tsx` — agrupa os 7 componentes do bloco 3.
+**Ação:** Em `src/lib/perfMetrics.ts`, fazer `startLcpTracking()` e `markEvent()` virarem no-op cedo se `import.meta.env.PROD && !location.search.includes("perf=1")`. Manter a API exportada para não quebrar os ~8 arquivos que importam.
 
-## Arquivos a editar
+**Ganho:** Menos trabalho na main thread durante o LCP (especialmente o observer de `event` e `longtask` que disparam a cada interação).
 
-- `src/pages/Index.tsx`
-  - Remover os 12 `lazy()` individuais.
-  - Importar `HomeMiddle` e `HomeBottom` via `lazy()`.
-  - Trocar a árvore atual por:
-    ```tsx
-    <HeroSection />
-    {hasSearch && <Suspense ...><BatteryGrid /></Suspense>}
-    <LazySection minHeight="1400px" rootMargin="200px">
-      <Suspense fallback={null}><HomeMiddle /></Suspense>
-    </LazySection>
-    <LazySection minHeight="900px" rootMargin="100px">
-      <Suspense fallback={null}><HomeBottom /></Suspense>
-    </LazySection>
-    ```
-  - `minHeight` de cada bloco é a soma dos `minHeight` atuais (evita CLS).
+### 3. Remover `PerfReport` do bundle de produção
 
-- `vite.config.ts` — adicionar `manualChunks` para garantir que cada bloco vire **um** chunk:
-  ```ts
-  if (id.includes("/components/home/HomeMiddle")) return "home-middle";
-  if (id.includes("/components/home/HomeBottom")) return "home-bottom";
-  ```
+**Problema:** Mesmo sendo lazy, ele é referenciado em `Index.tsx` com `Suspense` e gera um chunk + Subscription a métricas. Em prod só roda com `?perf=1`, que ninguém usa.
 
-## Detalhes técnicos
-
-```text
-Antes (atual):
-  Index importa 12 chunks separados via lazy().
-  IntersectionObserver dispara 9 vezes (um por LazySection).
-  Cada chunk = 1 request HTTP.
-
-Depois:
-  Index importa 2 chunks (home-middle, home-bottom).
-  Apenas 2 IntersectionObservers.
-  2 requests HTTP em vez de 9.
+**Ação:** Em `src/pages/Index.tsx`, fazer `PerfReport` apenas existir em DEV (mesmo padrão do `MobileDebugOverlay`):
+```ts
+const PerfReport = import.meta.env.DEV
+  ? lazy(() => import("@/components/PerfReport"))
+  : null;
 ```
 
-Ganhos esperados:
-- **−7 round-trips HTTP** após o LCP (importante em mobile 4G).
-- **TBT melhor**: menos chunks = menos parse/compile concorrente.
-- **LCP idêntico** (bloco 1 não muda).
-- **Sem custo de CLS** se o `minHeight` agregado for respeitado.
+**Ganho:** 1 chunk a menos + 1 Suspense a menos no render de `Index`.
 
-## Riscos e mitigação
+### 4. Remover `BatteryGridFallback` (não é usado no caminho rápido)
 
-- **Splash de tela em branco** entre blocos ao rolar rápido → `minHeight` correto + fallback opcional com skeleton baixo (pode ser adicionado depois).
-- **Componentes flutuantes (FloatingWhatsApp, MobileActionBar)** hoje aparecem cedo. Movê-los para o bloco 3 atrasa eles em mobile. Decisão: mantê-los no bloco 1 (eager dentro de `Suspense fallback={null}`) se você quiser que apareçam imediatamente. **Recomendação: deixá-los no bloco 3** — em mobile o usuário rola rápido e o ganho de bytes vale.
-- **CartDrawer**: ele só aparece quando o usuário clica no carrinho do Header. Pode ser lazy *à parte* disparado pelo clique, não pelo scroll. Vou colocar no bloco 3 por simplicidade (rola = monta).
+**Problema:** Só aparece se a URL tiver `?q=`, `?codes=` ou `?v=` — ou seja, **nunca na home pura** que é o que estamos otimizando. Como o `BatteryGrid` é montado condicionalmente (já só carrega se `hasSearch`), o fallback é dead code para 99% dos acessos.
 
-## Fora deste plano
+Esse Skeleton é grande (3 cards de 420px) e importa `@/components/ui/skeleton`. Substituir por `null` no Suspense fallback do Index — quem chega via busca já espera latência e a transição é curta.
 
-- Mudar o sistema de iframes do tema WP (você escolheu cenário standalone).
-- Otimizar `BatteryGrid` (já lazy + guard de URL).
-- Service worker / cache.
+**Ação:** Apagar `src/components/BatteryGridFallback.tsx` e trocar `<BatteryGridFallback />` por `null` em `Index.tsx`.
+
+**Ganho:** Bundle inicial menor (o Index não importa mais o Skeleton só por causa do fallback).
+
+### O que NÃO mexer
+
+- `LazySection` — está enxuto e é o pilar do lazy por scroll.
+- `loadTracking` (GTM/GA4) — já é diferido por idle/interaction, faz sentido.
+- `HomeMiddle` / `HomeBottom` — agrupamento em chunks aprovado anteriormente, mantém.
+- CSS crítico inline + preload de fontes/hero no `index.html` — está correto.
+- `MobileDebugOverlay` — já é DEV-only via `import.meta.env.DEV`.
+
+### Arquivos afetados
+
+Apagados:
+- `src/components/SplashScreen.tsx`
+- `src/components/SplashFallback.tsx`
+- `src/components/BatteryGridFallback.tsx`
+
+Editados:
+- `src/App.tsx` (remove splash)
+- `src/pages/Index.tsx` (PerfReport DEV-only, sem BatteryGridFallback)
+- `src/lib/perfMetrics.ts` (no-op em prod sem `?perf=1`)
+
+### Ganho esperado
+
+- **−380ms** no FCP perceptual (sem splash)
+- **−~3KB** gz no bundle inicial (sem splash image, sem fallback skeleton)
+- **3 chunks lazy a menos** em prod (SplashScreen, SplashFallback, PerfReport)
+- **5 PerformanceObservers a menos** rodando na main thread durante LCP
