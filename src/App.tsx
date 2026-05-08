@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -32,12 +32,29 @@ const queryClient = new QueryClient();
 const Fallback = () => <div className="min-h-screen" />;
 const wrap = (el: React.ReactNode) => <Suspense fallback={<Fallback />}>{el}</Suspense>;
 
+function DeferredToaster() {
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 2000));
+    const id = schedule(() => setShow(true), { timeout: 4000 });
+    return () => {
+      const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+      if (cancel) cancel(id as number);
+    };
+  }, []);
+  if (!show) return null;
+  return (
+    <Suspense fallback={null}>
+      <LazyToaster />
+    </Suspense>
+  );
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <Suspense fallback={null}>
-        <LazyToaster />
-      </Suspense>
+      <DeferredToaster />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
