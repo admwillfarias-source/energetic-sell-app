@@ -1,9 +1,14 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { CartProvider } from "@/context/CartContext";
 import { Header } from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
-import { BatteryGrid } from "@/components/BatteryGrid";
 import LazySection from "@/components/LazySection";
+
+// BatteryGrid só renderiza quando há ?q= / ?codes= / ?v= na URL.
+// Lazy + guard evita carregar Slider/Checkbox/react-query/fitments no bundle inicial.
+const BatteryGrid = lazy(() =>
+  import("@/components/BatteryGrid").then((m) => ({ default: m.BatteryGrid })),
+);
 import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
 const BestSellers = lazy(() => import("@/components/BestSellers"));
