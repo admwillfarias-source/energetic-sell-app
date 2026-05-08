@@ -4,6 +4,7 @@ import App from "./App.tsx";
 import "./index.css";
 import { startLcpTracking, markEvent } from "@/lib/perfMetrics";
 import { initDeferredTracking } from "@/lib/loadTracking";
+import { isEmbedded } from "@/lib/isEmbedded";
 
 // Fontes carregadas de forma diferida e NÃO bloqueante.
 // Pegamos as URLs hashadas dos CSS do @fontsource via ?url (não injeta <link>),
@@ -31,10 +32,13 @@ function injectFontCssNonBlocking(href: string) {
 
 function loadFontsDeferred() {
   const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
-  const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 200));
+  // Em iframe, atrasa ainda mais — fontes do hero já vêm preloaded em index.html.
+  const idleTimeout = isEmbedded() ? 4000 : 2000;
+  const fallbackDelay = isEmbedded() ? 1500 : 200;
+  const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, fallbackDelay));
   schedule(() => {
     [inter400Url, inter600Url, jakarta700Url, jakarta800Url].forEach(injectFontCssNonBlocking);
-  }, { timeout: 2000 });
+  }, { timeout: idleTimeout });
 }
 loadFontsDeferred();
 

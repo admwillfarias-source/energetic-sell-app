@@ -1,6 +1,11 @@
 // Carrega GTM + GA4 + Google Ads de forma diferida.
 // Dispara após primeira interação do usuário OU em idle/load + timeout,
 // o que ocorrer primeiro. Reduz drasticamente TBT/main-thread no LCP.
+//
+// Quando o app roda dentro de iframe (tema WP), pula a injeção: o parent
+// já carrega GTM/GA4/Ads. Para conversões, faz postMessage para o parent.
+
+import { isEmbedded } from "@/lib/isEmbedded";
 
 const GTM_ID = "GTM-5JTRM2L";
 const GA4_ID = "G-FJ1MK5SLS5";
@@ -63,6 +68,31 @@ function loadAll() {
 
 export function initDeferredTracking() {
   if (typeof window === "undefined") return;
+
+  // Em iframe (tema WP), o parent já tem GTM/GA4/Ads. Não duplica.
+  // Conversões ainda funcionam: postMessage para o parent disparar.
+  if (isEmbedded()) {
+    const w = window as unknown as {
+      gtag_report_conversion?: (url?: string) => boolean;
+    };
+    w.gtag_report_conversion = function (url?: string) {
+      try {
+        window.parent.postMessage(
+          { type: "awr_conversion", url: url ?? null },
+          "*",
+        );
+      } catch {
+        /* noop */
+      }
+      if (typeof url !== "undefined") {
+        setTimeout(() => {
+          window.location.href = url!;
+        }, 80);
+      }
+      return false;
+    };
+    return;
+  }
 
   // Gate: só liberamos o tracking depois que o LCP terminou,
   // para não competir com a renderização do herói.
