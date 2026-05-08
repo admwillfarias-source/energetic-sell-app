@@ -9,7 +9,7 @@ import LazySection from "@/components/LazySection";
 const BatteryGrid = lazy(() =>
   import("@/components/BatteryGrid").then((m) => ({ default: m.BatteryGrid })),
 );
-const BatteryGridFallback = lazy(() => import("@/components/BatteryGridFallback"));
+import BatteryGridFallback from "@/components/BatteryGridFallback";
 import { SEO } from "@/components/SEO";
 import { cityPages } from "@/data/cityContent";
 const BestSellers = lazy(() => import("@/components/BestSellers"));
