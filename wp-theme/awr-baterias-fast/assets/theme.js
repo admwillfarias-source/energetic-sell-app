@@ -22,3 +22,24 @@
     if (t) { e.preventDefault(); t.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
   });
 })();
+
+/* Recebe conversões do app React quando ele roda dentro de iframe.
+   O app envia { type: 'awr_conversion', url } via postMessage para evitar
+   duplicar GTM/GA4 dentro do iframe; quem dispara a conversão é o parent. */
+(function () {
+  'use strict';
+  window.addEventListener('message', function (ev) {
+    var d = ev && ev.data;
+    if (!d || d.type !== 'awr_conversion') return;
+    if (typeof window.gtag_report_conversion === 'function') {
+      try { window.gtag_report_conversion(); } catch (e) {}
+    } else if (typeof window.gtag === 'function') {
+      try {
+        window.gtag('event', 'conversion', {
+          send_to: 'AW-994517528/axHrCPb1w6gcEJjEnNoD',
+          value: 1.0, currency: 'BRL', transaction_id: ''
+        });
+      } catch (e) {}
+    }
+  }, false);
+})();
