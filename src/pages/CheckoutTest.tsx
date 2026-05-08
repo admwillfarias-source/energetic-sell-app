@@ -225,6 +225,7 @@ function ViewportCard({
           title={`Checkout @ ${width}px`}
           width={width}
           height={FRAME_HEIGHT}
+          loading="lazy"
           className="block rounded border border-border bg-background"
           style={{ width: `${width}px`, height: `${FRAME_HEIGHT}px` }}
         />
