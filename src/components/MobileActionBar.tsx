@@ -17,7 +17,6 @@ export default function MobileActionBar() {
       <div className="grid grid-cols-2 gap-2 px-3 max-w-md mx-auto">
         <a
           href="tel:+555135165472"
-          target="_top"
           rel="nofollow"
           onClick={(event) => handleCallClick(event, "home", "mobile-bar")}
           style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
