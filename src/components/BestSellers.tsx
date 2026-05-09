@@ -243,15 +243,16 @@ export default function BestSellers() {
               ))}
             </div>
 
-            {hasMore && (
+            {(hasMore || (!hasFull && fullQuery.isFetching)) && (
               <div className="mt-8 flex justify-center">
                 <Button
                   variant="outline"
                   size="lg"
                   onClick={() => setPage((p) => p + 1)}
+                  disabled={!hasFull && fullQuery.isFetching}
                   className="min-w-[180px]"
                 >
-                  Ver mais
+                  {!hasFull && fullQuery.isFetching ? "Carregando..." : "Ver mais"}
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
