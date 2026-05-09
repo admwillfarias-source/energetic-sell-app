@@ -41,6 +41,11 @@ export default function BestSellers() {
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [page, setPage] = useState(1);
 
+  // Aguarda useIsMobile resolver para não disparar duas queries (uma "d", outra "m").
+  const mobileResolved = typeof window !== "undefined"
+    ? window.matchMedia("(max-width: 767px)").matches === isMobile
+    : true;
+
   const { data = [], isLoading } = useQuery({
     queryKey: ["best-sellers-top-skus", isMobile ? "m" : "d"],
     queryFn: async () => {
@@ -48,6 +53,7 @@ export default function BestSellers() {
       // acelerar o carregamento e evitar timeouts em redes lentas.
       return fetchBatteries({ perPage: isMobile ? 30 : 60 });
     },
+    enabled: mobileResolved,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
