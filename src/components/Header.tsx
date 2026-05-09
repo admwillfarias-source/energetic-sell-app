@@ -7,7 +7,7 @@ export function Header() {
   const count = items.reduce((s, i) => s + i.quantity, 0);
 
   return (
-    <header className="fixed top-0 inset-x-0 z-50 bg-secondary border-b border-border">
+    <header className="fixed inset-x-0 z-50 bg-secondary border-b border-border top-[calc(env(safe-area-inset-top,0px)+52px)] lg:top-0">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <a href="#inicio" className="font-display text-xl font-extrabold text-secondary-foreground whitespace-nowrap">

@@ -2,6 +2,7 @@ import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { CartProvider } from "@/context/CartContext";
 import HeroSection from "@/components/HeroSection";
 import LazySection from "@/components/LazySection";
+import MobileActionBar from "@/components/MobileActionBar";
 
 // Cascata de carregamento:
 // [shell estático em index.html] → FCP imediato
@@ -95,6 +96,7 @@ const Index = () => {
   return (
     <CartProvider>
       <div className="min-h-screen bg-background">
+        <MobileActionBar />
         {showHeader && (
           <Suspense fallback={null}>
             <Header />
