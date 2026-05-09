@@ -87,7 +87,13 @@ ${phpEntries}
 }
 `;
 
-const outDir = resolve(root, "wp-theme/awr-baterias/inc");
-mkdirSync(outDir, { recursive: true });
-writeFileSync(resolve(outDir, "seo-routes.php"), php);
-console.log(`✓ Geradas ${Object.keys(routes).length} rotas SEO em wp-theme/awr-baterias/inc/seo-routes.php`);
+const targets = [
+  "wp-theme/awr-baterias/inc",
+  "wp-theme/awr-baterias-fast/inc",
+];
+for (const rel of targets) {
+  const outDir = resolve(root, rel);
+  mkdirSync(outDir, { recursive: true });
+  writeFileSync(resolve(outDir, "seo-routes.php"), php);
+  console.log(`✓ ${Object.keys(routes).length} rotas SEO → ${rel}/seo-routes.php`);
+}
