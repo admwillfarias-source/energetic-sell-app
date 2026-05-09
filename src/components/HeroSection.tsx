@@ -1,26 +1,18 @@
-import { lazy, Suspense, useState, useRef, useEffect } from "react";
+import { lazy, Suspense, useState, useEffect, useMemo } from "react";
 import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle } from "lucide-react";
-import { markEvent } from "@/lib/perfMetrics";
 
 function getLiveDeliveries() {
   const now = new Date();
-  const hour = now.getHours();
-  const minutes = now.getMinutes();
-  const totalMinutes = hour * 60 + minutes;
-  // Janela ativa: 8h00 (480) até 19h30 (1170)
+  const totalMinutes = now.getHours() * 60 + now.getMinutes();
   if (totalMinutes < 480 || totalMinutes > 1170) return 0;
-  // Curva senoidal dentro da janela: média ~9, mín 3, máx 16
-  const progress = (totalMinutes - 480) / (1170 - 480); // 0..1
-  const wave = (Math.sin(progress * Math.PI * 2) + 1) / 2; // 0..1
-  return 3 + Math.round(wave * 13); // 3..16
+  const progress = (totalMinutes - 480) / (1170 - 480);
+  const wave = (Math.sin(progress * Math.PI * 2) + 1) / 2;
+  return 3 + Math.round(wave * 13);
 }
 
 const HeroWhatsButton = lazy(() => import("@/components/HeroWhatsButton"));
 const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
 
-
-// Hero LCP: paths estáveis em /public (sem hash) — combinam com o
-// <link rel="preload"> do index.html para zero "Resource load delay".
 const heroBg = "/hero-bg.webp";
 
 function SearchPlaceholder({
@@ -66,63 +58,27 @@ export default function HeroSection() {
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [initialQuery, setInitialQuery] = useState("");
   const [whatsVisible, setWhatsVisible] = useState(false);
-  const whatsRef = useRef<HTMLDivElement>(null);
 
-  // Marca: hero montado + placeholder de busca já interativo
-  useEffect(() => {
-    markEvent("hero_mounted");
-    markEvent("hero_search_interactive");
-  }, []);
+  // Calcula 1x por render
+  const liveDeliveries = useMemo(() => getLiveDeliveries(), []);
 
-  // Pré-carrega o overlay (chunk JS leve) em idle para abrir instantâneo no clique.
-  // O catálogo Supabase NÃO é pré-carregado aqui — ele compete com o LCP em mobile lento.
-  // O BatteryGrid carrega o catálogo sob demanda quando o usuário envia a busca.
+  // WhatsApp button entra em idle (cascata, sem custo de IntersectionObserver)
   useEffect(() => {
-    const w = window as unknown as { requestIdleCallback?: (cb: () => void) => number };
-    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
-    const id = schedule(() => {
-      import("@/components/SearchOverlay");
-    });
+    const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+    const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1200));
+    const id = schedule(() => setWhatsVisible(true), { timeout: 3000 });
     return () => {
-      const cancel =
-        (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback ??
-        clearTimeout;
-      cancel(id as number);
+      const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+      if (cancel) cancel(id as number);
     };
   }, []);
-
-  // Lazy para o botão de WhatsApp quando visível
-  useEffect(() => {
-    if (whatsVisible) return;
-    const el = whatsRef.current;
-    if (!el) return;
-    const obs = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setWhatsVisible(true);
-          obs.disconnect();
-        }
-      },
-      { rootMargin: "100px" },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [whatsVisible]);
 
   return (
     <section id="inicio" className="relative min-h-[80vh] flex items-center pt-16">
       <div className="absolute inset-0 z-0">
         <picture>
-          <source
-            srcSet="/hero-bg-sm.avif 768w, /hero-bg.avif 1600w"
-            sizes="100vw"
-            type="image/avif"
-          />
-          <source
-            srcSet="/hero-bg-sm.webp 768w, /hero-bg.webp 1600w"
-            sizes="100vw"
-            type="image/webp"
-          />
+          <source srcSet="/hero-bg-sm.avif 768w, /hero-bg.avif 1600w" sizes="100vw" type="image/avif" />
+          <source srcSet="/hero-bg-sm.webp 768w, /hero-bg.webp 1600w" sizes="100vw" type="image/webp" />
           <img
             src={heroBg}
             alt="Técnico instalando bateria automotiva AWR"
@@ -142,26 +98,21 @@ export default function HeroSection() {
       <div className="container mx-auto px-4 relative z-10 py-12 md:py-20">
         <div className="max-w-2xl">
           <div className="flex flex-wrap items-center gap-2 mb-6">
-            <div
-              className="inline-flex items-center gap-2 bg-accent/20 border border-accent/40 rounded-full px-4 py-1.5"
-              role="status"
-            >
+            <div className="inline-flex items-center gap-2 bg-accent/20 border border-accent/40 rounded-full px-4 py-1.5" role="status">
               <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
-              <span className="text-accent font-semibold text-sm">
-                Porto Alegre: Plantão 6h às 22h
-              </span>
+              <span className="text-accent font-semibold text-sm">Porto Alegre: Plantão 6h às 22h</span>
             </div>
             <div className="inline-flex items-center gap-2 bg-primary text-primary-foreground rounded-full px-4 py-1.5 font-bold text-sm shadow-md">
               <CreditCard className="h-4 w-4" aria-hidden="true" />
               10x sem juros
             </div>
-            {getLiveDeliveries() > 0 && (
+            {liveDeliveries > 0 && (
               <div
                 className="inline-flex items-center gap-2 bg-awr-green/15 border border-awr-green/40 text-awr-green rounded-full px-4 py-1.5 font-semibold text-sm"
                 aria-live="polite"
               >
                 <Truck className="h-4 w-4" aria-hidden="true" />
-                {getLiveDeliveries()} entregas em andamento agora
+                {liveDeliveries} entregas em andamento agora
               </div>
             )}
             <div
@@ -209,7 +160,7 @@ export default function HeroSection() {
             </Suspense>
           )}
 
-          <div ref={whatsRef} className="hidden sm:flex flex-col sm:flex-row gap-3 mb-6 min-h-[56px]">
+          <div className="hidden sm:flex flex-col sm:flex-row gap-3 mb-6 min-h-[56px]">
             {whatsVisible && (
               <Suspense fallback={null}>
                 <HeroWhatsButton />
@@ -225,7 +176,6 @@ export default function HeroSection() {
             </div>
             <span className="text-sm font-medium">1500+ clientes satisfeitos no Google</span>
           </div>
-
         </div>
       </div>
     </section>
