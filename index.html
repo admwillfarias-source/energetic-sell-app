@@ -9,22 +9,11 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-    <!-- LCP: preload responsivo do hero — AVIF primeiro (menor), WebP fallback. ANTES de qualquer outro recurso. -->
+    <!-- LCP: preload do hero (única variante WebP disponível). ANTES de qualquer outro recurso. -->
     <link
       rel="preload"
       as="image"
-      href="/hero-bg-sm.avif"
-      imagesrcset="/hero-bg-sm.avif 768w, /hero-bg.avif 1600w"
-      imagesizes="100vw"
-      fetchpriority="high"
-      type="image/avif"
-    />
-    <link
-      rel="preload"
-      as="image"
-      href="/hero-bg-sm.webp"
-      imagesrcset="/hero-bg-sm.webp 768w, /hero-bg.webp 1600w"
-      imagesizes="100vw"
+      href="/hero-bg.webp"
       fetchpriority="high"
       type="image/webp"
     />
