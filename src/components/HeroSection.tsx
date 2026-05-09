@@ -164,7 +164,7 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4 min-h-[96px] md:min-h-[120px] lg:min-h-[140px]">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4 md:min-h-[120px] lg:min-h-[140px]">
             Bateria entregue e instalada{" "}
             em até <span className="text-primary">35 minutos</span>
           </h1>
