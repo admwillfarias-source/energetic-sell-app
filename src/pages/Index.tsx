@@ -108,13 +108,13 @@ const Index = () => {
             </Suspense>
           )}
 
-          <LazySection minHeight="800px" rootMargin="200px">
+          <LazySection minHeight="800px" rootMargin="50px">
             <Suspense fallback={null}>
               <HomeMiddle />
             </Suspense>
           </LazySection>
 
-          <LazySection minHeight="600px" rootMargin="100px">
+          <LazySection minHeight="600px" rootMargin="0px">
             <Suspense fallback={null}>
               <HomeBottom />
             </Suspense>

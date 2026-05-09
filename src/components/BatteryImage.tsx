@@ -79,7 +79,8 @@ export function BatteryImage({
         width={width}
         height={height}
         loading={priority ? "eager" : "lazy"}
-        fetchPriority={priority ? "high" : "auto"}
+        // @ts-expect-error: fetchpriority é atributo HTML válido (lowercase)
+        fetchpriority={priority ? "high" : "auto"}
         decoding="async"
         onLoad={() => setLoaded(true)}
         onError={() => {

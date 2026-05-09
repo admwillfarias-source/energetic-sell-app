@@ -24,6 +24,11 @@ function slim(p: Record<string, unknown>): Record<string, unknown> {
         id: c.id, name: c.name, slug: c.slug,
       }))
     : [];
+  // Cards de listagem só usam name/sku/price/image. Mantemos um short_description
+  // bem curto (≤140 chars) para tooltips/SEO; description completa é omitida
+  // (era ~70% do payload). A página de detalhe busca produto individual.
+  const shortRaw = stripHtmlServer(p.short_description);
+  const short = shortRaw.length > 140 ? shortRaw.slice(0, 137) + "..." : shortRaw;
   return {
     id: p.id,
     name: p.name,
@@ -33,8 +38,8 @@ function slim(p: Record<string, unknown>): Record<string, unknown> {
     prices: p.prices,
     images,
     categories: cats,
-    short_description: stripHtmlServer(p.short_description),
-    description: stripHtmlServer(p.description),
+    short_description: short,
+    description: "",
   };
 }
 
