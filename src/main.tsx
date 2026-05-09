@@ -41,6 +41,26 @@ function loadFontsDeferred() {
 }
 loadFontsDeferred();
 
+// Recupera-se de chunks lazy obsoletos (após deploy/HMR) recarregando uma vez.
+window.addEventListener("error", (e) => {
+  const msg = String(e?.message || "");
+  if (/Importing a module script failed|Failed to fetch dynamically imported module|Loading chunk \d+ failed/i.test(msg)) {
+    if (!sessionStorage.getItem("__chunk_reloaded__")) {
+      sessionStorage.setItem("__chunk_reloaded__", "1");
+      window.location.reload();
+    }
+  }
+});
+window.addEventListener("unhandledrejection", (e) => {
+  const msg = String((e?.reason as Error)?.message || e?.reason || "");
+  if (/Importing a module script failed|Failed to fetch dynamically imported module|Loading chunk \d+ failed/i.test(msg)) {
+    if (!sessionStorage.getItem("__chunk_reloaded__")) {
+      sessionStorage.setItem("__chunk_reloaded__", "1");
+      window.location.reload();
+    }
+  }
+});
+
 
 // Preload do hero agora vive em index.html (paths estáveis em /public)
 // para que o navegador o resolva antes do parse do JS bundle.
