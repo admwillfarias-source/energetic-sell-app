@@ -57,6 +57,7 @@ function awrf_app_iframe_shortcode( $atts ) {
         . 'loading="lazy" decoding="async" fetchpriority="low" '
         . 'referrerpolicy="no-referrer-when-downgrade" '
         . 'allow="clipboard-write; payment; geolocation" '
+        . 'sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation" '
         . 'width="100%%" height="%4$d" '
         . 'style="display:block;width:100%%;border:0;background:hsl(0 0%% 98%%);min-height:%4$dpx"></iframe>',
         $url,
