@@ -3,6 +3,12 @@ import { CartProvider } from "@/context/CartContext";
 import HeroSection from "@/components/HeroSection";
 import LazySection from "@/components/LazySection";
 import MobileActionBar from "@/components/MobileActionBar";
+import { isEmbedded } from "@/lib/isEmbedded";
+
+// Quando rodando em iframe (preview Lovable / tema WP), o parent já fornece
+// header, footer, contato flutuante, SEO e tracking. Não precisamos pagar
+// esse custo dentro do iframe — pula tudo isso para deixar o frame leve.
+const EMBEDDED = isEmbedded();
 
 // Cascata de carregamento:
 // [shell estático em index.html] → FCP imediato
