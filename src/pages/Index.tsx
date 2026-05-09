@@ -105,7 +105,7 @@ const Index = () => {
   return (
     <CartProvider>
       <div className="min-h-screen bg-background">
-        {!EMBEDDED && <MobileActionBar />}
+        <MobileActionBar />
         {showHeader && (
           <Suspense fallback={null}>
             <Header />
