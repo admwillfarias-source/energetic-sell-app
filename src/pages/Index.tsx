@@ -3,6 +3,12 @@ import { CartProvider } from "@/context/CartContext";
 import HeroSection from "@/components/HeroSection";
 import LazySection from "@/components/LazySection";
 import MobileActionBar from "@/components/MobileActionBar";
+import { isEmbedded } from "@/lib/isEmbedded";
+
+// Quando rodando em iframe (preview Lovable / tema WP), o parent já fornece
+// header, footer, contato flutuante, SEO e tracking. Não precisamos pagar
+// esse custo dentro do iframe — pula tudo isso para deixar o frame leve.
+const EMBEDDED = isEmbedded();
 
 // Cascata de carregamento:
 // [shell estático em index.html] → FCP imediato
@@ -28,8 +34,10 @@ const Index = () => {
   }, []);
 
   // Header entra em cascata após o LCP, em idle.
+  // Em iframe (preview), o parent já tem header — pulamos.
   const [showHeader, setShowHeader] = useState(false);
   useEffect(() => {
+    if (EMBEDDED) return;
     const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 800));
     const id = schedule(() => setShowHeader(true), { timeout: 2500 });
@@ -39,14 +47,14 @@ const Index = () => {
     };
   }, []);
 
-  // Pré-fetch dos chunks middle/bottom em idle, sem renderizar — para o
-  // IntersectionObserver não precisar baixar nada quando entrar em viewport.
+  // Pré-fetch dos chunks middle/bottom em idle. Em iframe, o HomeBottom não
+  // monta (parent já tem footer/whatsapp/cart) — então só pré-fetch do middle.
   useEffect(() => {
     const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
     const id = schedule(() => {
       import("@/components/home/HomeMiddle");
-      import("@/components/home/HomeBottom");
+      if (!EMBEDDED) import("@/components/home/HomeBottom");
     }, { timeout: 4000 });
     return () => {
       const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
@@ -54,9 +62,10 @@ const Index = () => {
     };
   }, []);
 
-  // Injeta JSON-LD organização em idle, fora do caminho crítico do LCP.
-  // JSON-LD enxuto — sem array de cidades (evita carregar cityContent).
+  // Injeta JSON-LD organização em idle. Em iframe, o parent (site WP) já
+  // serve o JSON-LD canônico — pular evita duplicação e trabalho.
   useEffect(() => {
+    if (EMBEDDED) return;
     if (typeof document === "undefined") return;
     if (document.getElementById("ld-org")) return;
     const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
@@ -96,13 +105,13 @@ const Index = () => {
   return (
     <CartProvider>
       <div className="min-h-screen bg-background">
-        <MobileActionBar />
+        {!EMBEDDED && <MobileActionBar />}
         {showHeader && (
           <Suspense fallback={null}>
             <Header />
           </Suspense>
         )}
-        <main className="pt-[60px] lg:pt-0">
+        <main className={EMBEDDED ? "" : "pt-[60px] lg:pt-0"}>
           <HeroSection />
           {hasSearch && (
             <Suspense fallback={null}>
@@ -116,11 +125,13 @@ const Index = () => {
             </Suspense>
           </LazySection>
 
-          <LazySection minHeight="600px" rootMargin="0px">
-            <Suspense fallback={null}>
-              <HomeBottom />
-            </Suspense>
-          </LazySection>
+          {!EMBEDDED && (
+            <LazySection minHeight="600px" rootMargin="0px">
+              <Suspense fallback={null}>
+                <HomeBottom />
+              </Suspense>
+            </LazySection>
+          )}
         </main>
       </div>
     </CartProvider>

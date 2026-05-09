@@ -1,6 +1,9 @@
 import { lazy, Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle } from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
+import { isEmbedded } from "@/lib/isEmbedded";
+
+const EMBEDDED = isEmbedded();
 
 function getLiveDeliveries() {
   const now = new Date();
@@ -110,7 +113,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="inicio" className="relative min-h-[80vh] flex items-center pt-[116px] lg:pt-16">
+    <section ref={sectionRef} id="inicio" className={`relative min-h-[80vh] flex items-center ${EMBEDDED ? "pt-4" : "pt-[116px] lg:pt-16"}`}>
 
       <div className="absolute inset-0 z-0">
         <picture>
