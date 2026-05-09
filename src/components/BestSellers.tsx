@@ -186,6 +186,14 @@ export default function BestSellers() {
     else if (vw <= 1024) factor = 1.5;
     if (slow) factor = Math.min(factor, 0.5);
 
+    // Ajuste por densidade de pixels (HiDPI): em telas Retina/AMOLED o usuário
+    // costuma rolar mais conteúdo por gesto (mais pixels CSS visíveis por
+    // swipe físico). Aumentamos a margem proporcionalmente, com teto, para
+    // antecipar o próximo lote sem exagerar em telas 3x/4x de mobile barato.
+    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
+    const dprBoost = Math.min(1 + (dpr - 1) * 0.25, 1.5); // 1x→1.0, 2x→1.25, 3x→1.5 (cap)
+    factor *= dprBoost;
+
     const margin = `${Math.round(vh * factor)}px 0px`;
 
     const obs = new IntersectionObserver(
