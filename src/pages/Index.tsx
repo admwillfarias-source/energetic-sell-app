@@ -136,6 +136,9 @@ const Index = () => {
             </LazySection>
           )}
         </main>
+        <Suspense fallback={null}>
+          <CartDrawer />
+        </Suspense>
       </div>
     </CartProvider>
   );
