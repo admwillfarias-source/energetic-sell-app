@@ -96,6 +96,7 @@ const Index = () => {
   return (
     <CartProvider>
       <div className="min-h-screen bg-background">
+        <MobileActionBar />
         {showHeader && (
           <Suspense fallback={null}>
             <Header />
