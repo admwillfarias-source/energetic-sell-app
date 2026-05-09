@@ -77,7 +77,7 @@ export function BatteryImage({
         ref={imgRef}
         src={finalSrc}
         srcSet={srcset ?? undefined}
-        sizes={srcset && sizes ? sizes : undefined}
+        sizes={finalSizes}
         alt={alt}
         width={width}
         height={height}
