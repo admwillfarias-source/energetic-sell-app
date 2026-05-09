@@ -197,6 +197,18 @@ export default function HeroSection() {
             />
           </div>
 
+          <a
+            href="https://wa.me/5551993199486?text=Ol%C3%A1!%20Solicito%20a%20minha%20bateria."
+            target="_top"
+            rel="noopener noreferrer"
+            onClick={() => trackLead("hero-below-search")}
+            className="mb-6 flex items-center justify-center gap-2 w-full rounded-xl bg-awr-green hover:bg-awr-green/90 text-awr-green-foreground font-extrabold text-base h-12 px-5 shadow-md transition-colors"
+            aria-label="Peça sua bateria pelo WhatsApp"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Peça sua bateria pelo WhatsApp
+          </a>
+
           {overlayOpen && (
             <Suspense fallback={null}>
               <SearchOverlay open={overlayOpen} onOpenChange={setOverlayOpen} />
