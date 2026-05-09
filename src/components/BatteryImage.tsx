@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import batteryImg from "@/assets/battery-product.webp";
-import { buildWordpressSrcset, supportsWordpressSrcset } from "@/lib/imageSrcset";
+import { buildWordpressSrcset, proxiedWordpressSrc, supportsWordpressSrcset } from "@/lib/imageSrcset";
 
 const isRemote = (s: string) => /^https?:\/\//.test(s);
 
@@ -48,8 +48,11 @@ export function BatteryImage({
   }, [src]);
 
   const useRemote = initialRemote && !errored;
-  const finalSrc = useRemote ? src : batteryImg;
   const srcset = useRemote ? buildWordpressSrcset(src, srcsetWidths) : null;
+  // Para URLs WP "cruas" (sem -WxH), usamos o src proxiado para garantir
+  // payload pequeno mesmo se o browser não escolher do srcset.
+  const finalSrc = useRemote ? proxiedWordpressSrc(src, 400) : batteryImg;
+  const finalSizes = srcset ? (sizes ?? "(max-width: 640px) 96px, 112px") : undefined;
   const showsBlur = useRemote && !loaded;
 
   return (
@@ -74,7 +77,7 @@ export function BatteryImage({
         ref={imgRef}
         src={finalSrc}
         srcSet={srcset ?? undefined}
-        sizes={srcset && sizes ? sizes : undefined}
+        sizes={finalSizes}
         alt={alt}
         width={width}
         height={height}
