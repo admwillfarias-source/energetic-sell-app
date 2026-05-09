@@ -1233,7 +1233,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                         <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                           Parcelas (sem juros)
                         </p>
-                        <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-10">
+                        <div className="grid grid-cols-5 gap-1.5">
                           {Array.from({ length: 5 }, (_, i) => i + 1).map((n) => (
                             <button
                               key={n}
