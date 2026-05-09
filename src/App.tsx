@@ -56,35 +56,37 @@ function DeferredToaster() {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <DeferredToaster />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/resultado" element={wrap(<Resultado />)} />
-          <Route path="/baterias/:slug" element={wrap(<City />)} />
-          <Route path="/baterias/:citySlug/:slug" element={wrap(<Neighborhood />)} />
-          <Route path="/baterias-para/:slug" element={wrap(<VehicleSeo />)} />
-          <Route path="/baterias-para/:slug/:year" element={wrap(<VehicleSeo />)} />
-          <Route path="/baterias/marca/:slug" element={wrap(<Brand />)} />
-          <Route path="/baterias/amperagem/:ah" element={wrap(<Amperage />)} />
-          <Route path="/blog" element={wrap(<Blog />)} />
-          <Route path="/blog/tag/:slug" element={wrap(<BlogTag />)} />
-          <Route path="/blog/:slug" element={wrap(<BlogPost />)} />
-          <Route path="/bateria/:sku" element={wrap(<BatterySku />)} />
-          <Route path="/auth" element={wrap(<Auth />)} />
-          <Route path="/admin" element={wrap(<Admin />)} />
-          <Route path="/admin/validacao-skus" element={wrap(<SkuValidation />)} />
-          <Route path="/admin/whatsapp-logs" element={wrap(<WhatsappLogs />)} />
-          <Route path="/admin/whatsapp-test" element={wrap(<WhatsappTest />)} />
-          <Route path="/admin/whatsapp-diagnostico" element={wrap(<WhatsappDiagnose />)} />
-          <Route path="/checkout-test" element={wrap(<CheckoutTest />)} />
-          <Route path="/pedido-confirmado" element={wrap(<PedidoConfirmado />)} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <Suspense fallback={null}>
+      <TooltipProvider>
+        <DeferredToaster />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/resultado" element={wrap(<Resultado />)} />
+            <Route path="/baterias/:slug" element={wrap(<City />)} />
+            <Route path="/baterias/:citySlug/:slug" element={wrap(<Neighborhood />)} />
+            <Route path="/baterias-para/:slug" element={wrap(<VehicleSeo />)} />
+            <Route path="/baterias-para/:slug/:year" element={wrap(<VehicleSeo />)} />
+            <Route path="/baterias/marca/:slug" element={wrap(<Brand />)} />
+            <Route path="/baterias/amperagem/:ah" element={wrap(<Amperage />)} />
+            <Route path="/blog" element={wrap(<Blog />)} />
+            <Route path="/blog/tag/:slug" element={wrap(<BlogTag />)} />
+            <Route path="/blog/:slug" element={wrap(<BlogPost />)} />
+            <Route path="/bateria/:sku" element={wrap(<BatterySku />)} />
+            <Route path="/auth" element={wrap(<Auth />)} />
+            <Route path="/admin" element={wrap(<Admin />)} />
+            <Route path="/admin/validacao-skus" element={wrap(<SkuValidation />)} />
+            <Route path="/admin/whatsapp-logs" element={wrap(<WhatsappLogs />)} />
+            <Route path="/admin/whatsapp-test" element={wrap(<WhatsappTest />)} />
+            <Route path="/admin/whatsapp-diagnostico" element={wrap(<WhatsappDiagnose />)} />
+            <Route path="/checkout-test" element={wrap(<CheckoutTest />)} />
+            <Route path="/pedido-confirmado" element={wrap(<PedidoConfirmado />)} />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </Suspense>
   </QueryClientProvider>
 );
 
