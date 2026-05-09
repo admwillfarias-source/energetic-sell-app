@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { fetchBatteries } from "@/lib/api/batteries";
 import { BatteryMouraCard } from "./BatteryMouraCard";
@@ -163,6 +163,27 @@ export default function BestSellers() {
   const pageItems = withSku.slice(0, visibleCount);
   const hasMore = visibleCount < withSku.length;
 
+  // Sentinela próxima ao fim da lista: quando entra em viewport (com margem
+  // generosa de 400px), avança a página automaticamente. O lote completo já
+  // veio em background, então o avanço é instantâneo — o usuário não precisa
+  // clicar em "Ver mais" e não vê espera.
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!hasMore || !hasFull) return;
+    const el = sentinelRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          setPage((p) => p + 1);
+        }
+      },
+      { rootMargin: "400px 0px" },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasMore, hasFull, page]);
+
   return (
     <section
       id="mais-vendidos"
@@ -259,7 +280,10 @@ export default function BestSellers() {
             )}
           </>
         )}
-      </div>
+            </div>
+
+            {/* Sentinela para prefetch/auto-load quando o usuário se aproxima */}
+            {hasMore && hasFull && <div ref={sentinelRef} aria-hidden="true" className="h-1" />}
 
       <BatteryDetailDialog battery={active} onOpenChange={(o) => !o && setActive(null)} />
 
