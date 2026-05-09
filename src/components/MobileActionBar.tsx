@@ -29,7 +29,7 @@ export default function MobileActionBar() {
         </a>
         <a
           href={WHATSAPP_URL}
-          target="_blank"
+          target="_top"
           rel="noopener noreferrer"
           style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           className="flex items-center justify-center gap-2 rounded-lg bg-awr-green text-awr-green-foreground font-extrabold text-sm h-10 shadow-sm relative z-10"
