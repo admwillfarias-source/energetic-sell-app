@@ -28,7 +28,7 @@ export function Header() {
         </nav>
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm" className="text-secondary-foreground hidden sm:inline-flex hover:bg-accent/20 hover:text-accent">
-            <a href="tel:+555135165472" aria-label="Ligar para AWR Baterias">
+            <a href="tel:+555135165472" target="_top" aria-label="Ligar para AWR Baterias">
               <Phone className="h-4 w-4 mr-2" />(51) 3516-5472
             </a>
           </Button>
