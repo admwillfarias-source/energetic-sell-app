@@ -1,81 +1,94 @@
-## Limpeza do projeto
+## Objetivo
 
-Resultado de uma varredura completa. Nada de produção será tocado — só código sem uso real, páginas claramente marcadas como teste/diagnóstico, e logs de desenvolvimento.
-
----
-
-### 1. Páginas e rotas de teste (remover)
-
-Páginas que existem só para QA interno e não são linkadas em produção:
-
-- `src/pages/CheckoutTest.tsx` — rota `/checkout-test`
-- `src/pages/SkuValidation.tsx` — rota `/admin/validacao-skus`
-- `src/pages/WhatsappTest.tsx` — rota `/admin/whatsapp-test`
-- `src/pages/WhatsappDiagnose.tsx` — rota `/admin/whatsapp-diagnostico`
-
-Atualizar `src/App.tsx`: remover os 4 `lazy(...)` e as 4 `<Route>` correspondentes.
-
-**Mantido (produção):** `/admin`, `/admin/whatsapp-logs`, `/auth`.
+Adicionar uma verificação automática (CI) que bloqueie deploys quando houver código órfão ou páginas de teste no projeto, e orientar sobre as ações de limpeza de cache/build que precisam ser feitas fora do código (no navegador e na plataforma Lovable).
 
 ---
 
-### 2. Edge function órfã (remover)
+## Parte 1 — Verificação em CI (mudanças no código)
 
-- `supabase/functions/whatsapp-diagnose/` — invocada apenas pela `WhatsappDiagnose.tsx` que será removida.
+Vou adicionar uma checagem usando **knip** (ferramenta padrão para detectar arquivos, exports e dependências não usadas em projetos TS/Vite) mais um script guard simples para páginas de teste.
 
-**Mantido:** `wc-products`, `wc-create-order`, `wc-get-order`, `whatsapp-webhook` (recebe callbacks do WhatsApp), `send-whatsapp-order` (acionada pelo fluxo real de pedido — embora só apareça referência na tela de teste, ela também é chamada pelo backend WooCommerce; mantida por segurança).
+### 1.1 Instalar knip
+- Adicionar `knip` como devDependency.
 
----
+### 1.2 Configuração `knip.json` na raiz
+- Entry points: `src/main.tsx`, `index.html`, `supabase/functions/**/index.ts`.
+- Project: `src/**/*.{ts,tsx}`, `supabase/functions/**/*.ts`.
+- Ignorar: `src/components/ui/**` (shadcn — mantidos sob demanda), `src/integrations/supabase/**` (auto-gerado), `tailwind.config.ts`, `vite.config.ts`.
+- Reportar: `files`, `dependencies`, `unlisted`, `exports` não usados.
 
-### 3. Componentes/utilitários não utilizados (remover)
+### 1.3 Script guard para páginas de teste
+- Criar `scripts/check-no-test-pages.mjs` que falha se encontrar:
+  - Arquivos em `src/pages/` cujo nome contenha `Test`, `Diagnose`, `Debug`, `Sandbox`, `Validation`.
+  - Rotas em `src/App.tsx` cujo path contenha `/test`, `/diagnostico`, `/debug`, `/sandbox`.
+- Mensagem de erro clara apontando o arquivo/linha.
 
-Identificados via busca por imports — zero referências no código:
-
-- `src/components/NavLink.tsx`
-- `src/lib/phone.ts`
-- `src/lib/batterySku.test.ts` (teste solto, sem runner configurado)
-
----
-
-### 4. Componentes shadcn/ui não utilizados (remover)
-
-24 arquivos em `src/components/ui/` sem nenhum import no projeto:
-
-```
-alert-dialog, alert, aspect-ratio, avatar, breadcrumb, card,
-collapsible, command, context-menu, dropdown-menu, form,
-hover-card, menubar, navigation-menu, pagination, popover,
-radio-group, scroll-area, sidebar, sonner, switch, table,
-textarea, toggle-group
+### 1.4 Scripts no `package.json`
+```json
+"lint:orphans": "knip",
+"lint:test-pages": "node scripts/check-no-test-pages.mjs",
+"predeploy": "npm run lint:orphans && npm run lint:test-pages"
 ```
 
-Reduz superfície do bundle e ruído no editor. Se algum deles for necessário no futuro, pode ser readicionado via shadcn.
+### 1.5 GitHub Actions workflow `.github/workflows/ci.yml`
+- Trigger: `pull_request` e `push` na branch principal.
+- Steps: checkout → setup-node → `npm ci` → `npm run lint:orphans` → `npm run lint:test-pages` → `npm run build`.
+- Se qualquer passo falhar, o PR é bloqueado antes do deploy.
+
+> Observação: como o projeto roda no Lovable, o workflow GitHub Actions só roda se você tiver o repositório conectado ao GitHub. Se preferir, posso deixar apenas os scripts npm e você roda localmente antes de publicar.
 
 ---
 
-### 5. Logs de desenvolvimento
+## Parte 2 — Limpeza de cache do navegador (ação do usuário, sem código)
 
-Varredura encontrou 5 chamadas a `console.*`:
+Não é possível fazer isso pelo código do app — precisa ser feito por você no navegador:
 
-| Arquivo | Tipo | Ação |
-|---|---|---|
-| `src/lib/perfMetrics.ts:44` | `console.info("[perf] …")` | **Remover** (debug de performance) |
-| `src/wp-entry.tsx:10` | `console.warn("#root não encontrado")` | Manter (erro de bootstrap real) |
-| `supabase/functions/wc-products/index.ts` | 2× `console.warn` upstream/fetch | Manter (telemetria de erro) |
-| `src/pages/SkuValidation.tsx` | `console.warn` | Removido junto com a página |
+1. Abra o site em uma **aba anônima** para confirmar que o problema é só cache local.
+2. No Chrome/Edge: `DevTools (F12) → Application → Storage → Clear site data` (marca tudo: localStorage, sessionStorage, cookies, cache).
+3. Ou: `Ctrl+Shift+Del` → "Imagens e arquivos em cache" + "Cookies".
+4. Recarregue com `Ctrl+Shift+R` (hard reload).
+
+> Se quiser, posso adicionar no app um pequeno mecanismo de "version bump" que invalida o `localStorage` automaticamente quando a versão muda. Diga se quer essa proteção.
 
 ---
 
-### Resumo do impacto
+## Parte 3 — Apagar build antigo e forçar redeploy (ação na plataforma)
 
-- 4 páginas + 4 rotas removidas
-- 1 edge function deletada (também via tool `delete_edge_functions`)
-- 27 arquivos de componentes/libs órfãos removidos
-- 1 `console.info` de debug removido
-- **Sem mudanças visuais nem em fluxos de usuário final** (home, busca, blog, checkout, admin/logs continuam idênticos)
+No Lovable, builds e deploys são gerenciados pela plataforma — não há pasta `dist/` versionada para apagar manualmente. Para forçar um build/deploy completo:
 
-### Detalhes técnicos
+1. Clique em **Publish** (canto superior direito) → **Update**.
+2. Isso recompila tudo do zero e publica os assets novos com hashes novos no `https://energetic-sell-app.lovable.app`.
+3. Mudanças de backend (edge functions, migrações) já são deployadas automaticamente; só o frontend precisa do "Update".
 
-- A remoção dos `lazy(...)` de páginas de teste reduz code-splits desnecessários no manifesto do Vite.
-- Remover componentes shadcn não usados não afeta os que ficam — cada um é importado individualmente.
-- `whatsapp-diagnose` será apagada também no servidor via `supabase--delete_edge_functions` para não ficar deployada órfã.
+> Não preciso mexer no código para isso — é um clique seu.
+
+---
+
+## Parte 4 — Limpar cache do Vite e reinstalar dependências
+
+Também é uma ação de ambiente, não de código. No Lovable a sandbox é gerenciada, mas se você roda localmente:
+
+```bash
+rm -rf node_modules/.vite dist node_modules package-lock.json
+npm install
+npm run dev
+```
+
+No próprio Lovable, se o preview estiver com chunks travados, eu posso reiniciar o dev server (uso a ferramenta `restart_dev_server` no modo build). Diga se quer que eu faça isso depois de aprovar o plano.
+
+---
+
+## Resumo do que entra no código
+
+| Arquivo | Ação |
+|---|---|
+| `package.json` | adicionar `knip` (devDep) + 3 scripts |
+| `knip.json` | novo — config de detecção de órfãos |
+| `scripts/check-no-test-pages.mjs` | novo — guard de páginas de teste |
+| `.github/workflows/ci.yml` | novo (opcional — confirme se quer) |
+
+## Pontos para confirmar antes de implementar
+
+1. **Workflow GitHub Actions**: criar ou não? (depende se o projeto está conectado ao GitHub)
+2. **Version bump no localStorage**: quer que eu adicione um auto-clear quando a versão do app mudar?
+3. **Reiniciar o dev server do preview** agora após implementar?

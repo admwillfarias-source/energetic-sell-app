@@ -1,0 +1,29 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/main.tsx",
+    "index.html",
+    "supabase/functions/**/index.ts",
+    "scripts/**/*.{mjs,js,ts}",
+    "vite.config.ts",
+    "tailwind.config.ts",
+    "postcss.config.js",
+    "eslint.config.js"
+  ],
+  "project": [
+    "src/**/*.{ts,tsx}",
+    "supabase/functions/**/*.ts"
+  ],
+  "ignore": [
+    "src/components/ui/**",
+    "src/integrations/supabase/**"
+  ],
+  "ignoreDependencies": [
+    "tailwindcss-animate",
+    "@tailwindcss/typography",
+    "autoprefixer"
+  ],
+  "ignoreBinaries": [
+    "deno"
+  ]
+}
