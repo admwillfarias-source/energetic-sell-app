@@ -2,9 +2,8 @@ import { lazy, Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle, MessageCircle } from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
 import { trackLead } from "@/lib/tracking";
-import { isEmbedded } from "@/lib/isEmbedded";
 
-const EMBEDDED = isEmbedded();
+
 
 function getLiveDeliveries() {
   const now = new Date();
