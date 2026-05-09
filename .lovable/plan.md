@@ -1,94 +1,37 @@
-## Objetivo
+## Problemas e correções
 
-Adicionar uma verificação automática (CI) que bloqueie deploys quando houver código órfão ou páginas de teste no projeto, e orientar sobre as ações de limpeza de cache/build que precisam ser feitas fora do código (no navegador e na plataforma Lovable).
+### 1. Botão "Ligar agora" não dispara (mobile/iframe)
+**Causa provável:** Em iframe cross-origin, links `tel:` são bloqueados por padrão pela política de sandbox/permissions do `<iframe>` do WordPress se não houver `allow="..."` adequado. Além disso, o `<a href="tel:">` dentro de iframe sem `target="_top"` pode não navegar.
 
----
+**Correção:**
+- Adicionar `target="_top"` ao link `tel:` no `MobileActionBar.tsx` (e ao link `tel:` do `Header.tsx`) para que a navegação escape do iframe e dispare o discador no dispositivo.
+- No shortcode `[awr_app]` (`wp-theme/awr-baterias-fast/inc/perf-app-iframe.php`), garantir que o `<iframe>` tenha `allow="autoplay; clipboard-write"` e remover qualquer `sandbox` restritivo (ou incluir `allow-top-navigation-by-user-activation allow-popups`).
 
-## Parte 1 — Verificação em CI (mudanças no código)
+### 2. Cabeçalho não aparece no mobile
+**Causa:** Em `Index.tsx`, `showHeader` só vira `true` quando `!EMBEDDED`. Em modo iframe (preview e WP) o `Header` nunca monta. O usuário quer o header visível também no mobile dentro do iframe.
 
-Vou adicionar uma checagem usando **knip** (ferramenta padrão para detectar arquivos, exports e dependências não usadas em projetos TS/Vite) mais um script guard simples para páginas de teste.
+**Correção:**
+- Em `Index.tsx`, montar o `Header` também em modo embedded (remover o `if (EMBEDDED) return;` do effect que ativa `showHeader`).
+- Validar empilhamento: `MobileActionBar` fica em `top:0` (z-60), `Header` fica em `top: 52px+safe-area` (z-50). Ajustar o offset do `Header` no mobile para ficar logo abaixo da MobileActionBar (~52px), e ajustar `padding-top` do `<main>` para acomodar (`MobileActionBar ~52px` + `Header 64px` = ~116px no mobile).
 
-### 1.1 Instalar knip
-- Adicionar `knip` como devDependency.
+### 3. Adicionar botão "Peça sua bateria" abaixo do campo de busca
+**Localização:** `HeroSection.tsx`, logo após o card branco da busca (`<div className="mb-6 rounded-2xl bg-card p-4 ...">`).
 
-### 1.2 Configuração `knip.json` na raiz
-- Entry points: `src/main.tsx`, `index.html`, `supabase/functions/**/index.ts`.
-- Project: `src/**/*.{ts,tsx}`, `supabase/functions/**/*.ts`.
-- Ignorar: `src/components/ui/**` (shadcn — mantidos sob demanda), `src/integrations/supabase/**` (auto-gerado), `tailwind.config.ts`, `vite.config.ts`.
-- Reportar: `files`, `dependencies`, `unlisted`, `exports` não usados.
+**Implementação:**
+- Adicionar um botão verde (mesmo estilo `bg-awr-green`) full-width no mobile, com ícone `MessageCircle` e texto "Peça a sua bateria pelo WhatsApp".
+- Link: `https://wa.me/5551993199486?text=...` com `target="_blank"` e `rel="noopener noreferrer"`.
+- Visível em todos os breakpoints (não esconder no mobile como o `HeroWhatsButton` atual que só aparece em `sm:flex`).
+- Disparar `trackLead("hero-below-search")` no clique.
 
-### 1.3 Script guard para páginas de teste
-- Criar `scripts/check-no-test-pages.mjs` que falha se encontrar:
-  - Arquivos em `src/pages/` cujo nome contenha `Test`, `Diagnose`, `Debug`, `Sandbox`, `Validation`.
-  - Rotas em `src/App.tsx` cujo path contenha `/test`, `/diagnostico`, `/debug`, `/sandbox`.
-- Mensagem de erro clara apontando o arquivo/linha.
+### 4. Ajustes de layout responsivo (mobile)
+- Reduzir `min-h-[96px]` do `<h1>` no mobile que cria espaço vazio (usar `min-h-0 md:min-h-[120px]`).
+- Reduzir `py-12` para `py-6` no container do hero no mobile.
+- Garantir que badges no topo (`Plantão`, `10x sem juros`, etc.) quebrem bem em telas de 360-440px (já usam `flex-wrap`, validar tamanhos).
+- Ajustar o `pt` do hero embedded para acomodar Header + MobileActionBar quando ambos estiverem visíveis no mobile.
 
-### 1.4 Scripts no `package.json`
-```json
-"lint:orphans": "knip",
-"lint:test-pages": "node scripts/check-no-test-pages.mjs",
-"predeploy": "npm run lint:orphans && npm run lint:test-pages"
-```
-
-### 1.5 GitHub Actions workflow `.github/workflows/ci.yml`
-- Trigger: `pull_request` e `push` na branch principal.
-- Steps: checkout → setup-node → `npm ci` → `npm run lint:orphans` → `npm run lint:test-pages` → `npm run build`.
-- Se qualquer passo falhar, o PR é bloqueado antes do deploy.
-
-> Observação: como o projeto roda no Lovable, o workflow GitHub Actions só roda se você tiver o repositório conectado ao GitHub. Se preferir, posso deixar apenas os scripts npm e você roda localmente antes de publicar.
-
----
-
-## Parte 2 — Limpeza de cache do navegador (ação do usuário, sem código)
-
-Não é possível fazer isso pelo código do app — precisa ser feito por você no navegador:
-
-1. Abra o site em uma **aba anônima** para confirmar que o problema é só cache local.
-2. No Chrome/Edge: `DevTools (F12) → Application → Storage → Clear site data` (marca tudo: localStorage, sessionStorage, cookies, cache).
-3. Ou: `Ctrl+Shift+Del` → "Imagens e arquivos em cache" + "Cookies".
-4. Recarregue com `Ctrl+Shift+R` (hard reload).
-
-> Se quiser, posso adicionar no app um pequeno mecanismo de "version bump" que invalida o `localStorage` automaticamente quando a versão muda. Diga se quer essa proteção.
-
----
-
-## Parte 3 — Apagar build antigo e forçar redeploy (ação na plataforma)
-
-No Lovable, builds e deploys são gerenciados pela plataforma — não há pasta `dist/` versionada para apagar manualmente. Para forçar um build/deploy completo:
-
-1. Clique em **Publish** (canto superior direito) → **Update**.
-2. Isso recompila tudo do zero e publica os assets novos com hashes novos no `https://energetic-sell-app.lovable.app`.
-3. Mudanças de backend (edge functions, migrações) já são deployadas automaticamente; só o frontend precisa do "Update".
-
-> Não preciso mexer no código para isso — é um clique seu.
-
----
-
-## Parte 4 — Limpar cache do Vite e reinstalar dependências
-
-Também é uma ação de ambiente, não de código. No Lovable a sandbox é gerenciada, mas se você roda localmente:
-
-```bash
-rm -rf node_modules/.vite dist node_modules package-lock.json
-npm install
-npm run dev
-```
-
-No próprio Lovable, se o preview estiver com chunks travados, eu posso reiniciar o dev server (uso a ferramenta `restart_dev_server` no modo build). Diga se quer que eu faça isso depois de aprovar o plano.
-
----
-
-## Resumo do que entra no código
-
-| Arquivo | Ação |
-|---|---|
-| `package.json` | adicionar `knip` (devDep) + 3 scripts |
-| `knip.json` | novo — config de detecção de órfãos |
-| `scripts/check-no-test-pages.mjs` | novo — guard de páginas de teste |
-| `.github/workflows/ci.yml` | novo (opcional — confirme se quer) |
-
-## Pontos para confirmar antes de implementar
-
-1. **Workflow GitHub Actions**: criar ou não? (depende se o projeto está conectado ao GitHub)
-2. **Version bump no localStorage**: quer que eu adicione um auto-clear quando a versão do app mudar?
-3. **Reiniciar o dev server do preview** agora após implementar?
+## Arquivos a editar
+- `src/components/MobileActionBar.tsx` — adicionar `target="_top"` no link tel:
+- `src/components/Header.tsx` — adicionar `target="_top"` no link tel: e ajustar offset top no mobile
+- `src/pages/Index.tsx` — montar Header também em iframe; ajustar padding do main
+- `src/components/HeroSection.tsx` — novo botão WhatsApp abaixo da busca; ajustes responsivos de espaçamento
+- `wp-theme/awr-baterias-fast/inc/perf-app-iframe.php` — atributo `allow` no iframe para permitir tel: e top-navigation

@@ -1,9 +1,9 @@
 import { lazy, Suspense, useState, useEffect, useMemo, useRef } from "react";
-import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle } from "lucide-react";
+import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle, MessageCircle } from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
-import { isEmbedded } from "@/lib/isEmbedded";
+import { trackLead } from "@/lib/tracking";
 
-const EMBEDDED = isEmbedded();
+
 
 function getLiveDeliveries() {
   const now = new Date();
@@ -113,7 +113,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="inicio" className={`relative min-h-[80vh] flex items-center ${EMBEDDED ? "pt-4 lg:pt-4" : "pt-[116px] lg:pt-16"}`}>
+    <section ref={sectionRef} id="inicio" className="relative min-h-[80vh] flex items-center pt-2 lg:pt-16">
 
       <div className="absolute inset-0 z-0">
         <picture>
@@ -164,7 +164,7 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <h1 className="font-display text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4 min-h-[96px] md:min-h-[120px] lg:min-h-[140px]">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4 md:min-h-[120px] lg:min-h-[140px]">
             Bateria entregue e instalada{" "}
             em até <span className="text-primary">35 minutos</span>
           </h1>
@@ -196,6 +196,18 @@ export default function HeroSection() {
               onChange={setInitialQuery}
             />
           </div>
+
+          <a
+            href="https://wa.me/5551993199486?text=Ol%C3%A1!%20Solicito%20a%20minha%20bateria."
+            target="_top"
+            rel="noopener noreferrer"
+            onClick={() => trackLead("hero-below-search")}
+            className="mb-6 flex items-center justify-center gap-2 w-full rounded-xl bg-awr-green hover:bg-awr-green/90 text-awr-green-foreground font-extrabold text-base h-12 px-5 shadow-md transition-colors"
+            aria-label="Peça sua bateria pelo WhatsApp"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Peça sua bateria pelo WhatsApp
+          </a>
 
           {overlayOpen && (
             <Suspense fallback={null}>

@@ -33,11 +33,9 @@ const Index = () => {
     return !!(sp.get("q") || sp.get("codes") || sp.get("v"));
   }, []);
 
-  // Header entra em cascata após o LCP, em idle.
-  // Em iframe (preview), o parent já tem header — pulamos.
+  // Header entra em cascata após o LCP, em idle (mesmo em iframe).
   const [showHeader, setShowHeader] = useState(false);
   useEffect(() => {
-    if (EMBEDDED) return;
     const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 800));
     const id = schedule(() => setShowHeader(true), { timeout: 2500 });
@@ -111,7 +109,7 @@ const Index = () => {
             <Header />
           </Suspense>
         )}
-        <main className={EMBEDDED ? "pt-[60px] lg:pt-0" : "pt-[60px] lg:pt-0"}>
+        <main className="pt-[116px] lg:pt-0">
           <HeroSection />
           {hasSearch && (
             <Suspense fallback={null}>

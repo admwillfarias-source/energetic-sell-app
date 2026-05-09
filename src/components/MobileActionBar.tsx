@@ -17,6 +17,7 @@ export default function MobileActionBar() {
       <div className="grid grid-cols-2 gap-2 px-3 max-w-md mx-auto">
         <a
           href="tel:+555135165472"
+          target="_top"
           rel="nofollow"
           onClick={(event) => handleCallClick(event, "home", "mobile-bar")}
           style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
@@ -28,7 +29,7 @@ export default function MobileActionBar() {
         </a>
         <a
           href={WHATSAPP_URL}
-          target="_blank"
+          target="_top"
           rel="noopener noreferrer"
           style={{ touchAction: "manipulation", WebkitTapHighlightColor: "transparent" }}
           className="flex items-center justify-center gap-2 rounded-lg bg-awr-green text-awr-green-foreground font-extrabold text-sm h-10 shadow-sm relative z-10"
