@@ -30,14 +30,17 @@ function injectFontCssNonBlocking(href: string) {
 }
 
 function loadFontsDeferred() {
+  // Em iframe (preview Lovable / WP), pula 100% do @fontsource.
+  // O index.html já preloada Jakarta-800 + Inter-400/600 inline (woff2 direto),
+  // que cobrem todo o conteúdo acima da dobra. Pesos extras (Jakarta-700) caem
+  // para o fallback metrics-adjusted — visualmente idêntico, sem 4 requests
+  // (4 CSS + 4 woff2) custosos dentro do iframe.
+  if (isEmbedded()) return;
   const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
-  // Em iframe, atrasa ainda mais — fontes do hero já vêm preloaded em index.html.
-  const idleTimeout = isEmbedded() ? 4000 : 2000;
-  const fallbackDelay = isEmbedded() ? 1500 : 200;
-  const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, fallbackDelay));
+  const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 200));
   schedule(() => {
     [inter400Url, inter600Url, jakarta700Url, jakarta800Url].forEach(injectFontCssNonBlocking);
-  }, { timeout: idleTimeout });
+  }, { timeout: 2000 });
 }
 loadFontsDeferred();
 
