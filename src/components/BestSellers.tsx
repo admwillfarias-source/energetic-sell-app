@@ -46,17 +46,37 @@ export default function BestSellers() {
     ? window.matchMedia("(max-width: 767px)").matches === isMobile
     : true;
 
-  const { data = [], isLoading } = useQuery({
-    queryKey: ["best-sellers-top-skus", isMobile ? "m" : "d"],
-    queryFn: async () => {
-      // Uma única chamada leve. Em mobile reduzimos ainda mais para
-      // acelerar o carregamento e evitar timeouts em redes lentas.
-      return fetchBatteries({ perPage: isMobile ? 30 : 60 });
-    },
+  // Lote inicial: pequeno e rápido. Mobile: 8 produtos (~15-20 KB) → primeira
+  // renderização ~3x mais rápida. Desktop: 16. Cobre as primeiras "páginas"
+  // visíveis (PER_PAGE) sem esperar a lista completa.
+  const INITIAL_PER_PAGE = isMobile ? 8 : 16;
+  const FULL_PER_PAGE = isMobile ? 30 : 60;
+
+  const initialQuery = useQuery({
+    queryKey: ["best-sellers-initial", isMobile ? "m" : "d"],
+    queryFn: () => fetchBatteries({ perPage: INITIAL_PER_PAGE }),
     enabled: mobileResolved,
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
+
+  // Lote completo: só dispara depois que o lote inicial chegou (cascata),
+  // OU quando o usuário pediu "Ver mais" (page > 1).
+  const wantFull = !!initialQuery.data || page > 1;
+  const fullQuery = useQuery({
+    queryKey: ["best-sellers-full", isMobile ? "m" : "d"],
+    queryFn: () => fetchBatteries({ perPage: FULL_PER_PAGE }),
+    enabled: mobileResolved && wantFull,
+    staleTime: 10 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+  });
+
+  // Usa o lote completo quando disponível, senão o inicial. Renderização
+  // imediata do primeiro lote, expansão silenciosa quando o segundo chega.
+  const data: Battery[] = fullQuery.data ?? initialQuery.data ?? [];
+  const isLoading = initialQuery.isLoading;
+  const hasFull = !!fullQuery.data;
+
 
   useEffect(() => {
     if (!isLoading && data.length > 0) markEvent("best_sellers_ready");
