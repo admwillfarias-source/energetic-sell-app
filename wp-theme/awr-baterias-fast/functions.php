@@ -140,6 +140,7 @@ require_once AWRF_DIR . '/inc/perf-defer.php';
 require_once AWRF_DIR . '/inc/perf-cache.php';
 require_once AWRF_DIR . '/inc/perf-headers.php';
 require_once AWRF_DIR . '/inc/perf-iframe.php';
+require_once AWRF_DIR . '/inc/perf-app-iframe.php';
 require_once AWRF_DIR . '/inc/perf-gtm.php';
 require_once AWRF_DIR . '/inc/perf-fonts.php';
 require_once AWRF_DIR . '/inc/perf-images.php';
