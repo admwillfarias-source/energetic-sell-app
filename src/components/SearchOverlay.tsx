@@ -38,6 +38,13 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
   const [pickedYear, setPickedYear] = useState<number | null>(null);
   const [variants, setVariants] = useState<VehicleVariant[] | null>(null);
   const [notFound, setNotFound] = useState<{ year: number } | null>(null);
+
+  // Mede latência de abertura: do clique no campo de busca até este mount.
+  useEffect(() => {
+    markEvent("overlay_mounted");
+    measureBetween("overlay_chunk_fetch", "overlay_intent", "overlay_chunk_loaded");
+    measureBetween("overlay_open_total", "overlay_intent", "overlay_mounted");
+  }, []);
   const [resolving, setResolving] = useState(false);
 
   const WHATSAPP_NUMBER = "5551993199486";

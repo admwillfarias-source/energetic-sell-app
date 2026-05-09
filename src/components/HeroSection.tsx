@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle } from "lucide-react";
+import { markEvent } from "@/lib/perfMetrics";
 
 function getLiveDeliveries() {
   const now = new Date();
@@ -83,7 +84,7 @@ export default function HeroSection() {
     const prefetch = () => {
       if (overlayPrefetched.current) return;
       overlayPrefetched.current = true;
-      import("@/components/SearchOverlay");
+      import("@/components/SearchOverlay").then(() => markEvent("overlay_chunk_loaded"));
     };
     const el = sectionRef.current;
     if (typeof IntersectionObserver === "undefined" || !el) {
@@ -184,7 +185,10 @@ export default function HeroSection() {
 
           <div className="mb-6 rounded-2xl bg-card p-4 shadow-lg md:p-5 min-h-[88px] md:min-h-[92px]">
             <SearchPlaceholder
-              onActivate={() => setOverlayOpen(true)}
+              onActivate={() => {
+                markEvent("overlay_intent");
+                setOverlayOpen(true);
+              }}
               initialValue={initialQuery}
               onChange={setInitialQuery}
             />

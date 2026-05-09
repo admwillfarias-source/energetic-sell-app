@@ -5,8 +5,7 @@
 const ENABLED: boolean = (() => {
   if (typeof window === "undefined") return false;
   if (typeof performance === "undefined") return false;
-  // @ts-expect-error vite env
-  if (import.meta.env?.DEV) return true;
+  if ((import.meta as unknown as { env?: { DEV?: boolean } }).env?.DEV) return true;
   try {
     return new URLSearchParams(window.location.search).get("perf") === "1";
   } catch {
