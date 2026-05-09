@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect, useMemo } from "react";
+import { lazy, Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle } from "lucide-react";
 
 function getLiveDeliveries() {
@@ -58,6 +58,8 @@ export default function HeroSection() {
   const [overlayOpen, setOverlayOpen] = useState(false);
   const [initialQuery, setInitialQuery] = useState("");
   const [whatsVisible, setWhatsVisible] = useState(false);
+  const sectionRef = useRef<HTMLElement>(null);
+  const overlayPrefetched = useRef(false);
 
   // Calcula 1x por render
   const liveDeliveries = useMemo(() => getLiveDeliveries(), []);
@@ -73,8 +75,42 @@ export default function HeroSection() {
     };
   }, []);
 
+  // Pré-fetch do chunk do SearchOverlay assim que o herói entra parcialmente
+  // em viewport (10%). Antecipa o download para que o clique no campo de busca
+  // abra o overlay em ~0ms.
+  useEffect(() => {
+    if (overlayPrefetched.current) return;
+    const prefetch = () => {
+      if (overlayPrefetched.current) return;
+      overlayPrefetched.current = true;
+      import("@/components/SearchOverlay");
+    };
+    const el = sectionRef.current;
+    if (typeof IntersectionObserver === "undefined" || !el) {
+      const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+      const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1000));
+      const id = schedule(prefetch, { timeout: 2500 });
+      return () => {
+        const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+        if (cancel) cancel(id as number);
+      };
+    }
+    const obs = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+          prefetch();
+          obs.disconnect();
+        }
+      },
+      { threshold: 0.1 },
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
-    <section id="inicio" className="relative min-h-[80vh] flex items-center pt-16">
+    <section ref={sectionRef} id="inicio" className="relative min-h-[80vh] flex items-center pt-16">
+
       <div className="absolute inset-0 z-0">
         <picture>
           <source srcSet="/hero-bg-sm.avif 768w, /hero-bg.avif 1600w" sizes="100vw" type="image/avif" />
