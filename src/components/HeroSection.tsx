@@ -114,6 +114,8 @@ export default function HeroSection() {
 
       <div className="absolute inset-0 z-0">
         <picture>
+          <source type="image/avif" srcSet="/hero-bg.avif" />
+          <source type="image/webp" srcSet="/hero-bg.webp" />
           <img
             src={heroBg}
             alt="Técnico instalando bateria automotiva AWR"

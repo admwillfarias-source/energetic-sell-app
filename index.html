@@ -9,14 +9,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-    <!-- LCP: preload do hero (única variante WebP disponível). ANTES de qualquer outro recurso. -->
-    <link
-      rel="preload"
-      as="image"
-      href="/hero-bg.webp"
-      fetchpriority="high"
-      type="image/webp"
-    />
+    <!-- LCP: preload do hero. AVIF primeiro (menor); navegadores sem suporte ignoram pelo type. -->
+    <link rel="preload" as="image" href="/hero-bg.avif" fetchpriority="high" type="image/avif" />
+    <link rel="preload" as="image" href="/hero-bg.webp" fetchpriority="high" type="image/webp" />
 
     <!-- Preload das fontes do HERO (h1 Jakarta 800 + Inter 600/400 acima da dobra) -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/jakarta-800.woff2" crossorigin />
@@ -98,6 +93,8 @@
         <section id="inicio" style="position:relative;display:flex;align-items:center;min-height:80vh;padding-top:64px;background:hsl(0 0% 10%);overflow:hidden">
           <div style="position:absolute;inset:0;z-index:0">
             <picture>
+              <source type="image/avif" srcset="/hero-bg.avif" />
+              <source type="image/webp" srcset="/hero-bg.webp" />
               <img src="/hero-bg.webp" alt="Técnico instalando bateria automotiva AWR" width="1200" height="900" sizes="100vw" fetchpriority="high" decoding="async" loading="eager" style="width:100%;height:100%;object-fit:cover" />
             </picture>
             <div style="position:absolute;inset:0;background:linear-gradient(to right,hsl(0 0% 10% / 0.95),hsl(0 0% 10% / 0.8) 50%,hsl(0 0% 10% / 0.4))"></div>
