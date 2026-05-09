@@ -48,8 +48,11 @@ export function BatteryImage({
   }, [src]);
 
   const useRemote = initialRemote && !errored;
-  const finalSrc = useRemote ? src : batteryImg;
   const srcset = useRemote ? buildWordpressSrcset(src, srcsetWidths) : null;
+  // Para URLs WP "cruas" (sem -WxH), usamos o src proxiado para garantir
+  // payload pequeno mesmo se o browser não escolher do srcset.
+  const finalSrc = useRemote ? proxiedWordpressSrc(src, 400) : batteryImg;
+  const finalSizes = srcset ? (sizes ?? "(max-width: 640px) 96px, 112px") : undefined;
   const showsBlur = useRemote && !loaded;
 
   return (
