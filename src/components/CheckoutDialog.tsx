@@ -623,7 +623,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-[calc(100vw-1rem)] max-w-[calc(100vw-1rem)] flex-col gap-0 overflow-hidden p-0 sm:h-auto sm:max-h-[92vh] sm:w-full sm:max-w-xl">
+      <DialogContent className="flex h-[100dvh] max-h-[100dvh] w-screen max-w-[100vw] flex-col gap-0 overflow-hidden rounded-none border-0 p-0 sm:h-auto sm:max-h-[92vh] sm:w-[calc(100vw-2rem)] sm:max-w-xl sm:rounded-lg sm:border md:max-w-2xl lg:max-w-3xl">
         <DialogHeader className="border-b border-border px-4 pb-3 pt-5 sm:px-6 sm:pb-4 sm:pt-6">
           <DialogTitle className="font-display text-xl sm:text-2xl">Finalizar pedido</DialogTitle>
           <DialogDescription className="sr-only">
@@ -1205,7 +1205,7 @@ export function CheckoutDialog({ open, onOpenChange }: Props) {
                               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                                 Parcelas (sem juros)
                               </p>
-                              <div className="grid grid-cols-5 gap-1.5">
+                              <div className="grid grid-cols-5 gap-1.5 sm:grid-cols-10">
                                 {Array.from({ length: 10 }, (_, i) => i + 1).map((n) => (
                                   <button
                                     key={n}
