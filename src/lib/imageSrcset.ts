@@ -34,18 +34,39 @@ export function buildWordpressSrcset(
 ): string | null {
   if (!supportsWordpressSrcset(url)) return null;
 
+  // Caso 1: URL já tem sufixo -WxH (WP gerou variantes)
   const match = url.match(/^(.*?)-(\d{2,4})x(\d{2,4})(\.(?:jpe?g|png|webp))(\?.*)?$/i);
-  if (!match) return null;
+  if (match) {
+    const [, base, , h, ext, query = ""] = match;
+    const heightNum = Number(h);
+    const variants = widths.map((w) => {
+      const newH = Math.round((heightNum * w) / Number(match[2]));
+      return `${base}-${w}x${newH}${ext}${query} ${w}w`;
+    });
+    return variants.join(", ");
+  }
 
-  const [, base, , h, ext, query = ""] = match;
-  const heightNum = Number(h);
-
-  const variants = widths.map((w) => {
-    const newH = Math.round((heightNum * w) / Number(match[2]));
-    return `${base}-${w}x${newH}${ext}${query} ${w}w`;
-  });
-  return variants.join(", ");
+  // Caso 2: URL "crua" (ex.: exf45.png) — proxy via wsrv.nl para resize + webp.
+  // Reduz drasticamente o peso (Lighthouse: image-delivery) sem mexer no host de origem.
+  if (/^https?:\/\//i.test(url)) {
+    const proxied = (w: number) =>
+      `https://images.weserv.nl/?url=${encodeURIComponent(url.replace(/^https?:\/\//, ""))}&w=${w}&output=webp&q=78`;
+    return widths.map((w) => `${proxied(w)} ${w}w`).join(", ");
+  }
+  return null;
 }
+
+/**
+ * Versão "src principal" via proxy para fallback quando o navegador não usar srcset.
+ * Mantém compat: se a URL não for WP-like, retorna a URL original.
+ */
+export function proxiedWordpressSrc(url: string, width = 400): string {
+  if (!supportsWordpressSrcset(url)) return url;
+  if (/-\d{2,4}x\d{2,4}\.(jpe?g|png|webp)(\?.*)?$/i.test(url)) return url;
+  if (!/^https?:\/\//i.test(url)) return url;
+  return `https://images.weserv.nl/?url=${encodeURIComponent(url.replace(/^https?:\/\//, ""))}&w=${width}&output=webp&q=78`;
+}
+
 
 /**
  * Sizes default para cards: até 640px ocupam 50vw, depois ~25vw em telas grandes.
