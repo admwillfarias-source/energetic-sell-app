@@ -35,7 +35,8 @@ foreach ( array(
 
 /* ---------- Setup do tema ---------- */
 function awrf_setup() {
-    add_theme_support( 'title-tag' );
+    // Não usamos 'title-tag': awr_print_seo_tags() emite o <title> próprio
+    // a partir do mapa de rotas SEO compartilhado com o app React.
     add_theme_support( 'post-thumbnails' );
     add_theme_support( 'automatic-feed-links' );
     add_theme_support( 'responsive-embeds' );
@@ -147,6 +148,19 @@ require_once AWRF_DIR . '/inc/perf-images.php';
 require_once AWRF_DIR . '/inc/perf-elementor.php';
 require_once AWRF_DIR . '/inc/perf-woo.php';
 require_once AWRF_DIR . '/inc/perf-html.php';
+
+/* ---------- SEO server-side (mapa compartilhado com o app React) ---------- */
+if ( file_exists( AWRF_DIR . '/inc/seo-routes.php' ) ) {
+    require_once AWRF_DIR . '/inc/seo-routes.php';
+}
+require_once AWRF_DIR . '/inc/seo.php';
+add_action( 'wp_head', 'awr_print_seo_tags', 1 );
+
+/* Evita conflito com Yoast/RankMath nas páginas que servem o app. */
+add_filter( 'wpseo_title',          '__return_false' );
+add_filter( 'wpseo_metadesc',       '__return_false' );
+add_filter( 'rank_math/frontend/title',       '__return_false' );
+add_filter( 'rank_math/frontend/description', '__return_false' );
 
 /* Elementor — registra Locations para Theme Builder. */
 function awrf_register_elementor_locations( $mgr ) { $mgr->register_all_core_location(); }
