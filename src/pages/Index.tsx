@@ -22,6 +22,11 @@ const BatteryGrid = lazy(() =>
 );
 const HomeMiddle = lazy(() => import("@/components/home/HomeMiddle"));
 const HomeBottom = lazy(() => import("@/components/home/HomeBottom"));
+// CartDrawer precisa estar SEMPRE montado (mesmo em iframe e antes do scroll),
+// pois é ele quem escuta o evento "open-checkout" disparado pelos cards.
+const CartDrawer = lazy(() =>
+  import("@/components/CartDrawer").then((m) => ({ default: m.CartDrawer })),
+);
 
 const SITE = "https://awrbaterias.com.br";
 
@@ -131,6 +136,9 @@ const Index = () => {
             </LazySection>
           )}
         </main>
+        <Suspense fallback={null}>
+          <CartDrawer />
+        </Suspense>
       </div>
     </CartProvider>
   );

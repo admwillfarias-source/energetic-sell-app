@@ -4,7 +4,6 @@ import QuickNavigation from "@/components/QuickNavigation";
 import ManufacturerLogos from "@/components/ManufacturerLogos";
 import FaqHome from "@/components/FaqHome";
 import { Footer } from "@/components/Footer";
-import { CartDrawer } from "@/components/CartDrawer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
 
 export default function HomeBottom() {
@@ -14,7 +13,6 @@ export default function HomeBottom() {
       <ManufacturerLogos />
       <FaqHome />
       <Footer />
-      <CartDrawer />
       <FloatingWhatsApp />
     </>
   );
