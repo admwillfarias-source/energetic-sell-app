@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Helmet } from "react-helmet-async";
 
 type Props = {
@@ -31,6 +32,21 @@ export function SEO({
     : [];
   const ld = ldArray.filter((x): x is Record<string, unknown> => !!x);
   const ogImage = image || DEFAULT_OG;
+
+  // Em iframe (WP), notifica o parent para atualizar <title>, meta description
+  // e canonical do documento hospedeiro durante navegação client-side.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.parent === window) return;
+    try {
+      window.parent.postMessage(
+        { type: "awr:seo", title, description, canonical, ogImage },
+        "*"
+      );
+    } catch {
+      /* ignore cross-origin failures */
+    }
+  }, [title, description, canonical, ogImage]);
 
   return (
     <Helmet>
