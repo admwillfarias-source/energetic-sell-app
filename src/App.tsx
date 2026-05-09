@@ -71,11 +71,7 @@ const App = () => (
             <Route path="/bateria/:sku" element={wrap(<BatterySku />)} />
             <Route path="/auth" element={wrap(<Auth />)} />
             <Route path="/admin" element={wrap(<Admin />)} />
-            <Route path="/admin/validacao-skus" element={wrap(<SkuValidation />)} />
             <Route path="/admin/whatsapp-logs" element={wrap(<WhatsappLogs />)} />
-            <Route path="/admin/whatsapp-test" element={wrap(<WhatsappTest />)} />
-            <Route path="/admin/whatsapp-diagnostico" element={wrap(<WhatsappDiagnose />)} />
-            <Route path="/checkout-test" element={wrap(<CheckoutTest />)} />
             <Route path="/pedido-confirmado" element={wrap(<PedidoConfirmado />)} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
