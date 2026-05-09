@@ -75,6 +75,9 @@ createRoot(document.getElementById("root")!).render(
   </HelmetProvider>,
 );
 
+// Auto-resize do iframe (no-op fora de iframe).
+startIframeAutoResize();
+
 // Inicializa GTM/GA4/Ads de forma diferida (após interação ou idle).
 // Posterga o registro dos próprios listeners para idle, liberando o caminho do LCP.
 {
