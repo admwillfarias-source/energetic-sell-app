@@ -88,28 +88,50 @@ function awr_ensure_page_for_path( $path, $title, $description = '' ) {
     return $last_id;
 }
 
-function awr_sync_seo_pages_run() {
+function awr_sync_seo_pages_run( $dry_run = false ) {
     if ( ! function_exists( 'awr_seo_routes' ) ) {
         return array( 'error' => 'awr_seo_routes() não disponível.' );
     }
     $map = awr_seo_routes();
     $created = 0; $updated = 0; $skipped = 0; $errors = array();
+    $will_create = array(); $will_update = array();
 
     foreach ( $map as $path => $meta ) {
         if ( $path === '/' ) { $skipped++; continue; }
         $before = get_page_by_path( ltrim( $path, '/' ), OBJECT, 'page' );
+
+        if ( $dry_run ) {
+            if ( $before ) {
+                // Detecta se um update real seria necessário.
+                $needs = false;
+                if ( $before->post_status !== 'publish' ) { $needs = true; }
+                if ( strpos( (string) $before->post_content, '[awr_app' ) === false ) { $needs = true; }
+                if ( ! empty( $meta['title'] ) && $before->post_title !== $meta['title'] ) { $needs = true; }
+                if ( $needs ) { $updated++; $will_update[] = $path; } else { $skipped++; }
+            } else {
+                $created++; $will_create[] = $path;
+            }
+            continue;
+        }
+
         $id = awr_ensure_page_for_path( $path, $meta['title'] ?? '', $meta['description'] ?? '' );
         if ( ! $id ) { $errors[] = $path; continue; }
         if ( $before ) { $updated++; } else { $created++; }
     }
 
-    return array(
+    $out = array(
+        'dry_run' => (bool) $dry_run,
         'total'   => count( $map ),
         'created' => $created,
         'updated' => $updated,
         'skipped' => $skipped,
         'errors'  => $errors,
     );
+    if ( $dry_run ) {
+        $out['will_create'] = $will_create;
+        $out['will_update'] = $will_update;
+    }
+    return $out;
 }
 
 function awr_sync_seo_pages_endpoint() {
@@ -121,9 +143,78 @@ function awr_sync_seo_pages_endpoint() {
     if ( ! hash_equals( AWR_SYNC_TOKEN, $token ) ) {
         wp_die( 'Token inválido.', 'AWR sync', array( 'response' => 403 ) );
     }
+    $dry = ! empty( $_GET['dry_run'] );
     nocache_headers();
     header( 'Content-Type: application/json; charset=utf-8' );
-    echo wp_json_encode( awr_sync_seo_pages_run(), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
+    echo wp_json_encode( awr_sync_seo_pages_run( $dry ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE );
     exit;
 }
 add_action( 'init', 'awr_sync_seo_pages_endpoint' );
+
+/* ============================================================
+ * WP-CLI:  wp awr sync-seo-pages [--token=...] [--dry-run] [--format=table|json]
+ * ============================================================ */
+if ( defined( 'WP_CLI' ) && WP_CLI ) {
+
+    class AWR_Sync_SEO_CLI {
+
+        /**
+         * Cria/atualiza páginas WP a partir do mapa awr_seo_routes().
+         *
+         * ## OPTIONS
+         *
+         * [--token=<token>]
+         * : Token de segurança (precisa bater com AWR_SYNC_TOKEN). Opcional via CLI
+         *   pois o usuário já está autenticado pelo shell, mas aceito por simetria
+         *   com o endpoint HTTP.
+         *
+         * [--dry-run]
+         * : Não grava nada — apenas lista o que seria criado/atualizado.
+         *
+         * [--format=<format>]
+         * : table (default) | json | yaml | csv
+         *
+         * ## EXAMPLES
+         *
+         *     wp awr sync-seo-pages --dry-run
+         *     wp awr sync-seo-pages --token=awr-sync
+         *     wp awr sync-seo-pages --dry-run --format=json
+         */
+        public function sync_seo_pages( $args, $assoc ) {
+            if ( isset( $assoc['token'] ) && ! hash_equals( AWR_SYNC_TOKEN, (string) $assoc['token'] ) ) {
+                WP_CLI::error( 'Token inválido.' );
+            }
+            $dry    = ! empty( $assoc['dry-run'] );
+            $format = isset( $assoc['format'] ) ? $assoc['format'] : 'table';
+
+            $res = awr_sync_seo_pages_run( $dry );
+            if ( ! empty( $res['error'] ) ) { WP_CLI::error( $res['error'] ); }
+
+            $prefix = $dry ? '[DRY-RUN] ' : '';
+            WP_CLI::log( sprintf(
+                '%stotal=%d  created=%d  updated=%d  skipped=%d  errors=%d',
+                $prefix,
+                $res['total'], $res['created'], $res['updated'], $res['skipped'], count( $res['errors'] )
+            ) );
+
+            if ( $dry ) {
+                $rows = array();
+                foreach ( ( $res['will_create'] ?? array() ) as $p ) { $rows[] = array( 'action' => 'create', 'path' => $p ); }
+                foreach ( ( $res['will_update'] ?? array() ) as $p ) { $rows[] = array( 'action' => 'update', 'path' => $p ); }
+                if ( $rows ) {
+                    \WP_CLI\Utils\format_items( $format, $rows, array( 'action', 'path' ) );
+                } else {
+                    WP_CLI::success( 'Nada para fazer — todas as rotas já existem e estão em dia.' );
+                }
+            } else {
+                if ( $res['errors'] ) {
+                    WP_CLI::warning( 'Falhas em: ' . implode( ', ', $res['errors'] ) );
+                } else {
+                    WP_CLI::success( 'Sync concluído sem erros.' );
+                }
+            }
+        }
+    }
+
+    WP_CLI::add_command( 'awr sync-seo-pages', array( 'AWR_Sync_SEO_CLI', 'sync_seo_pages' ) );
+}
