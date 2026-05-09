@@ -163,22 +163,38 @@ export default function BestSellers() {
   const pageItems = withSku.slice(0, visibleCount);
   const hasMore = visibleCount < withSku.length;
 
-  // Sentinela próxima ao fim da lista: quando entra em viewport (com margem
-  // generosa de 400px), avança a página automaticamente. O lote completo já
-  // veio em background, então o avanço é instantâneo — o usuário não precisa
-  // clicar em "Ver mais" e não vê espera.
+  // Sentinela próxima ao fim da lista: quando entra em viewport, avança a
+  // página automaticamente. O rootMargin é adaptativo:
+  //  - mobile (≤640px):  ~1.0× viewport → menos render fora de tela, economia de CPU/memória em redes lentas
+  //  - tablet (≤1024px): ~1.5× viewport
+  //  - desktop:          ~2.0× viewport → carrega bem antes, scroll suave
+  // Em conexões 2g/slow-2g (Network Information API), reduz para 0.5× para
+  // não onerar dados móveis.
   const sentinelRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (!hasMore || !hasFull) return;
     const el = sentinelRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return;
+
+    const vh = typeof window !== "undefined" ? window.innerHeight || 720 : 720;
+    const vw = typeof window !== "undefined" ? window.innerWidth || 1024 : 1024;
+    const conn = (navigator as unknown as { connection?: { effectiveType?: string; saveData?: boolean } }).connection;
+    const slow = conn?.saveData || conn?.effectiveType === "2g" || conn?.effectiveType === "slow-2g";
+
+    let factor = 2.0;
+    if (vw <= 640) factor = 1.0;
+    else if (vw <= 1024) factor = 1.5;
+    if (slow) factor = Math.min(factor, 0.5);
+
+    const margin = `${Math.round(vh * factor)}px 0px`;
+
     const obs = new IntersectionObserver(
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) {
           setPage((p) => p + 1);
         }
       },
-      { rootMargin: "400px 0px" },
+      { rootMargin: margin },
     );
     obs.observe(el);
     return () => obs.disconnect();
