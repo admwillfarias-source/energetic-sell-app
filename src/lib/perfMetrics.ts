@@ -40,8 +40,6 @@ export function measureBetween(name: string, startMark: string, endMark: string)
     duration = MARKS.get(endMark)! - MARKS.get(startMark)!;
   }
   MEASURES.set(name, duration);
-  // eslint-disable-next-line no-console
-  console.info(`[perf] ${name}  ${duration.toFixed(1)}ms`);
 }
 
 // no-ops mantidos para compat
