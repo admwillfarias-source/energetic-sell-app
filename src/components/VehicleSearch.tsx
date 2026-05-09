@@ -1,1 +1,6 @@
-fatal: path 'src/components/VehicleSearch.tsx' exists on disk, but not in 'HEAD'
+import VehicleAutocomplete from "@/components/VehicleAutocomplete";
+
+// Wrapper compatível com chamadas existentes (<VehicleSearch />).
+export default function VehicleSearch() {
+  return <VehicleAutocomplete />;
+}

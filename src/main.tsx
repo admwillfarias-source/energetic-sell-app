@@ -41,9 +41,6 @@ function loadFontsDeferred() {
 }
 loadFontsDeferred();
 
-// Inicia o tracking de Web Vitals o quanto antes
-startLcpTracking();
-markEvent("app_boot");
 
 // Preload do hero agora vive em index.html (paths estáveis em /public)
 // para que o navegador o resolva antes do parse do JS bundle.
