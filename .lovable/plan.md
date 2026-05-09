@@ -1,66 +1,31 @@
-# Medir o tempo de abertura do SearchOverlay
+# Plano — Otimizar LCP do hero (escopo reduzido)
 
-Objetivo: registrar quanto tempo passa entre a intenção do usuário (clique/foco no campo de busca) e o momento em que o `SearchOverlay` está renderizado e interativo. Permite comparar antes/depois do pré-fetch via IntersectionObserver.
+Foco exclusivo: reduzir o tempo do LCP da seção hero, mantendo o layout 100% intacto.
 
-## Métricas a coletar
+## O que será feito
 
-Três marcadores via `performance.mark` + dois `measure`:
+### 1. Comprimir mais a imagem do hero
+- `public/hero-bg.webp` está em **74 KB / 800×600**.
+- Como o hero fica sob um overlay escuro (gradient `secondary/95 → secondary/40`), há margem para qualidade menor sem perda perceptível.
+- Recomprimir com `cwebp -q 40 -m 6 -sharp_yuv` mantendo 800×600 → meta **~35–45 KB** (≈ 50% menor).
+- Gerar também `public/hero-bg.avif` em ~25–30 KB com `avifenc --min 35 --max 50 --speed 4`.
 
-| Mark | Quando |
-|---|---|
-| `overlay_intent` | usuário clica/foca no input ou botão de busca (antes do `setOverlayOpen(true)`) |
-| `overlay_chunk_loaded` | `import("@/components/SearchOverlay")` resolve (módulo em memória) |
-| `overlay_mounted` | primeiro `useEffect` do `SearchOverlay` roda (componente já no DOM) |
+### 2. Servir AVIF com fallback WebP
+- `index.html` (shell estático acima da dobra) e `src/components/HeroSection.tsx`: usar `<picture>` com `<source type="image/avif">` antes do `<img src="/hero-bg.webp">`.
+- Adicionar segundo `<link rel="preload" as="image" type="image/avif" href="/hero-bg.avif" fetchpriority="high">` no `<head>` (mantém o atual de WebP como fallback). Navegadores que não suportam AVIF ignoram o preload tipado.
 
-Measures derivados:
-- `overlay_open_total` = `overlay_intent` → `overlay_mounted` (latência percebida real)
-- `overlay_chunk_fetch` = `overlay_intent` → `overlay_chunk_loaded` (custo de rede do chunk; ~0 se já pré-carregado)
+### 3. Validar
+- Medir antes/depois com `scripts/lighthouse.mjs` (já existe no projeto) e registrar LCP no console via `perfMetrics`.
 
-Tudo gravado via `markEvent` / `measureBetween` do `perfMetrics`, e logado no `console` em DEV (ou quando `?perf=1`).
+## Não será alterado
 
-## Mudanças
+- Estrutura visual, classes Tailwind, tamanhos, gradient, h1, busca.
+- Outras imagens (produtos, logos, mascote).
+- Bundle JS, fontes, GTM, CSS — já otimizados em iterações anteriores.
 
-### 1. `src/lib/perfMetrics.ts`
-Hoje é stub no-op. Reativar o mínimo necessário para este caso:
-- `markEvent(name)` chama `performance.mark` e armazena timestamp em `Map`.
-- `measureBetween(name, start, end)` chama `performance.measure` e faz `console.info("[perf]", name, durationMs)`.
-- Manter no-op se `performance` indisponível.
-- Sem `PerformanceObserver` (não voltar com Web Vitals que removemos).
+## Resultado esperado
 
-### 2. `src/components/HeroSection.tsx`
-- Importar `markEvent`.
-- No handler do `SearchPlaceholder` (atualmente `onActivate={() => setOverlayOpen(true)}`), envolver com `markEvent("overlay_intent")` antes do `setOverlayOpen(true)`. Guard com `useRef` para marcar só na primeira abertura por sessão.
-- No `useEffect` do IntersectionObserver, após `import("@/components/SearchOverlay").then(...)`, chamar `markEvent("overlay_chunk_loaded")`. Isso captura o caso "pré-carregado".
-
-### 3. `src/components/SearchOverlay.tsx`
-- No primeiro `useEffect` (mount, `[]`), chamar:
-  - `markEvent("overlay_mounted")`
-  - `measureBetween("overlay_open_total", "overlay_intent", "overlay_mounted")`
-  - `measureBetween("overlay_chunk_fetch", "overlay_intent", "overlay_chunk_loaded")` (silenciosamente ignora se mark não existir)
-
-### 4. Logs
-
-`measureBetween` imprime no console:
-
-```
-[perf] overlay_chunk_fetch  3.2ms
-[perf] overlay_open_total   42.1ms
-```
-
-E `window.__perfReport()` continua acessível para inspeção manual.
-
-## Como verificar o ganho
-
-1. Carregar a home, abrir DevTools → Console.
-2. Esperar ~1s (IntersectionObserver dispara → chunk pré-carregado).
-3. Clicar no campo de busca.
-4. Ler `[perf] overlay_chunk_fetch` (deve ser ~0–5 ms) e `overlay_open_total` (deve ser <60 ms).
-5. Comparar com cenário sem pré-fetch: temporariamente comentar o `import()` no IntersectionObserver e recarregar.
-
-## Arquivos tocados
-
-- `src/lib/perfMetrics.ts` — reativar `markEvent`/`measureBetween` com log no console.
-- `src/components/HeroSection.tsx` — marcar `overlay_intent` e `overlay_chunk_loaded`.
-- `src/components/SearchOverlay.tsx` — marcar `overlay_mounted` e medir intervalos.
-
-Sem mudança visual.
+| Métrica | Atual | Meta |
+|---|---|---|
+| Hero payload (mobile) | 74 KB WebP | ~25–30 KB AVIF |
+| LCP | ~6.5 s | < 2.5 s |
