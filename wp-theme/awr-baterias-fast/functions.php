@@ -154,6 +154,7 @@ if ( file_exists( AWRF_DIR . '/inc/seo-routes.php' ) ) {
     require_once AWRF_DIR . '/inc/seo-routes.php';
 }
 require_once AWRF_DIR . '/inc/seo.php';
+require_once AWRF_DIR . '/inc/seo-pages-sync.php';
 add_action( 'wp_head', 'awr_print_seo_tags', 1 );
 
 /* Evita conflito com Yoast/RankMath nas páginas que servem o app. */
