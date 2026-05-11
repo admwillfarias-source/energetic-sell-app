@@ -1,59 +1,53 @@
-# Plano — Landing page focada em conversão
+## Objetivo
 
-Reaproveita os componentes existentes (`Benefits`, `HowItWorks`, `ManufacturerLogos`, `Testimonials`, `FaqHome`, `Footer`) atualizando cópia/ordem, e cria 1 novo bloco (CTA final). Mantém o tema atual (dark + laranja/amarelo).
+Deixar o app mais rápido quando carregado dentro do iframe do WordPress (parâmetro `?embed=1`), sem afetar a versão standalone.
 
-## 1. Hero (`src/components/HeroSection.tsx`)
+## Diagnóstico
 
-- **H1:** "Sua bateria nova em até 35 minutos — entregue e instalada" (manter destaque em laranja na expressão "35 minutos").
-- **Subtítulo:** "Selecione o modelo ideal para o seu veículo e solicite agora. Atendemos Porto Alegre e região com Moura, Heliar, Zetta e Excell."
-- **CTA principal:** o botão laranja "Buscar" ao lado do input vira "Pedir minha bateria agora", largura total abaixo do input (não inline), centralizado, `h-14`, `text-base/lg`, fundo `bg-primary` (laranja já no tema), `shadow-lg`. Mantém comportamento atual de abrir o overlay de busca.
-- **Linha de urgência abaixo do CTA:** badge sutil `🟢 Técnicos disponíveis agora · Pagamento em 10x sem juros` (texto sm, cor `awr-green`).
-- Manter chips "Buscas frequentes" e botão WhatsApp existentes.
-- Remover o callout `AlertTriangle` ("Precisando de bateria…") para reduzir ruído acima do CTA.
+Hoje, dentro do iframe, ainda pagamos custos que o tema WP já cobre ou que não fazem sentido no iframe:
 
-## 2. Reordenar seções da home (`src/components/home/HomeMiddle.tsx` + `HomeBottom.tsx`)
+1. **Header lazy** — sempre monta após idle, mesmo no iframe (parent já tem header próprio).
+2. **MobileActionBar** — sempre renderiza no topo; no iframe duplica a barra de contato do parent e ocupa espaço caro acima da dobra.
+3. **Pré-fetch de `HomeBottom`** — agendado em idle mesmo quando o bloco final é menos prioritário no iframe.
+4. **Preconnect a `awrbaterias.com.br`** — desperdiçado quando o iframe já está dentro desse domínio (handshake duplicado).
+5. **Fontes `@fontsource` (Inter 400/600 + Jakarta 700/800) via CSS `?url`** — `loadFontsDeferred` já pula no iframe ✓, mas o `index.html` ainda preloada Jakarta 800 e Inter 400/600 como `woff2` (3 requisições) que o parent normalmente já tem em cache de outra forma; podemos remover o preload de **Inter 400** no iframe (o fallback metrics-adjusted cobre). Manter Jakarta 800 + Inter 600 (LCP/H1).
+6. **CSS bundle** — atualmente o Vite injeta um único CSS para a app. Já é pequeno, manter.
+7. **JSON-LD organização** — já pulado no iframe ✓.
+8. **GTM/GA4/Ads** — já pulado no iframe ✓.
+9. **CartDrawer + portal** — montado sempre via Suspense; necessário (escuta `open-checkout`). Manter.
+10. **Hero shell estático no `#root`** — pinta antes do bundle; bom para LCP. Manter.
 
-Nova ordem (logo abaixo do Hero + TrustBar):
-1. **Diferenciais** → `Benefits` (atualizado, ver abaixo) — título adicionado: "Por que escolher a AWR?"
-2. **Marcas** → `ManufacturerLogos` — título: "Trabalhamos com as melhores marcas"
-3. **Como funciona** → `HowItWorks` (atualizado, 3 passos) — título: "Simples assim:"
-4. **Depoimentos** → `Testimonials` — título: "O que nossos clientes dizem" (substituir 3 primeiros por Carlos M./Ana P./Roberto S.)
-5. **FAQ** → `FaqHome` (estender para 5 perguntas) — título: "Dúvidas frequentes"
-6. **CTA Final** → novo `FinalCtaBanner`
-7. **Footer** existente
+## Mudanças propostas (apenas no caminho iframe)
 
-`HomeMiddle` passa a conter Diferenciais + Marcas + Como funciona + Depoimentos.
-`HomeBottom` passa a conter FAQ + FinalCtaBanner + Footer + FloatingWhatsApp. Remove `QuickNavigation` e `HowToOrder`/`BestSellers` da home (mantidos no projeto, só não exibidos).
+### 1. `src/pages/Index.tsx`
+- Não montar o `Header` quando `EMBEDDED` (remove o `useEffect` de `showHeader` no caso embed e o bloco JSX).
+- Não renderizar o `MobileActionBar` quando `EMBEDDED`.
+- Ajustar `pt-[116px] lg:pt-0` do `<main>` para `pt-0` quando `EMBEDDED` (sem header/mobile bar, não há altura fixa para compensar — ganha viewport útil acima da dobra).
+- Pré-fetch em idle: no iframe, pré-buscar só `HomeMiddle` (já é o caso para HomeBottom só no iframe? hoje busca os dois — manter HomeBottom também faz sentido pois o footer foi pedido; deixar como está).
 
-## 3. Atualizações de cópia em componentes existentes
+### 2. `src/lib/loadTracking.ts`
+- Já está ótimo no iframe (early return). Sem mudanças.
 
-- **Benefits**: trocar 4 itens para Zap/35min, Battery/Marcas originais, CreditCard/10x, Shield/Desde 2009. Adicionar título de seção centralizado.
-- **HowItWorks**: reduzir para 3 passos numerados (Escolha → Endereço → Receba) com cópia exata do briefing.
-- **ManufacturerLogos**: garantir título "Trabalhamos com as melhores marcas" e fundo claro/sutil contraste; usar logos existentes.
-- **Testimonials**: garantir 3 depoimentos do briefing como primeiros, 5 estrelas, nome + cidade.
-- **FaqHome**: ler 5 perguntas do briefing (sobrepor `homepageFaqs.slice` para usar lista local com as 5 perguntas exatas).
+### 3. `index.html`
+- Adicionar pequeno script inline **no topo do `<head>`** que detecta `?embed=1` e remove os `<link rel="preload">` de:
+  - `awrbaterias.com.br` (preconnect/dns-prefetch)
+  - `inter-400.woff2` (não usado em hero crítico do iframe)
+- Manter preloads do hero AVIF/WebP, Jakarta 800 e Inter 600 (são o LCP).
 
-## 4. Novo `src/components/FinalCtaBanner.tsx`
+### 4. `src/components/HeroSection.tsx` (se aplicável)
+- Verificar se há animações/efeitos que rodam só no iframe sem necessidade. Se houver `framer-motion` pesado no hero, considerar desabilitar transições no iframe para reduzir TBT (ajustar somente após confirmar pelo arquivo).
 
-- Fundo `bg-secondary` (escuro do tema), gradiente sutil.
-- Título grande "Precisa de bateria agora?", subtítulo "Técnicos disponíveis. Entrega em até 35 minutos."
-- Botão grande `Pedir minha bateria` que abre WhatsApp (`https://wa.me/5551993199486?text=…`) — em mobile.
-  No desktop, mostra também botão secundário "Voltar ao topo" que faz scroll para `#inicio`.
-- Importado em `HomeBottom`.
+### 5. `src/lib/iframeAutoResize.ts`
+- Substituir o envio bruto de `scrollHeight` em cada `ResizeObserver` por **debounce de 80ms** + comparação de altura, evitando rajadas de `postMessage` enquanto imagens carregam (reduz reflow no parent).
 
-## 5. Footer (`src/components/Footer.tsx`)
+## Não-objetivos
 
-- Verificar se já contém logo, links rápidos (Início, Como funciona, Contato), WhatsApp clicável e linha de copyright. Atualizar copyright para "© 2026 AWR Baterias — Porto Alegre, RS" se necessário (sem reescrever todo o footer).
+- Não mexer em design, copy, layout ou comportamento da versão standalone.
+- Não trocar libs nem alterar build/Vite.
+- Não tocar em backend, edge functions ou banco.
 
-## 6. Verificação
+## Validação
 
-- Build passa sem erros TS.
-- Sanity manual: scroll completo na `/` mostra Hero novo → Benefits → Marcas → Como funciona → Depoimentos → FAQ → CTA Final → Footer.
-- CTA principal no hero abre o overlay; CTA final abre WhatsApp.
-- Mobile: botão CTA do hero ocupa 100% da largura; layout dos cards quebra para 1 coluna.
-
-## Notas técnicas
-
-- Não alterar lógica de fitments / `parseCodesParam` / overlay — apenas cópia, layout e ordem.
-- Manter `id="inicio"` no Hero para o scroll do CTA final.
-- Tokens semânticos do design system (`primary`, `secondary`, `accent`, `awr-green`) — sem cores hardcoded novas.
+- Abrir preview com `?embed=1` no preview URL e medir Lighthouse mobile (TBT, LCP) antes/depois.
+- Confirmar que header/mobile bar somem no iframe e seguem aparecendo no standalone.
+- Confirmar que o auto-resize continua reportando altura correta ao parent.
