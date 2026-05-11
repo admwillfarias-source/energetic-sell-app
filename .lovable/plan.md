@@ -1,57 +1,59 @@
-# Plano de Ajustes — Fluxo de busca / Resultado
+# Plano — Landing page focada em conversão
 
-## 1. Sincronizar autocomplete do SearchOverlay com `codes` + `v`
+Reaproveita os componentes existentes (`Benefits`, `HowItWorks`, `ManufacturerLogos`, `Testimonials`, `FaqHome`, `Footer`) atualizando cópia/ordem, e cria 1 novo bloco (CTA final). Mantém o tema atual (dark + laranja/amarelo).
 
-**Arquivos:** `src/components/SearchOverlay.tsx`, `src/components/HeroSection.tsx`
+## 1. Hero (`src/components/HeroSection.tsx`)
 
-- Adicionar nova prop opcional `initialCodes?: string[]` em `SearchOverlay`.
-- Quando o overlay abre via fallback (chip sem fitment), passar `initialCodes` (vazio nesse caso) e manter `initialQuery`/`notFoundLabel` já existentes.
-- Em `VehicleAutocomplete`: aceitar nova prop `autoSelectFirst?: boolean`. Quando `initialQuery` é fornecido + `autoSelectFirst`, ao terminar de carregar o catálogo, se houver exatamente uma sugestão de alta confiança (modelo+ano), pré-selecioná-la (highlight=0, abrir dropdown automaticamente). Sem auto-navegar — apenas refletir filtros visíveis (lista de sugestões + badge de códigos compatíveis), evitando exigir nova interação para começar a ver opções.
-- Repassar `autoSelectFirst` do `SearchOverlay` quando ele recebe `initialQuery` ou `notFoundLabel`.
+- **H1:** "Sua bateria nova em até 35 minutos — entregue e instalada" (manter destaque em laranja na expressão "35 minutos").
+- **Subtítulo:** "Selecione o modelo ideal para o seu veículo e solicite agora. Atendemos Porto Alegre e região com Moura, Heliar, Zetta e Excell."
+- **CTA principal:** o botão laranja "Buscar" ao lado do input vira "Pedir minha bateria agora", largura total abaixo do input (não inline), centralizado, `h-14`, `text-base/lg`, fundo `bg-primary` (laranja já no tema), `shadow-lg`. Mantém comportamento atual de abrir o overlay de busca.
+- **Linha de urgência abaixo do CTA:** badge sutil `🟢 Técnicos disponíveis agora · Pagamento em 10x sem juros` (texto sm, cor `awr-green`).
+- Manter chips "Buscas frequentes" e botão WhatsApp existentes.
+- Remover o callout `AlertTriangle` ("Precisando de bateria…") para reduzir ruído acima do CTA.
 
-## 2. Robustez do estado de carregamento (chip + overlay)
+## 2. Reordenar seções da home (`src/components/home/HomeMiddle.tsx` + `HomeBottom.tsx`)
 
-**Arquivo:** `src/components/HeroSection.tsx`
+Nova ordem (logo abaixo do Hero + TrustBar):
+1. **Diferenciais** → `Benefits` (atualizado, ver abaixo) — título adicionado: "Por que escolher a AWR?"
+2. **Marcas** → `ManufacturerLogos` — título: "Trabalhamos com as melhores marcas"
+3. **Como funciona** → `HowItWorks` (atualizado, 3 passos) — título: "Simples assim:"
+4. **Depoimentos** → `Testimonials` — título: "O que nossos clientes dizem" (substituir 3 primeiros por Carlos M./Ana P./Roberto S.)
+5. **FAQ** → `FaqHome` (estender para 5 perguntas) — título: "Dúvidas frequentes"
+6. **CTA Final** → novo `FinalCtaBanner`
+7. **Footer** existente
 
-- `handleQuickSearch`: envolver toda a lógica em `try/catch/finally`. No `finally`, sempre `setChipLoading(null)` para garantir que erros (rede, exceção em `getStrictVehicleCodes`, navegação bloqueada) não prendam o overlay de loading.
-- Adicionar timeout de segurança (e.g. `setTimeout(() => setChipLoading(null), 8000)`) limpado quando navegação acontece, para o caso da navegação não desmontar o componente.
-- Tratar erro de `ensureCatalogLoaded` exibindo um toast curto ("Não conseguimos carregar o catálogo, tente novamente") e mantendo a UI utilizável.
+`HomeMiddle` passa a conter Diferenciais + Marcas + Como funciona + Depoimentos.
+`HomeBottom` passa a conter FAQ + FinalCtaBanner + Footer + FloatingWhatsApp. Remove `QuickNavigation` e `HowToOrder`/`BestSellers` da home (mantidos no projeto, só não exibidos).
 
-## 3. Mensagem do WhatsApp enriquecida com `codes` e `v`
+## 3. Atualizações de cópia em componentes existentes
 
-**Arquivos:** `src/pages/Resultado.tsx`, `src/components/SearchOverlay.tsx`
+- **Benefits**: trocar 4 itens para Zap/35min, Battery/Marcas originais, CreditCard/10x, Shield/Desde 2009. Adicionar título de seção centralizado.
+- **HowItWorks**: reduzir para 3 passos numerados (Escolha → Endereço → Receba) com cópia exata do briefing.
+- **ManufacturerLogos**: garantir título "Trabalhamos com as melhores marcas" e fundo claro/sutil contraste; usar logos existentes.
+- **Testimonials**: garantir 3 depoimentos do briefing como primeiros, 5 estrelas, nome + cidade.
+- **FaqHome**: ler 5 perguntas do briefing (sobrepor `homepageFaqs.slice` para usar lista local com as 5 perguntas exatas).
 
-- Centralizar um helper `buildWhatsAppMessage({ vehicle, codes })` em `src/lib/whatsapp.ts` (novo arquivo pequeno) ou inline nos dois arquivos. Formato sugerido:
-  ```
-  Olá! Preciso de uma bateria.
-  Veículo: <v>
-  Códigos pesquisados: <codes.join(", ")>
-  Podem me ajudar a confirmar a opção certa?
-  ```
-- Quando `vehicle` não existir, omitir a linha "Veículo:". Quando `codes` vazios, omitir "Códigos pesquisados:".
-- Substituir as construções atuais em `Resultado.tsx` (botão WhatsApp do empty state) e `SearchOverlay.tsx` (`buildWhatsAppUrl`) por esse helper.
+## 4. Novo `src/components/FinalCtaBanner.tsx`
 
-## 4. Testes do parsing de `codes` em `/resultado`
+- Fundo `bg-secondary` (escuro do tema), gradiente sutil.
+- Título grande "Precisa de bateria agora?", subtítulo "Técnicos disponíveis. Entrega em até 35 minutos."
+- Botão grande `Pedir minha bateria` que abre WhatsApp (`https://wa.me/5551993199486?text=…`) — em mobile.
+  No desktop, mostra também botão secundário "Voltar ao topo" que faz scroll para `#inicio`.
+- Importado em `HomeBottom`.
 
-**Arquivos novos:** `src/lib/parseCodesParam.ts`, `src/lib/parseCodesParam.test.ts`
+## 5. Footer (`src/components/Footer.tsx`)
 
-- Extrair a lógica de parsing atual de `Resultado.tsx` (linhas 41-53) para uma função pura `parseCodesParam(raw: string): string[]` exportada de `src/lib/parseCodesParam.ts`. Substituir o uso inline em `Resultado.tsx`.
-- Testes (vitest) cobrindo:
-  - vírgula simples: `"A,B,C"` → `["A","B","C"]`
-  - barra: `"A/B/C"` → `["A","B","C"]`
-  - mistura vírgula + barra + espaço + pipe + ponto-e-vírgula: `"A, B/C;D|E F"` → `["A","B","C","D","E","F"]`
-  - duplicados case-insensitive: `"a,A,b"` → `["A","B"]`
-  - vazio / só separadores: `""`, `",,,"`, `" / / "` → `[]`
-  - encoding já decodificado com `+`: aceito como espaço pelo `URLSearchParams`, validar comportamento esperado.
-  - preserva ordem da primeira ocorrência.
+- Verificar se já contém logo, links rápidos (Início, Como funciona, Contato), WhatsApp clicável e linha de copyright. Atualizar copyright para "© 2026 AWR Baterias — Porto Alegre, RS" se necessário (sem reescrever todo o footer).
 
-## 5. Verificação
+## 6. Verificação
 
-- `bunx vitest run src/lib/parseCodesParam.test.ts` (ou via tool de testes).
-- Sanity manual no preview: navegar `/resultado?codes=MF60AD/ECON60EFB,HEFB60HD&v=Renault+Kwid+2025` e confirmar 3 códigos parseados; clicar chip Hero sem fitment para validar que loading se limpa e overlay abre com query refletida.
+- Build passa sem erros TS.
+- Sanity manual: scroll completo na `/` mostra Hero novo → Benefits → Marcas → Como funciona → Depoimentos → FAQ → CTA Final → Footer.
+- CTA principal no hero abre o overlay; CTA final abre WhatsApp.
+- Mobile: botão CTA do hero ocupa 100% da largura; layout dos cards quebra para 1 coluna.
 
-## Detalhes técnicos
+## Notas técnicas
 
-- Manter API pública dos componentes retrocompatível (todas as novas props são opcionais).
-- Não tocar em `src/integrations/supabase/*` nem em lógica de fetch.
-- `parseCodesParam` permanece puro/sem dependências para teste rápido.
+- Não alterar lógica de fitments / `parseCodesParam` / overlay — apenas cópia, layout e ordem.
+- Manter `id="inicio"` no Hero para o scroll do CTA final.
+- Tokens semânticos do design system (`primary`, `secondary`, `accent`, `awr-green`) — sem cores hardcoded novas.

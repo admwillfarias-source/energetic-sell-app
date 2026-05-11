@@ -4,15 +4,36 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { homepageFaqs } from "@/data/faqData";
+
+const faqs: { question: string; answer: string }[] = [
+  {
+    question: "Qual a área de atendimento?",
+    answer:
+      "Porto Alegre e grande Porto Alegre (Canoas, Gravataí, Cachoeirinha, Alvorada e região).",
+  },
+  {
+    question: "Quanto tempo leva a entrega?",
+    answer: "Em média 35 minutos após o pedido.",
+  },
+  {
+    question: "Vocês retiram a bateria velha?",
+    answer: "Sim, o técnico leva a bateria antiga sem custo adicional.",
+  },
+  {
+    question: "Quais formas de pagamento?",
+    answer: "Cartão de crédito em até 10x sem juros, débito, Pix e dinheiro.",
+  },
+  {
+    question: "A bateria tem garantia?",
+    answer: "Sim, todas as baterias têm garantia de fábrica.",
+  },
+];
 
 export default function FaqHome() {
-  const top = homepageFaqs.slice(0, 3);
-
   const faqLd = {
     "@context": "https://schema.org",
     "@type": "FAQPage",
-    mainEntity: top.map((f) => ({
+    mainEntity: faqs.map((f) => ({
       "@type": "Question",
       name: f.question,
       acceptedAnswer: { "@type": "Answer", text: f.answer },
@@ -26,10 +47,10 @@ export default function FaqHome() {
           id="faq-home-title"
           className="font-display text-2xl md:text-3xl font-extrabold text-center mb-8"
         >
-          Perguntas <span className="text-primary">frequentes</span>
+          Dúvidas <span className="text-primary">frequentes</span>
         </h2>
         <Accordion type="single" collapsible className="bg-card rounded-xl border border-border">
-          {top.map((f, i) => (
+          {faqs.map((f, i) => (
             <AccordionItem key={f.question} value={`item-${i}`} className="px-4">
               <AccordionTrigger className="text-left font-semibold">
                 {f.question}

@@ -46,9 +46,9 @@ export default function ManufacturerLogos({ variant = "full" }: Props) {
       <div className="container mx-auto px-4">
         <h2
           id="brands-title"
-          className="font-display text-xl md:text-2xl font-extrabold text-foreground text-center mb-2"
+          className="font-display text-2xl md:text-3xl font-extrabold text-foreground text-center mb-2"
         >
-          Marcas que Trabalhamos
+          Trabalhamos com as <span className="text-primary">melhores marcas</span>
         </h2>
         <p className="text-muted-foreground text-center text-sm mb-8">
           Revenda autorizada das principais fabricantes do Brasil
