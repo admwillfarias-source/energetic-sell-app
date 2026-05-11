@@ -40,31 +40,21 @@ function SearchPlaceholder({
   onChange: (v: string) => void;
 }) {
   return (
-    <div className="flex gap-2">
-      <div className="relative flex-1">
-        <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <input
-          type="text"
-          defaultValue={initialValue}
-          placeholder="Carro e ano (Ex: Onix 2018) ou modelo da bateria (Ex: M60GD)"
-          onFocus={onActivate}
-          onClick={onActivate}
-          onChange={(e) => {
-            onChange(e.target.value);
-            onActivate();
-          }}
-          className="h-12 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          aria-label="Buscar veículo ou modelo da bateria"
-        />
-      </div>
-      <button
+    <div className="relative">
+      <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+      <input
+        type="text"
+        defaultValue={initialValue}
+        placeholder="Carro e ano (Ex: Onix 2018) ou modelo da bateria (Ex: M60GD)"
+        onFocus={onActivate}
         onClick={onActivate}
-        aria-label="Buscar"
-        className="inline-flex h-12 items-center justify-center gap-2 rounded-md bg-primary px-5 font-bold text-primary-foreground shadow-md hover:bg-primary/90 transition-colors"
-      >
-        <Car className="h-4 w-4" />
-        <span className="hidden sm:inline">Buscar</span>
-      </button>
+        onChange={(e) => {
+          onChange(e.target.value);
+          onActivate();
+        }}
+        className="h-12 w-full rounded-md border border-input bg-background pl-9 pr-3 text-base text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+        aria-label="Buscar veículo ou modelo da bateria"
+      />
     </div>
   );
 }
@@ -216,29 +206,19 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4 md:min-h-[120px] lg:min-h-[140px]">
-            Bateria entregue e instalada{" "}
-            em até <span className="text-primary">35 minutos</span>
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4">
+            Sua bateria nova em até{" "}
+            <span className="text-primary">35 minutos</span>{" "}
+            — entregue e instalada
           </h1>
 
-          <p className="text-lg md:text-xl text-secondary-foreground/80 mb-4">
-            Encontre e escolha o modelo de bateria no campo abaixo e faça a sua encomenda{" "}
-            <strong className="text-accent">on-line</strong>, por{" "}
-            <strong className="text-accent">Telefone</strong> ou{" "}
-            <strong className="text-accent">WhatsApp</strong>.
+          <p className="text-lg md:text-xl text-secondary-foreground/80 mb-6">
+            Selecione o modelo ideal para o seu veículo e solicite agora.
+            Atendemos Porto Alegre e região com{" "}
+            <strong className="text-accent">Moura, Heliar, Zetta e Excell</strong>.
           </p>
 
-          <div
-            className="mb-6 hidden sm:inline-flex items-start gap-2 rounded-lg border border-primary/30 bg-primary/10 px-3 py-2 text-sm text-secondary-foreground"
-            role="note"
-          >
-            <AlertTriangle className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
-            <span>
-              <strong>Precisando de bateria para o seu carro?</strong> Resolva em 35 min.
-            </span>
-          </div>
-
-          <div className="mb-3 rounded-2xl bg-card p-4 shadow-lg md:p-5 min-h-[88px] md:min-h-[92px]">
+          <div className="mb-3 rounded-2xl bg-card p-4 shadow-lg md:p-5">
             <SearchPlaceholder
               onActivate={() => {
                 markEvent("overlay_intent");
@@ -247,6 +227,20 @@ export default function HeroSection() {
               initialValue={initialQuery}
               onChange={setInitialQuery}
             />
+            <button
+              type="button"
+              onClick={() => {
+                markEvent("overlay_intent");
+                setOverlayOpen(true);
+              }}
+              className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base md:text-lg font-extrabold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring"
+            >
+              <Car className="h-5 w-5" aria-hidden="true" />
+              Pedir minha bateria agora
+            </button>
+            <p className="mt-3 text-center text-xs sm:text-sm font-semibold text-awr-green">
+              <span aria-hidden="true">🟢</span> Técnicos disponíveis agora · Pagamento em 10x sem juros
+            </p>
           </div>
 
           <div className="mb-6 flex flex-wrap items-center gap-2">
