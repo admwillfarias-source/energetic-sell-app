@@ -162,7 +162,7 @@ export default function Resultado() {
     const codeSet = new Set(codes.map((c) => c.toUpperCase()));
     const brands = new Set<string>();
     for (const b of sorted) {
-      const sku = (b.sku ?? b.code ?? "").toUpperCase();
+      const sku = (b.sku ?? "").toUpperCase();
       if (codeSet.has(sku) && b.brand) brands.add(b.brand);
     }
     return brands;
