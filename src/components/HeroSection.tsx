@@ -73,6 +73,26 @@ export default function HeroSection() {
   const [initialQuery, setInitialQuery] = useState("");
   const [whatsVisible, setWhatsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
+
+  const handleQuickSearch = async (item: { label: string; query: string }) => {
+    markEvent("quick_search_click");
+    try {
+      await ensureCatalogLoaded();
+    } catch {
+      // segue mesmo sem catálogo carregado
+    }
+    const codes = getStrictVehicleCodes(item.query);
+    if (codes.length > 0) {
+      navigate(
+        `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(item.query)}`,
+      );
+      return;
+    }
+    // fallback: abre overlay com a query
+    setInitialQuery(item.label);
+    setOverlayOpen(true);
+  };
   const overlayPrefetched = useRef(false);
 
   // Calcula 1x por render
