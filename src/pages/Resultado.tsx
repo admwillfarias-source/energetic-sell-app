@@ -508,6 +508,10 @@ export default function Resultado() {
               );
             }
             if (sorted.length === 0) {
+              const waLabel = vehicle || "minha bateria";
+              const waUrl = `https://wa.me/5551993199486?text=${encodeURIComponent(
+                `Olá! Preciso de ajuda para encontrar a bateria do meu ${waLabel}.`,
+              )}`;
               return (
                 <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
                   <Search className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
@@ -515,9 +519,29 @@ export default function Resultado() {
                   <p className="mt-1 text-sm text-muted-foreground">
                     Tente outra grafia, inclua o ano ou fale com a gente no WhatsApp.
                   </p>
-                  <Button asChild className="mt-4">
-                    <Link to="/">Nova busca</Link>
-                  </Button>
+                  <div className="mt-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-2">
+                    <Button asChild variant="outline">
+                      <Link to="/">Nova busca</Link>
+                    </Button>
+                    {isMobile ? (
+                      <Button
+                        asChild
+                        className="bg-[#25D366] hover:brightness-110 text-white font-bold"
+                      >
+                        <a href={waUrl} target="_blank" rel="noopener noreferrer">
+                          <MessageCircle className="h-4 w-4" />
+                          Tire sua dúvida com um atendente
+                        </a>
+                      </Button>
+                    ) : (
+                      <Button asChild className="font-bold">
+                        <a href="tel:+555135165472">
+                          <Phone className="h-4 w-4" />
+                          Tire sua dúvida: (51) 3516-5472
+                        </a>
+                      </Button>
+                    )}
+                  </div>
                 </div>
               );
             }
