@@ -23,6 +23,8 @@ const Amperage = lazy(() => import("./pages/Amperage.tsx"));
 const Blog = lazy(() => import("./pages/Blog.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
 const BlogTag = lazy(() => import("./pages/BlogTag.tsx"));
+const Catalogo = lazy(() => import("./pages/Catalogo.tsx"));
+const Servicos = lazy(() => import("./pages/Servicos.tsx"));
 
 const LazyToaster = lazy(() => import("@/components/LazyToaster"));
 
@@ -58,6 +60,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/catalogo" element={wrap(<Catalogo />)} />
+            <Route path="/servicos" element={wrap(<Servicos />)} />
             <Route path="/resultado" element={wrap(<Resultado />)} />
             <Route path="/baterias/:slug" element={wrap(<City />)} />
             <Route path="/baterias/:citySlug/:slug" element={wrap(<Neighborhood />)} />
