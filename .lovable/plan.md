@@ -1,64 +1,57 @@
-# Plano de refinos de conversão — AWR Baterias
+# Plano de Ajustes — Fluxo de busca / Resultado
 
-A maior parte da reforma já foi implementada nas iterações anteriores (rotas `/catalogo` e `/servicos` criadas, links do header/footer corrigidos, `BestSellers` com paginação manual). Este plano cobre os ajustes que ainda faltam para fechar o escopo do briefing.
+## 1. Sincronizar autocomplete do SearchOverlay com `codes` + `v`
 
-## 1. Hero / Busca (foco em conversão)
+**Arquivos:** `src/components/SearchOverlay.tsx`, `src/components/HeroSection.tsx`
 
-Arquivo: `src/components/HeroSection.tsx`, `src/components/VehicleAutocomplete.tsx`
+- Adicionar nova prop opcional `initialCodes?: string[]` em `SearchOverlay`.
+- Quando o overlay abre via fallback (chip sem fitment), passar `initialCodes` (vazio nesse caso) e manter `initialQuery`/`notFoundLabel` já existentes.
+- Em `VehicleAutocomplete`: aceitar nova prop `autoSelectFirst?: boolean`. Quando `initialQuery` é fornecido + `autoSelectFirst`, ao terminar de carregar o catálogo, se houver exatamente uma sugestão de alta confiança (modelo+ano), pré-selecioná-la (highlight=0, abrir dropdown automaticamente). Sem auto-navegar — apenas refletir filtros visíveis (lista de sugestões + badge de códigos compatíveis), evitando exigir nova interação para começar a ver opções.
+- Repassar `autoSelectFirst` do `SearchOverlay` quando ele recebe `initialQuery` ou `notFoundLabel`.
 
-- Reforçar selo de prova social ao lado da busca: estrelas Google, "+1500 clientes desde 2009", "18 meses de garantia", "entrega + instalação 35 min".
-- Adicionar "chips" de busca rápida abaixo do input: `Onix 2018`, `HB20 2020`, `Strada 2015`, `Corolla 2017`. Ao clicar, dispara a busca direto.
-- Botão WhatsApp secundário ao lado do "Buscar" no hero, para quem prefere atendimento humano (já existe `HeroWhatsButton` — garantir presença mobile).
-- Garantir que o autocomplete continua levando direto para `/resultado` (já está) e que o estado vazio mostra CTA "Falar no WhatsApp".
+## 2. Robustez do estado de carregamento (chip + overlay)
 
-## 2. Página de Catálogo
+**Arquivo:** `src/components/HeroSection.tsx`
 
-Arquivo: `src/pages/Catalogo.tsx`
+- `handleQuickSearch`: envolver toda a lógica em `try/catch/finally`. No `finally`, sempre `setChipLoading(null)` para garantir que erros (rede, exceção em `getStrictVehicleCodes`, navegação bloqueada) não prendam o overlay de loading.
+- Adicionar timeout de segurança (e.g. `setTimeout(() => setChipLoading(null), 8000)`) limpado quando navegação acontece, para o caso da navegação não desmontar o componente.
+- Tratar erro de `ensureCatalogLoaded` exibindo um toast curto ("Não conseguimos carregar o catálogo, tente novamente") e mantendo a UI utilizável.
 
-- Aplicar a mesma paginação "Mostrar mais" usada em `BestSellers` (4 mobile / 8 desktop), em vez de listar 100 itens de uma vez.
-- Filtros já existem (marca, amperagem) — adicionar filtro por tipo de veículo (carro/moto/utilitário) usando metadados disponíveis em `fetchBatteries`.
-- Sticky filter sidebar no desktop e drawer no mobile (já parcialmente feito) — revisar UX em 390px.
-- Card do catálogo deve ter CTA duplo: "Pedir agora" (CheckoutDialog) + "WhatsApp" (mensagem pré-preenchida com modelo).
+## 3. Mensagem do WhatsApp enriquecida com `codes` e `v`
 
-## 3. Página de Serviços
+**Arquivos:** `src/pages/Resultado.tsx`, `src/components/SearchOverlay.tsx`
 
-Arquivo: `src/pages/Servicos.tsx`
+- Centralizar um helper `buildWhatsAppMessage({ vehicle, codes })` em `src/lib/whatsapp.ts` (novo arquivo pequeno) ou inline nos dois arquivos. Formato sugerido:
+  ```
+  Olá! Preciso de uma bateria.
+  Veículo: <v>
+  Códigos pesquisados: <codes.join(", ")>
+  Podem me ajudar a confirmar a opção certa?
+  ```
+- Quando `vehicle` não existir, omitir a linha "Veículo:". Quando `codes` vazios, omitir "Códigos pesquisados:".
+- Substituir as construções atuais em `Resultado.tsx` (botão WhatsApp do empty state) e `SearchOverlay.tsx` (`buildWhatsAppUrl`) por esse helper.
 
-- Adicionar seção "Áreas atendidas" reaproveitando `CityMap` ou lista de cidades de `src/data/stores.ts`.
-- Adicionar bloco de garantia 18 meses + descarte ecológico da bateria antiga.
-- Inserir `ManufacturerLogos` e `Testimonials` para reforçar prova social.
-- FAQ já existe (`faqLd`) — renderizar visualmente com `Accordion` (hoje só tem JSON-LD).
+## 4. Testes do parsing de `codes` em `/resultado`
 
-## 4. Resultado da busca
+**Arquivos novos:** `src/lib/parseCodesParam.ts`, `src/lib/parseCodesParam.test.ts`
 
-Arquivo: `src/pages/Resultado.tsx`, `src/components/BatteryCard.tsx`
+- Extrair a lógica de parsing atual de `Resultado.tsx` (linhas 41-53) para uma função pura `parseCodesParam(raw: string): string[]` exportada de `src/lib/parseCodesParam.ts`. Substituir o uso inline em `Resultado.tsx`.
+- Testes (vitest) cobrindo:
+  - vírgula simples: `"A,B,C"` → `["A","B","C"]`
+  - barra: `"A/B/C"` → `["A","B","C"]`
+  - mistura vírgula + barra + espaço + pipe + ponto-e-vírgula: `"A, B/C;D|E F"` → `["A","B","C","D","E","F"]`
+  - duplicados case-insensitive: `"a,A,b"` → `["A","B"]`
+  - vazio / só separadores: `""`, `",,,"`, `" / / "` → `[]`
+  - encoding já decodificado com `+`: aceito como espaço pelo `URLSearchParams`, validar comportamento esperado.
+  - preserva ordem da primeira ocorrência.
 
-- Card sticky no topo "Não encontrou? Fale no WhatsApp" quando a lista vier vazia.
-- CTAs do card: garantir que ambos (Pedir / WhatsApp) aparecem lado a lado no mobile sem quebrar.
+## 5. Verificação
 
-## 5. Prova social na home
-
-Arquivo: `src/pages/Index.tsx`, `src/components/home/HomeMiddle.tsx`
-
-- Inserir um `TrustBar` compacto logo abaixo do Hero (estrelas Google, +1500 clientes, 18m garantia, marcas atendidas) — antes mesmo do `HomeMiddle` carregar via lazy.
-- Subir `Testimonials` na ordem do `HomeMiddle` para vir antes de `Benefits`.
-
-## 6. SEO e sitemap
-
-- Adicionar JSON-LD `Service` em `/servicos` e `ItemList` em `/catalogo`.
-- Verificar `public/sitemap.xml` (já contém `/catalogo` e `/servicos`).
+- `bunx vitest run src/lib/parseCodesParam.test.ts` (ou via tool de testes).
+- Sanity manual no preview: navegar `/resultado?codes=MF60AD/ECON60EFB,HEFB60HD&v=Renault+Kwid+2025` e confirmar 3 códigos parseados; clicar chip Hero sem fitment para validar que loading se limpa e overlay abre com query refletida.
 
 ## Detalhes técnicos
 
-- Reaproveitar padrão de paginação de `BestSellers.tsx` (estado `page`, fatia `items.slice(0, page*perPage)`, botão "Mostrar mais").
-- `useIsMobile()` já existe em `src/hooks/use-mobile.tsx` para escolher 4 vs 8.
-- Chips de busca rápida no hero: array estático em `HeroSection.tsx`, clique chama `navigate('/resultado?v=' + encodeURIComponent(label))`.
-- Novo componente `src/components/TrustBar.tsx` (4 itens, ícones lucide, sem dependências novas).
-- Filtro tipo de veículo: derivar de `battery.categories` ou `tags` no retorno de `fetchBatteries`.
-
-## Fora de escopo
-
-- Wizard guiado passo a passo (carro→ano→marca) — manter autocomplete atual.
-- Mudanças no checkout/pagamento.
-- Alterações no tema WordPress além de menu/SEO já feitos.
-- Novas integrações de backend.
+- Manter API pública dos componentes retrocompatível (todas as novas props são opcionais).
+- Não tocar em `src/integrations/supabase/*` nem em lógica de fetch.
+- `parseCodesParam` permanece puro/sem dependências para teste rápido.
