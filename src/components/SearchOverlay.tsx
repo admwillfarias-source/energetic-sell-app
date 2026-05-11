@@ -18,12 +18,15 @@ import { fetchBatteriesByVehicle } from "@/lib/api/batteries";
 import { toast } from "@/hooks/use-toast";
 import { markEvent, measureBetween } from "@/lib/perfMetrics";
 import { cn } from "@/lib/utils";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Pré-preenche o campo de busca quando o overlay abre. */
   initialQuery?: string;
+  /** Códigos já conhecidos (vindos de `codes` da URL ou do chip). */
+  initialCodes?: string[];
   /** Quando informado, mostra um aviso "não encontramos para X" + CTA WhatsApp. */
   notFoundLabel?: string;
 };
@@ -35,7 +38,7 @@ const TRUCK_MODELS = new Set(["Strada", "Hilux"]);
 
 type StartStopChoice = "standard" | "start-stop";
 
-export default function SearchOverlay({ open, onOpenChange, initialQuery, notFoundLabel }: Props) {
+export default function SearchOverlay({ open, onOpenChange, initialQuery, initialCodes, notFoundLabel }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [picked, setPicked] = useState<TopVehicle | null>(null);
@@ -51,11 +54,8 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, notFou
   }, []);
   const [resolving, setResolving] = useState(false);
 
-  const WHATSAPP_NUMBER = "5551993199486";
-  const buildWhatsAppUrl = (vehicleLabel: string) => {
-    const msg = `Olá! Preciso de ajuda para encontrar a bateria do meu ${vehicleLabel}. Vocês podem me orientar?`;
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(msg)}`;
-  };
+  const buildWaUrl = (vehicleLabel: string, codes?: string[]) =>
+    buildWhatsAppUrl({ vehicle: vehicleLabel, codes });
 
   useEffect(() => {
     if (open) {
