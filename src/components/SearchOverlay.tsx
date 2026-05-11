@@ -201,7 +201,7 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
                     Refine a busca abaixo ou fale agora com um especialista.
                   </p>
                   <a
-                    href={buildWhatsAppUrl(notFoundLabel)}
+                    href={buildWaUrl(notFoundLabel, initialCodes)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => onOpenChange(false)}
@@ -371,7 +371,7 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
               </p>
 
               <a
-                href={buildWhatsAppUrl(`${picked.brand} ${picked.label} ${notFound.year}`)}
+                href={buildWaUrl(`${picked.brand} ${picked.label} ${notFound.year}`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={() => onOpenChange(false)}
