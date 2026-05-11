@@ -1,4 +1,5 @@
 import { Phone, ShoppingCart, Award } from "lucide-react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/context/CartContext";
 
