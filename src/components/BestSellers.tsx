@@ -264,8 +264,6 @@ export default function BestSellers() {
         )}
             </div>
 
-            {/* Sentinela para prefetch/auto-load quando o usuário se aproxima */}
-            {hasMore && hasFull && <div ref={sentinelRef} aria-hidden="true" className="h-1" />}
 
       <BatteryDetailDialog battery={active} onOpenChange={(o) => !o && setActive(null)} />
 
