@@ -117,7 +117,7 @@ const Index = () => {
             <Header />
           </Suspense>
         )}
-        <main className={EMBEDDED ? "pt-0" : "pt-[116px] lg:pt-0"}>
+        <main className={EMBEDDED ? "pt-0" : "pt-[120px] lg:pt-16"}>
           <HeroSection />
           <TrustBar />
           {hasSearch && (
