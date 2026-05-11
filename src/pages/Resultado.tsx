@@ -1,7 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search } from "lucide-react";
+import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search, MessageCircle, Phone } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Header } from "@/components/Header";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
