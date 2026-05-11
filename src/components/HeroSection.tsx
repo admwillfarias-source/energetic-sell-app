@@ -186,7 +186,7 @@ export default function HeroSection() {
             </span>
           </div>
 
-          <div className="mb-6 rounded-2xl bg-card p-4 shadow-lg md:p-5 min-h-[88px] md:min-h-[92px]">
+          <div className="mb-3 rounded-2xl bg-card p-4 shadow-lg md:p-5 min-h-[88px] md:min-h-[92px]">
             <SearchPlaceholder
               onActivate={() => {
                 markEvent("overlay_intent");
@@ -195,6 +195,26 @@ export default function HeroSection() {
               initialValue={initialQuery}
               onChange={setInitialQuery}
             />
+          </div>
+
+          <div className="mb-6 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-secondary-foreground/70">
+              Buscas frequentes:
+            </span>
+            {["Onix 2018", "HB20 2020", "Strada 2015", "Corolla 2017"].map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => {
+                  setInitialQuery(q);
+                  markEvent("overlay_intent");
+                  setOverlayOpen(true);
+                }}
+                className="rounded-full border border-secondary-foreground/20 bg-secondary-foreground/5 px-3 py-1 text-xs font-medium text-secondary-foreground hover:border-primary hover:text-primary transition-colors"
+              >
+                {q}
+              </button>
+            ))}
           </div>
 
           <a
