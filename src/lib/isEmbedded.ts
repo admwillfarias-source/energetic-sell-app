@@ -14,10 +14,7 @@ export function isEmbedded(): boolean {
     const sp = new URLSearchParams(window.location.search);
     if (sp.get("embed") === "1") return true;
   } catch { /* noop */ }
-  try {
-    return window.self !== window.top;
-  } catch {
-    // Cross-origin lança SecurityError no acesso a window.top — significa que estamos em iframe.
-    return true;
-  }
+  // Importante: NÃO tratar iframe genérico (preview Lovable, etc.) como embed.
+  // Só consideramos embed quando o parent (tema WP) sinaliza com ?embed=1.
+  return false;
 }
