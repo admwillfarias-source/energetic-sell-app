@@ -266,26 +266,34 @@ export default function Catalogo() {
                     </div>
                   )}
 
-                  {!isLoading && !isError && grouped.map(([brand, list]) => (
-                    <div key={brand} className="mb-10">
-                      <div className="flex items-end justify-between mb-4">
-                        <h2 className="font-display text-xl md:text-2xl font-extrabold text-foreground">
-                          Baterias {brand}
-                        </h2>
-                        <Link
-                          to={`/baterias/marca/${brand.toLowerCase()}`}
-                          className="text-sm text-primary hover:underline inline-flex items-center"
-                        >
-                          Ver mais <ChevronRight className="h-4 w-4" />
-                        </Link>
+                  {!isLoading && !isError && pageItems.length > 0 && (
+                    <>
+                      <div className="mb-4 flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          Mostrando <span className="font-semibold text-foreground">{pageItems.length}</span> de{" "}
+                          <span className="font-semibold text-foreground">{sorted.length}</span> baterias
+                        </p>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {list.map((b) => (
+                        {pageItems.map((b) => (
                           <BatteryMouraCard key={b.id} battery={b} />
                         ))}
                       </div>
-                    </div>
-                  ))}
+                      {hasMore && (
+                        <div className="mt-8 flex justify-center">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => setPage((p) => p + 1)}
+                            className="min-w-[180px]"
+                          >
+                            Mostrar mais
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </div>
