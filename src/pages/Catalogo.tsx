@@ -136,14 +136,13 @@ export default function Catalogo() {
     });
   }, [batteries, selectedBrands, selectedBuckets]);
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, Battery[]>();
-    for (const b of filtered) {
-      if (!map.has(b.brand)) map.set(b.brand, []);
-      map.get(b.brand)!.push(b);
-    }
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [filtered]);
+  const sorted = useMemo(
+    () => [...filtered].sort((a, b) => a.brand.localeCompare(b.brand) || a.amperage - b.amperage),
+    [filtered],
+  );
+  const visibleCount = Math.min(sorted.length, page * PER_PAGE);
+  const pageItems = sorted.slice(0, visibleCount);
+  const hasMore = visibleCount < sorted.length;
 
   const canonical = `${SITE_URL}/catalogo`;
   const title = "Catálogo de Baterias | Moura, Heliar, Excell e Zetta | AWR";
