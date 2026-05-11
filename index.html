@@ -3,6 +3,30 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // Modo iframe (shortcode [awr_app]): remove preloads/preconnects
+      // que o tema WP do parent já cobre, para reduzir requisições no iframe.
+      (function(){
+        try {
+          if (new URLSearchParams(location.search).get('embed') !== '1') return;
+          window.__AWR_EMBED__ = true;
+          document.documentElement.setAttribute('data-embed','1');
+          var drop = ['/fonts/inter-400.woff2','awrbaterias.com.br'];
+          document.addEventListener('DOMContentLoaded', function(){}, { once: true });
+          // Remove em runtime imediato (head ainda está sendo parseado, mas
+          // os <link> já existentes podem ser removidos antes da requisição
+          // efetiva caso este script rode antes — fica como hint defensivo).
+          var rm = function(){
+            document.querySelectorAll('link[rel="preload"],link[rel="preconnect"],link[rel="dns-prefetch"]').forEach(function(l){
+              var h = l.getAttribute('href') || '';
+              for (var i=0;i<drop.length;i++) if (h.indexOf(drop[i]) !== -1) { l.parentNode && l.parentNode.removeChild(l); break; }
+            });
+          };
+          rm();
+          document.addEventListener('DOMContentLoaded', rm, { once: true });
+        } catch(_) {}
+      })();
+    </script>
     <meta name="theme-color" content="#0f172a" />
     <meta name="color-scheme" content="light" />
     <meta name="format-detection" content="telephone=no" />
