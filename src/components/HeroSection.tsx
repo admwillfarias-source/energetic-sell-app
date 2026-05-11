@@ -239,16 +239,27 @@ export default function HeroSection() {
             <span className="text-xs font-semibold text-secondary-foreground/70">
               Buscas frequentes:
             </span>
-            {QUICK_SEARCHES.map((item) => (
-              <button
-                key={item.label}
-                type="button"
-                onClick={() => handleQuickSearch(item)}
-                className="rounded-full border border-secondary-foreground/20 bg-secondary-foreground/5 px-3 py-1 text-xs font-medium text-secondary-foreground hover:border-primary hover:text-primary transition-colors"
-              >
-                {item.label}
-              </button>
-            ))}
+            {QUICK_SEARCHES.map((item) => {
+              const isLoading = chipLoading === item.label;
+              const disabled = !!chipLoading && !isLoading;
+              return (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => handleQuickSearch(item)}
+                  disabled={disabled}
+                  aria-busy={isLoading}
+                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-medium transition-colors ${
+                    isLoading
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-secondary-foreground/20 bg-secondary-foreground/5 text-secondary-foreground hover:border-primary hover:text-primary"
+                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                >
+                  {isLoading && <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />}
+                  {item.label}
+                </button>
+              );
+            })}
           </div>
 
           <a
@@ -263,9 +274,37 @@ export default function HeroSection() {
             Peça sua bateria pelo WhatsApp
           </a>
 
+          {chipLoading && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-background/70 backdrop-blur-sm"
+            >
+              <div className="flex flex-col items-center gap-3 rounded-2xl bg-card px-6 py-5 shadow-lg">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" aria-hidden="true" />
+                <p className="text-sm font-semibold text-foreground">
+                  Buscando baterias para {chipLoading}…
+                </p>
+                <div className="grid w-56 grid-cols-3 gap-1.5">
+                  {Array.from({ length: 3 }).map((_, i) => (
+                    <div key={i} className="h-12 animate-pulse rounded-md bg-muted" />
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           {overlayOpen && (
             <Suspense fallback={null}>
-              <SearchOverlay open={overlayOpen} onOpenChange={setOverlayOpen} />
+              <SearchOverlay
+                open={overlayOpen}
+                onOpenChange={(o) => {
+                  setOverlayOpen(o);
+                  if (!o) setNotFoundLabel(undefined);
+                }}
+                initialQuery={initialQuery}
+                notFoundLabel={notFoundLabel}
+              />
             </Suspense>
           )}
 
