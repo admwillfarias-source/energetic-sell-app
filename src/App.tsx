@@ -60,6 +60,8 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />
+            <Route path="/catalogo" element={wrap(<Catalogo />)} />
+            <Route path="/servicos" element={wrap(<Servicos />)} />
             <Route path="/resultado" element={wrap(<Resultado />)} />
             <Route path="/baterias/:slug" element={wrap(<City />)} />
             <Route path="/baterias/:citySlug/:slug" element={wrap(<Neighborhood />)} />
