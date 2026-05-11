@@ -8,9 +8,9 @@ export default function MobileActionBar() {
   return (
     <div
       data-debug-id="mobile-action-bar"
-      className="fixed inset-x-0 top-0 z-[60] lg:hidden border-b border-border bg-background shadow-[0_4px_12px_-4px_hsl(var(--foreground)/0.18)]"
+      className="fixed inset-x-0 top-16 z-[60] lg:hidden border-b border-border bg-background shadow-[0_4px_12px_-4px_hsl(var(--foreground)/0.18)]"
       style={{
-        paddingTop: "calc(env(safe-area-inset-top, 0px) + 6px)",
+        paddingTop: "6px",
         paddingBottom: "6px",
       }}
     >
