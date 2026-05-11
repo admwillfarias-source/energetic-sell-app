@@ -17,6 +17,7 @@ export function startIframeAutoResize(): void {
 
   let lastSent = 0;
   let frame = 0;
+  let debounceTimer: number | 0 = 0;
 
   const send = () => {
     frame = 0;
@@ -25,6 +26,8 @@ export function startIframeAutoResize(): void {
       document.documentElement?.scrollHeight ?? 0,
     );
     if (h === lastSent || h < 1) return;
+    // Evita oscilações pequenas (ex.: 1-2px) durante carregamento de imagens.
+    if (Math.abs(h - lastSent) < 4) return;
     lastSent = h;
     try {
       window.parent?.postMessage({ type: "awr:height", height: h }, "*");
@@ -32,12 +35,18 @@ export function startIframeAutoResize(): void {
   };
 
   const schedule = () => {
-    if (frame) return;
-    frame = requestAnimationFrame(send);
+    // Debounce ~80ms para agrupar rajadas (carga de imagens, fontes, etc.)
+    if (debounceTimer) window.clearTimeout(debounceTimer);
+    debounceTimer = window.setTimeout(() => {
+      debounceTimer = 0;
+      if (frame) return;
+      frame = requestAnimationFrame(send);
+    }, 80);
   };
 
   // Envia uma vez logo após o boot e em qualquer mudança de tamanho.
-  schedule();
+  // O primeiro envio é imediato (sem debounce) para o parent ajustar cedo.
+  if (frame === 0) frame = requestAnimationFrame(send);
   window.addEventListener("load", schedule, { once: true });
   if (typeof ResizeObserver !== "undefined") {
     const ro = new ResizeObserver(schedule);
