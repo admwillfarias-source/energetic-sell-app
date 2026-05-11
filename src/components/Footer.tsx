@@ -12,10 +12,9 @@ const prefetchCity = () => {
 };
 
 const links = [
-  { label: "Início", href: "#inicio" },
-  { label: "Serviços", href: "#servicos" },
-  { label: "Buscar Bateria", href: "#busca" },
-  { label: "Catálogo", href: "#catalogo" },
+  { label: "Início", href: "/" },
+  { label: "Serviços", href: "/servicos" },
+  { label: "Catálogo", href: "/catalogo" },
   { label: "Blog", href: "/blog" },
   { label: "Contato", href: "#contato" },
 ];
