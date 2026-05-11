@@ -402,6 +402,74 @@ export default function Resultado() {
             </div>
           </div>
 
+          {/* Filtros sincronizados com URL — atualizam a lista sem refazer busca */}
+          {sorted.length > 0 && (availableBrands.length > 1 || availableAmps.length > 1) && (
+            <div className="mb-5 rounded-xl border border-border bg-card p-3 md:p-4">
+              {availableBrands.length > 1 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Marca:
+                  </span>
+                  {availableBrands.map((brand) => {
+                    const active = selectedBrands.has(brand);
+                    return (
+                      <button
+                        key={brand}
+                        type="button"
+                        onClick={() => setSelectedBrands((s) => toggleSet(s, brand))}
+                        aria-pressed={active}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:border-primary/60"
+                        }`}
+                      >
+                        {brand}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {availableAmps.length > 1 && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Amperagem:
+                  </span>
+                  {availableAmps.map((amp) => {
+                    const active = selectedAmps.has(amp);
+                    return (
+                      <button
+                        key={amp}
+                        type="button"
+                        onClick={() => setSelectedAmps((s) => toggleSet(s, amp))}
+                        aria-pressed={active}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:border-primary/60"
+                        }`}
+                      >
+                        {amp}Ah
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {(selectedBrands.size > 0 || selectedAmps.size > 0) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedBrands(new Set());
+                    setSelectedAmps(new Set());
+                  }}
+                  className="mt-2 text-xs font-semibold text-primary hover:underline"
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
+          )}
+
           {/* Lista — carregamento progressivo: cards aparecem assim que cada
               SKU chega; skeletons preenchem os pendentes. */}
           {(() => {
