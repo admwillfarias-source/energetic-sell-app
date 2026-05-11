@@ -5,6 +5,7 @@ import { markEvent } from "@/lib/perfMetrics";
 import { trackLead } from "@/lib/tracking";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
 import { getStrictVehicleCodes } from "@/lib/fitments";
+import { toast } from "@/hooks/use-toast";
 
 const QUICK_SEARCHES: { label: string; query: string }[] = [
   { label: "Onix 2018", query: "Chevrolet Onix 2018" },
@@ -82,24 +83,37 @@ export default function HeroSection() {
     markEvent("quick_search_click");
     setChipLoading(item.label);
     setNotFoundLabel(undefined);
+    // Timeout de segurança: nunca deixa o overlay de loading travado.
+    const safety = window.setTimeout(() => setChipLoading(null), 8000);
     try {
-      await ensureCatalogLoaded();
-    } catch {
-      // segue mesmo sem catálogo carregado
+      try {
+        await ensureCatalogLoaded();
+      } catch {
+        toast({
+          title: "Falha ao carregar catálogo",
+          description: "Tente novamente em alguns segundos.",
+        });
+      }
+      let codes: string[] = [];
+      try {
+        codes = getStrictVehicleCodes(item.query);
+      } catch {
+        codes = [];
+      }
+      if (codes.length > 0) {
+        navigate(
+          `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(item.query)}`,
+        );
+        return;
+      }
+      // fallback: abre overlay já preenchido + CTA WhatsApp
+      setInitialQuery(item.query);
+      setNotFoundLabel(item.query);
+      setOverlayOpen(true);
+    } finally {
+      window.clearTimeout(safety);
+      setChipLoading(null);
     }
-    const codes = getStrictVehicleCodes(item.query);
-    if (codes.length > 0) {
-      navigate(
-        `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(item.query)}`,
-      );
-      // Mantém o loader até o desmonte (navegação substitui a página).
-      return;
-    }
-    // fallback: abre overlay já preenchido + CTA WhatsApp
-    setChipLoading(null);
-    setInitialQuery(item.query);
-    setNotFoundLabel(item.query);
-    setOverlayOpen(true);
   };
   const overlayPrefetched = useRef(false);
 
