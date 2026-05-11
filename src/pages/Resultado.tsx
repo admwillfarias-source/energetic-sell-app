@@ -140,18 +140,74 @@ export default function Resultado() {
     [results, vehicle],
   );
 
-  // ===== SEO derivado dos resultados =====
-  const hasResults = sorted.length > 0;
-  const minPrice = hasResults ? Math.min(...sorted.map((b) => b.price)) : 0;
-  const maxPrice = hasResults ? Math.max(...sorted.map((b) => b.price)) : 0;
-  const uniqueBrands = useMemo(
+  // ===== Filtros sincronizados com a URL (codes + v) =====
+  // Marcas/amperagens disponíveis vêm dos resultados retornados.
+  const availableBrands = useMemo(
     () => Array.from(new Set(sorted.map((b) => b.brand).filter(Boolean))),
     [sorted],
   );
-  const uniqueAmps = useMemo(
-    () => Array.from(new Set(sorted.map((b) => b.amperage).filter(Boolean))).sort((a, b) => a - b),
+  const availableAmps = useMemo(
+    () =>
+      Array.from(new Set(sorted.map((b) => b.amperage).filter(Boolean))).sort(
+        (a, b) => a - b,
+      ),
     [sorted],
   );
+
+  // Inicializa marcas selecionadas a partir dos `codes` da URL: se a URL traz
+  // SKUs específicos, marcamos as marcas correspondentes para filtrar a lista
+  // automaticamente; caso contrário mantém todas (sem filtro ativo).
+  const initialBrandsFromUrl = useMemo(() => {
+    if (!codes.length || !sorted.length) return new Set<string>();
+    const codeSet = new Set(codes.map((c) => c.toUpperCase()));
+    const brands = new Set<string>();
+    for (const b of sorted) {
+      const sku = (b.sku ?? b.code ?? "").toUpperCase();
+      if (codeSet.has(sku) && b.brand) brands.add(b.brand);
+    }
+    return brands;
+  }, [codes, sorted]);
+
+  const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
+  const [selectedAmps, setSelectedAmps] = useState<Set<number>>(new Set());
+  const filtersInitialized = useRef(false);
+
+  // Sincroniza filtros com a URL na primeira vez que os resultados chegam.
+  useEffect(() => {
+    if (filtersInitialized.current) return;
+    if (!sorted.length) return;
+    setSelectedBrands(initialBrandsFromUrl);
+    filtersInitialized.current = true;
+  }, [sorted.length, initialBrandsFromUrl]);
+
+  // Reseta a inicialização quando o veículo/URL muda.
+  useEffect(() => {
+    filtersInitialized.current = false;
+    setSelectedBrands(new Set());
+    setSelectedAmps(new Set());
+  }, [vehicle, codesParam]);
+
+  const toggleSet = <T,>(set: Set<T>, value: T): Set<T> => {
+    const next = new Set(set);
+    if (next.has(value)) next.delete(value);
+    else next.add(value);
+    return next;
+  };
+
+  const filteredSorted = useMemo<Battery[]>(() => {
+    return sorted.filter((b) => {
+      if (selectedBrands.size && (!b.brand || !selectedBrands.has(b.brand))) return false;
+      if (selectedAmps.size && !selectedAmps.has(b.amperage)) return false;
+      return true;
+    });
+  }, [sorted, selectedBrands, selectedAmps]);
+
+  // ===== SEO derivado dos resultados =====
+  const hasResults = filteredSorted.length > 0;
+  const minPrice = hasResults ? Math.min(...filteredSorted.map((b) => b.price)) : 0;
+  const maxPrice = hasResults ? Math.max(...filteredSorted.map((b) => b.price)) : 0;
+  const uniqueBrands = availableBrands;
+  const uniqueAmps = availableAmps;
 
   const canonical = vehicle
     ? `${SITE_URL}/resultado?v=${encodeURIComponent(vehicle)}${codes.length ? `&codes=${codes.join(",")}` : ""}`
