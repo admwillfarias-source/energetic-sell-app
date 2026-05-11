@@ -98,18 +98,26 @@ function FiltersUI({
 export default function Catalogo() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
+  const isMobile = useIsMobile();
+  const PER_PAGE = isMobile ? 4 : 8;
+  const [page, setPage] = useState(1);
+
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const [selectedBuckets, setSelectedBuckets] = useState<Set<string>>(new Set());
 
-  const toggleBrand = (b: string) =>
+  const toggleBrand = (b: string) => {
+    setPage(1);
     setSelectedBrands((s) => {
       const n = new Set(s); n.has(b) ? n.delete(b) : n.add(b); return n;
     });
-  const toggleBucket = (b: string) =>
+  };
+  const toggleBucket = (b: string) => {
+    setPage(1);
     setSelectedBuckets((s) => {
       const n = new Set(s); n.has(b) ? n.delete(b) : n.add(b); return n;
     });
-  const clear = () => { setSelectedBrands(new Set()); setSelectedBuckets(new Set()); };
+  };
+  const clear = () => { setPage(1); setSelectedBrands(new Set()); setSelectedBuckets(new Set()); };
 
   const { data: batteries = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["catalog-all"],
