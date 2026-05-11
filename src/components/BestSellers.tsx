@@ -163,50 +163,8 @@ export default function BestSellers() {
   const pageItems = withSku.slice(0, visibleCount);
   const hasMore = visibleCount < withSku.length;
 
-  // Sentinela próxima ao fim da lista: quando entra em viewport, avança a
-  // página automaticamente. O rootMargin é adaptativo:
-  //  - mobile (≤640px):  ~1.0× viewport → menos render fora de tela, economia de CPU/memória em redes lentas
-  //  - tablet (≤1024px): ~1.5× viewport
-  //  - desktop:          ~2.0× viewport → carrega bem antes, scroll suave
-  // Em conexões 2g/slow-2g (Network Information API), reduz para 0.5× para
-  // não onerar dados móveis.
-  const sentinelRef = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    if (!hasMore || !hasFull) return;
-    const el = sentinelRef.current;
-    if (!el || typeof IntersectionObserver === "undefined") return;
-
-    const vh = typeof window !== "undefined" ? window.innerHeight || 720 : 720;
-    const vw = typeof window !== "undefined" ? window.innerWidth || 1024 : 1024;
-    const conn = (navigator as unknown as { connection?: { effectiveType?: string; saveData?: boolean } }).connection;
-    const slow = conn?.saveData || conn?.effectiveType === "2g" || conn?.effectiveType === "slow-2g";
-
-    let factor = 2.0;
-    if (vw <= 640) factor = 1.0;
-    else if (vw <= 1024) factor = 1.5;
-    if (slow) factor = Math.min(factor, 0.5);
-
-    // Ajuste por densidade de pixels (HiDPI): em telas Retina/AMOLED o usuário
-    // costuma rolar mais conteúdo por gesto (mais pixels CSS visíveis por
-    // swipe físico). Aumentamos a margem proporcionalmente, com teto, para
-    // antecipar o próximo lote sem exagerar em telas 3x/4x de mobile barato.
-    const dpr = typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1;
-    const dprBoost = Math.min(1 + (dpr - 1) * 0.25, 1.5); // 1x→1.0, 2x→1.25, 3x→1.5 (cap)
-    factor *= dprBoost;
-
-    const margin = `${Math.round(vh * factor)}px 0px`;
-
-    const obs = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((e) => e.isIntersecting)) {
-          setPage((p) => p + 1);
-        }
-      },
-      { rootMargin: margin },
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, [hasMore, hasFull, page]);
+  // Carregamento por clique apenas: o usuário avança a página com o botão
+  // "Mostrar mais". Sem auto-load via IntersectionObserver.
 
   return (
     <section
