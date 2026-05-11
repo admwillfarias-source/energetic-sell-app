@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchBatteries } from "@/lib/api/batteries";
-import { Battery } from "@/data/batteries";
+
 import { BatteryMouraCard } from "@/components/BatteryMouraCard";
 import { brandPages } from "@/data/brandContent";
 import { amperagePages } from "@/data/amperageContent";
