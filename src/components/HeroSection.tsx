@@ -1,6 +1,6 @@
 import { lazy, Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle, MessageCircle, Loader2 } from "lucide-react";
+import { Search, Car, Clock, Star, Truck, CreditCard, Award, MessageCircle, Loader2 } from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
 import { trackLead } from "@/lib/tracking";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
