@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CarFront, Clock, ShieldCheck, Truck, Search } from "lucide-react";
@@ -140,18 +140,74 @@ export default function Resultado() {
     [results, vehicle],
   );
 
-  // ===== SEO derivado dos resultados =====
-  const hasResults = sorted.length > 0;
-  const minPrice = hasResults ? Math.min(...sorted.map((b) => b.price)) : 0;
-  const maxPrice = hasResults ? Math.max(...sorted.map((b) => b.price)) : 0;
-  const uniqueBrands = useMemo(
+  // ===== Filtros sincronizados com a URL (codes + v) =====
+  // Marcas/amperagens disponíveis vêm dos resultados retornados.
+  const availableBrands = useMemo(
     () => Array.from(new Set(sorted.map((b) => b.brand).filter(Boolean))),
     [sorted],
   );
-  const uniqueAmps = useMemo(
-    () => Array.from(new Set(sorted.map((b) => b.amperage).filter(Boolean))).sort((a, b) => a - b),
+  const availableAmps = useMemo(
+    () =>
+      Array.from(new Set(sorted.map((b) => b.amperage).filter(Boolean))).sort(
+        (a, b) => a - b,
+      ),
     [sorted],
   );
+
+  // Inicializa marcas selecionadas a partir dos `codes` da URL: se a URL traz
+  // SKUs específicos, marcamos as marcas correspondentes para filtrar a lista
+  // automaticamente; caso contrário mantém todas (sem filtro ativo).
+  const initialBrandsFromUrl = useMemo(() => {
+    if (!codes.length || !sorted.length) return new Set<string>();
+    const codeSet = new Set(codes.map((c) => c.toUpperCase()));
+    const brands = new Set<string>();
+    for (const b of sorted) {
+      const sku = (b.sku ?? "").toUpperCase();
+      if (codeSet.has(sku) && b.brand) brands.add(b.brand);
+    }
+    return brands;
+  }, [codes, sorted]);
+
+  const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
+  const [selectedAmps, setSelectedAmps] = useState<Set<number>>(new Set());
+  const filtersInitialized = useRef(false);
+
+  // Sincroniza filtros com a URL na primeira vez que os resultados chegam.
+  useEffect(() => {
+    if (filtersInitialized.current) return;
+    if (!sorted.length) return;
+    setSelectedBrands(initialBrandsFromUrl);
+    filtersInitialized.current = true;
+  }, [sorted.length, initialBrandsFromUrl]);
+
+  // Reseta a inicialização quando o veículo/URL muda.
+  useEffect(() => {
+    filtersInitialized.current = false;
+    setSelectedBrands(new Set());
+    setSelectedAmps(new Set());
+  }, [vehicle, codesParam]);
+
+  const toggleSet = <T,>(set: Set<T>, value: T): Set<T> => {
+    const next = new Set(set);
+    if (next.has(value)) next.delete(value);
+    else next.add(value);
+    return next;
+  };
+
+  const filteredSorted = useMemo<Battery[]>(() => {
+    return sorted.filter((b) => {
+      if (selectedBrands.size && (!b.brand || !selectedBrands.has(b.brand))) return false;
+      if (selectedAmps.size && !selectedAmps.has(b.amperage)) return false;
+      return true;
+    });
+  }, [sorted, selectedBrands, selectedAmps]);
+
+  // ===== SEO derivado dos resultados =====
+  const hasResults = filteredSorted.length > 0;
+  const minPrice = hasResults ? Math.min(...filteredSorted.map((b) => b.price)) : 0;
+  const maxPrice = hasResults ? Math.max(...filteredSorted.map((b) => b.price)) : 0;
+  const uniqueBrands = availableBrands;
+  const uniqueAmps = availableAmps;
 
   const canonical = vehicle
     ? `${SITE_URL}/resultado?v=${encodeURIComponent(vehicle)}${codes.length ? `&codes=${codes.join(",")}` : ""}`
@@ -321,7 +377,11 @@ export default function Resultado() {
                 </h1>
               </div>
               <span className="text-xs text-muted-foreground">
-                {sorted.length} {sorted.length === 1 ? "opção" : "opções"}
+                {filteredSorted.length}
+                {selectedBrands.size + selectedAmps.size > 0 && sorted.length !== filteredSorted.length
+                  ? ` de ${sorted.length}`
+                  : ""}{" "}
+                {filteredSorted.length === 1 ? "opção" : "opções"}
               </span>
             </div>
 
@@ -341,6 +401,74 @@ export default function Resultado() {
               </div>
             </div>
           </div>
+
+          {/* Filtros sincronizados com URL — atualizam a lista sem refazer busca */}
+          {sorted.length > 0 && (availableBrands.length > 1 || availableAmps.length > 1) && (
+            <div className="mb-5 rounded-xl border border-border bg-card p-3 md:p-4">
+              {availableBrands.length > 1 && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Marca:
+                  </span>
+                  {availableBrands.map((brand) => {
+                    const active = selectedBrands.has(brand);
+                    return (
+                      <button
+                        key={brand}
+                        type="button"
+                        onClick={() => setSelectedBrands((s) => toggleSet(s, brand))}
+                        aria-pressed={active}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:border-primary/60"
+                        }`}
+                      >
+                        {brand}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {availableAmps.length > 1 && (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Amperagem:
+                  </span>
+                  {availableAmps.map((amp) => {
+                    const active = selectedAmps.has(amp);
+                    return (
+                      <button
+                        key={amp}
+                        type="button"
+                        onClick={() => setSelectedAmps((s) => toggleSet(s, amp))}
+                        aria-pressed={active}
+                        className={`rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                          active
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-border bg-background text-foreground hover:border-primary/60"
+                        }`}
+                      >
+                        {amp}Ah
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {(selectedBrands.size > 0 || selectedAmps.size > 0) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedBrands(new Set());
+                    setSelectedAmps(new Set());
+                  }}
+                  className="mt-2 text-xs font-semibold text-primary hover:underline"
+                >
+                  Limpar filtros
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Lista — carregamento progressivo: cards aparecem assim que cada
               SKU chega; skeletons preenchem os pendentes. */}
@@ -385,7 +513,7 @@ export default function Resultado() {
             const pendingSkeletons = vehicle ? Math.min(stillPending, remainingSlots) : 0;
             return (
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                {sorted.map((b, i) => (
+                {filteredSorted.map((b, i) => (
                   <BatteryMouraCard
                     key={b.id}
                     battery={b}
