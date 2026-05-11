@@ -4,28 +4,15 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script>
-      // Modo iframe (shortcode [awr_app]): remove preloads/preconnects
-      // que o tema WP do parent já cobre, para reduzir requisições no iframe.
-      (function(){
-        try {
-          if (new URLSearchParams(location.search).get('embed') !== '1') return;
+      // Detecta modo iframe (shortcode [awr_app] do tema WP) o mais cedo possível.
+      // Define flag global usada pelo restante do app e pelo CSS (data-embed=1).
+      window.__AWR_EMBED__ = false;
+      try {
+        if (new URLSearchParams(location.search).get('embed') === '1') {
           window.__AWR_EMBED__ = true;
           document.documentElement.setAttribute('data-embed','1');
-          var drop = ['/fonts/inter-400.woff2','awrbaterias.com.br'];
-          document.addEventListener('DOMContentLoaded', function(){}, { once: true });
-          // Remove em runtime imediato (head ainda está sendo parseado, mas
-          // os <link> já existentes podem ser removidos antes da requisição
-          // efetiva caso este script rode antes — fica como hint defensivo).
-          var rm = function(){
-            document.querySelectorAll('link[rel="preload"],link[rel="preconnect"],link[rel="dns-prefetch"]').forEach(function(l){
-              var h = l.getAttribute('href') || '';
-              for (var i=0;i<drop.length;i++) if (h.indexOf(drop[i]) !== -1) { l.parentNode && l.parentNode.removeChild(l); break; }
-            });
-          };
-          rm();
-          document.addEventListener('DOMContentLoaded', rm, { once: true });
-        } catch(_) {}
-      })();
+        }
+      } catch(_) {}
     </script>
     <meta name="theme-color" content="#0f172a" />
     <meta name="color-scheme" content="light" />
@@ -33,20 +20,37 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
 
-    <!-- LCP: preload do hero. AVIF primeiro (menor); navegadores sem suporte ignoram pelo type. -->
+    <!-- LCP: preload do hero. Sempre necessário (também é o LCP dentro do iframe). -->
     <link rel="preload" as="image" href="/hero-bg.avif" fetchpriority="high" type="image/avif" />
     <link rel="preload" as="image" href="/hero-bg.webp" fetchpriority="high" type="image/webp" />
 
-    <!-- Preload das fontes do HERO (h1 Jakarta 800 + Inter 600/400 acima da dobra) -->
+    <!-- Preload das fontes do HERO. Jakarta 800 (H1) e Inter 600 (subtítulos/CTA)
+         são críticos em ambos os modos. Inter 400 (corpo) só em standalone — no
+         iframe o fallback metrics-adjusted cobre sem custo extra. -->
     <link rel="preload" as="font" type="font/woff2" href="/fonts/jakarta-800.woff2" crossorigin />
     <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-600.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-400.woff2" crossorigin />
 
+    <!-- Supabase preconnect: necessário em ambos os modos (busca de baterias, cart, edge fns). -->
     <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
     <link rel="preconnect" href="https://mkkehvaclefoxkdlcmqm.supabase.co" crossorigin />
-    <link rel="preconnect" href="https://awrbaterias.com.br" crossorigin />
-    <link rel="dns-prefetch" href="https://awrbaterias.com.br" />
 
+    <script>
+      // Hints específicos do standalone: injetados em runtime para nunca
+      // dispararem requisições no iframe (o tema WP do parent já cobre).
+      (function(){
+        if (window.__AWR_EMBED__) return;
+        var head = document.head;
+        var add = function(rel, href, attrs){
+          var l = document.createElement('link');
+          l.rel = rel; l.href = href;
+          if (attrs) for (var k in attrs) l.setAttribute(k, attrs[k]);
+          head.appendChild(l);
+        };
+        add('preload', '/fonts/inter-400.woff2', { as:'font', type:'font/woff2', crossorigin:'' });
+        add('preconnect', 'https://awrbaterias.com.br', { crossorigin:'' });
+        add('dns-prefetch', 'https://awrbaterias.com.br');
+      })();
+    </script>
     <!-- CSS crítico inline: pinta hero acima da dobra sem esperar o bundle CSS -->
     <style>
       @font-face{font-family:"Plus Jakarta Sans";font-style:normal;font-weight:800;font-display:swap;src:url(/fonts/jakarta-800.woff2) format("woff2")}
