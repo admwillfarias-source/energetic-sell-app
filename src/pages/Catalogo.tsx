@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Checkbox } from "@/components/ui/checkbox";
 import { fetchBatteries } from "@/lib/api/batteries";
-import { Battery } from "@/data/batteries";
+
 import { BatteryMouraCard } from "@/components/BatteryMouraCard";
 import { brandPages } from "@/data/brandContent";
 import { amperagePages } from "@/data/amperageContent";
 import { Filter, ChevronRight, MessageCircle, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -97,18 +98,26 @@ function FiltersUI({
 export default function Catalogo() {
   useEffect(() => { window.scrollTo(0, 0); }, []);
 
+  const isMobile = useIsMobile();
+  const PER_PAGE = isMobile ? 4 : 8;
+  const [page, setPage] = useState(1);
+
   const [selectedBrands, setSelectedBrands] = useState<Set<string>>(new Set());
   const [selectedBuckets, setSelectedBuckets] = useState<Set<string>>(new Set());
 
-  const toggleBrand = (b: string) =>
+  const toggleBrand = (b: string) => {
+    setPage(1);
     setSelectedBrands((s) => {
       const n = new Set(s); n.has(b) ? n.delete(b) : n.add(b); return n;
     });
-  const toggleBucket = (b: string) =>
+  };
+  const toggleBucket = (b: string) => {
+    setPage(1);
     setSelectedBuckets((s) => {
       const n = new Set(s); n.has(b) ? n.delete(b) : n.add(b); return n;
     });
-  const clear = () => { setSelectedBrands(new Set()); setSelectedBuckets(new Set()); };
+  };
+  const clear = () => { setPage(1); setSelectedBrands(new Set()); setSelectedBuckets(new Set()); };
 
   const { data: batteries = [], isLoading, isError, refetch } = useQuery({
     queryKey: ["catalog-all"],
@@ -127,14 +136,13 @@ export default function Catalogo() {
     });
   }, [batteries, selectedBrands, selectedBuckets]);
 
-  const grouped = useMemo(() => {
-    const map = new Map<string, Battery[]>();
-    for (const b of filtered) {
-      if (!map.has(b.brand)) map.set(b.brand, []);
-      map.get(b.brand)!.push(b);
-    }
-    return Array.from(map.entries()).sort((a, b) => a[0].localeCompare(b[0]));
-  }, [filtered]);
+  const sorted = useMemo(
+    () => [...filtered].sort((a, b) => a.brand.localeCompare(b.brand) || a.amperage - b.amperage),
+    [filtered],
+  );
+  const visibleCount = Math.min(sorted.length, page * PER_PAGE);
+  const pageItems = sorted.slice(0, visibleCount);
+  const hasMore = visibleCount < sorted.length;
 
   const canonical = `${SITE_URL}/catalogo`;
   const title = "Catálogo de Baterias | Moura, Heliar, Excell e Zetta | AWR";
@@ -258,26 +266,34 @@ export default function Catalogo() {
                     </div>
                   )}
 
-                  {!isLoading && !isError && grouped.map(([brand, list]) => (
-                    <div key={brand} className="mb-10">
-                      <div className="flex items-end justify-between mb-4">
-                        <h2 className="font-display text-xl md:text-2xl font-extrabold text-foreground">
-                          Baterias {brand}
-                        </h2>
-                        <Link
-                          to={`/baterias/marca/${brand.toLowerCase()}`}
-                          className="text-sm text-primary hover:underline inline-flex items-center"
-                        >
-                          Ver mais <ChevronRight className="h-4 w-4" />
-                        </Link>
+                  {!isLoading && !isError && pageItems.length > 0 && (
+                    <>
+                      <div className="mb-4 flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground">
+                          Mostrando <span className="font-semibold text-foreground">{pageItems.length}</span> de{" "}
+                          <span className="font-semibold text-foreground">{sorted.length}</span> baterias
+                        </p>
                       </div>
                       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                        {list.map((b) => (
+                        {pageItems.map((b) => (
                           <BatteryMouraCard key={b.id} battery={b} />
                         ))}
                       </div>
-                    </div>
-                  ))}
+                      {hasMore && (
+                        <div className="mt-8 flex justify-center">
+                          <Button
+                            variant="outline"
+                            size="lg"
+                            onClick={() => setPage((p) => p + 1)}
+                            className="min-w-[180px]"
+                          >
+                            Mostrar mais
+                            <ChevronRight className="ml-1 h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
             </div>

@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { CartProvider } from "@/context/CartContext";
 import HeroSection from "@/components/HeroSection";
+import TrustBar from "@/components/TrustBar";
 import LazySection from "@/components/LazySection";
 import MobileActionBar from "@/components/MobileActionBar";
 import { isEmbedded } from "@/lib/isEmbedded";
@@ -116,6 +117,7 @@ const Index = () => {
         )}
         <main className="pt-[116px] lg:pt-0">
           <HeroSection />
+          <TrustBar />
           {hasSearch && (
             <Suspense fallback={null}>
               <BatteryGrid />
