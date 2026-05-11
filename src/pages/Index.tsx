@@ -58,7 +58,7 @@ const Index = () => {
     const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1500));
     const id = schedule(() => {
       import("@/components/home/HomeMiddle");
-      if (!EMBEDDED) import("@/components/home/HomeBottom");
+      import("@/components/home/HomeBottom");
     }, { timeout: 4000 });
     return () => {
       const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
@@ -130,13 +130,11 @@ const Index = () => {
             </Suspense>
           </LazySection>
 
-          {!EMBEDDED && (
-            <LazySection minHeight="600px" rootMargin="0px">
-              <Suspense fallback={null}>
-                <HomeBottom />
-              </Suspense>
-            </LazySection>
-          )}
+          <LazySection minHeight="600px" rootMargin="0px">
+            <Suspense fallback={null}>
+              <HomeBottom />
+            </Suspense>
+          </LazySection>
         </main>
         <Suspense fallback={null}>
           <CartDrawer />
