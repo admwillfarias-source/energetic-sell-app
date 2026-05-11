@@ -1,7 +1,17 @@
 import { lazy, Suspense, useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle, MessageCircle } from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
 import { trackLead } from "@/lib/tracking";
+import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { getStrictVehicleCodes } from "@/lib/fitments";
+
+const QUICK_SEARCHES: { label: string; query: string }[] = [
+  { label: "Onix 2018", query: "Chevrolet Onix 2018" },
+  { label: "HB20 2020", query: "Hyundai HB20 2020" },
+  { label: "Strada 2015", query: "Fiat Strada 2015" },
+  { label: "Corolla 2017", query: "Toyota Corolla 2017" },
+];
 
 
 
@@ -63,6 +73,26 @@ export default function HeroSection() {
   const [initialQuery, setInitialQuery] = useState("");
   const [whatsVisible, setWhatsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
+  const navigate = useNavigate();
+
+  const handleQuickSearch = async (item: { label: string; query: string }) => {
+    markEvent("quick_search_click");
+    try {
+      await ensureCatalogLoaded();
+    } catch {
+      // segue mesmo sem catálogo carregado
+    }
+    const codes = getStrictVehicleCodes(item.query);
+    if (codes.length > 0) {
+      navigate(
+        `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(item.query)}`,
+      );
+      return;
+    }
+    // fallback: abre overlay com a query
+    setInitialQuery(item.label);
+    setOverlayOpen(true);
+  };
   const overlayPrefetched = useRef(false);
 
   // Calcula 1x por render
@@ -201,18 +231,14 @@ export default function HeroSection() {
             <span className="text-xs font-semibold text-secondary-foreground/70">
               Buscas frequentes:
             </span>
-            {["Onix 2018", "HB20 2020", "Strada 2015", "Corolla 2017"].map((q) => (
+            {QUICK_SEARCHES.map((item) => (
               <button
-                key={q}
+                key={item.label}
                 type="button"
-                onClick={() => {
-                  setInitialQuery(q);
-                  markEvent("overlay_intent");
-                  setOverlayOpen(true);
-                }}
+                onClick={() => handleQuickSearch(item)}
                 className="rounded-full border border-secondary-foreground/20 bg-secondary-foreground/5 px-3 py-1 text-xs font-medium text-secondary-foreground hover:border-primary hover:text-primary transition-colors"
               >
-                {q}
+                {item.label}
               </button>
             ))}
           </div>
