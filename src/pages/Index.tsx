@@ -111,13 +111,13 @@ const Index = () => {
   return (
     <CartProvider>
       <div className="min-h-screen bg-background">
-        <MobileActionBar />
-        {showHeader && (
+        {!EMBEDDED && <MobileActionBar />}
+        {!EMBEDDED && showHeader && (
           <Suspense fallback={null}>
             <Header />
           </Suspense>
         )}
-        <main className="pt-[116px] lg:pt-0">
+        <main className={EMBEDDED ? "pt-0" : "pt-[116px] lg:pt-0"}>
           <HeroSection />
           <TrustBar />
           {hasSearch && (
