@@ -80,7 +80,7 @@ export default function Servicos() {
       { name: "Início", url: SITE_URL },
       { name: "Serviços", url: canonical },
     ]),
-    faqLd(homepageFaqs),
+    faqLd(homepageFaqs.map((f) => ({ q: f.question, a: f.answer }))),
     organizationLd(),
     serviceLd,
   ];
