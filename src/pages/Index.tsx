@@ -116,6 +116,7 @@ const Index = () => {
         )}
         <main className="pt-[116px] lg:pt-0">
           <HeroSection />
+          <TrustBar />
           {hasSearch && (
             <Suspense fallback={null}>
               <BatteryGrid />
