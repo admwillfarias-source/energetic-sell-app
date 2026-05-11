@@ -377,7 +377,11 @@ export default function Resultado() {
                 </h1>
               </div>
               <span className="text-xs text-muted-foreground">
-                {sorted.length} {sorted.length === 1 ? "opção" : "opções"}
+                {filteredSorted.length}
+                {selectedBrands.size + selectedAmps.size > 0 && sorted.length !== filteredSorted.length
+                  ? ` de ${sorted.length}`
+                  : ""}{" "}
+                {filteredSorted.length === 1 ? "opção" : "opções"}
               </span>
             </div>
 
