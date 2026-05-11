@@ -445,7 +445,7 @@ export default function Resultado() {
             const pendingSkeletons = vehicle ? Math.min(stillPending, remainingSlots) : 0;
             return (
               <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
-                {sorted.map((b, i) => (
+                {filteredSorted.map((b, i) => (
                   <BatteryMouraCard
                     key={b.id}
                     battery={b}
