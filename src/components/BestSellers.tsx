@@ -255,7 +255,7 @@ export default function BestSellers() {
                   disabled={!hasFull && fullQuery.isFetching}
                   className="min-w-[180px]"
                 >
-                  {!hasFull && fullQuery.isFetching ? "Carregando..." : "Ver mais"}
+                  {!hasFull && fullQuery.isFetching ? "Carregando..." : "Mostrar mais"}
                   <ChevronRight className="ml-1 h-4 w-4" />
                 </Button>
               </div>
