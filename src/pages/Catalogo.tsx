@@ -13,6 +13,7 @@ import { BatteryMouraCard } from "@/components/BatteryMouraCard";
 import { brandPages } from "@/data/brandContent";
 import { amperagePages } from "@/data/amperageContent";
 import { Filter, ChevronRight, MessageCircle, X } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
