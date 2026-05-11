@@ -33,6 +33,7 @@ const formatBRL = (n: number) =>
 
 export default function Resultado() {
   const [searchParams] = useSearchParams();
+  const isMobile = useIsMobile();
   const vehicle = searchParams.get("v") ?? "";
   const codesParam = searchParams.get("codes") ?? "";
   // Aceita vários separadores (vírgula, barra, ponto-e-vírgula, espaço, pipe)
