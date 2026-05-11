@@ -1,9 +1,11 @@
 // Bloco 3 da home — agrupado em um único chunk lazy.
-// Inclui também os componentes flutuantes (CartDrawer, FloatingWhatsApp).
 import FaqHome from "@/components/FaqHome";
 import FinalCtaBanner from "@/components/FinalCtaBanner";
 import { Footer } from "@/components/Footer";
 import FloatingWhatsApp from "@/components/FloatingWhatsApp";
+import { isEmbedded } from "@/lib/isEmbedded";
+
+const EMBEDDED = isEmbedded();
 
 export default function HomeBottom() {
   return (
@@ -11,7 +13,7 @@ export default function HomeBottom() {
       <FaqHome />
       <FinalCtaBanner />
       <Footer />
-      <FloatingWhatsApp />
+      {!EMBEDDED && <FloatingWhatsApp />}
     </>
   );
 }
