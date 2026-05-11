@@ -22,6 +22,10 @@ import { cn } from "@/lib/utils";
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Pré-preenche o campo de busca quando o overlay abre. */
+  initialQuery?: string;
+  /** Quando informado, mostra um aviso "não encontramos para X" + CTA WhatsApp. */
+  notFoundLabel?: string;
 };
 
 const CURRENT_YEAR = new Date().getFullYear();
@@ -31,7 +35,7 @@ const TRUCK_MODELS = new Set(["Strada", "Hilux"]);
 
 type StartStopChoice = "standard" | "start-stop";
 
-export default function SearchOverlay({ open, onOpenChange }: Props) {
+export default function SearchOverlay({ open, onOpenChange, initialQuery, notFoundLabel }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [picked, setPicked] = useState<TopVehicle | null>(null);
@@ -187,9 +191,32 @@ export default function SearchOverlay({ open, onOpenChange }: Props) {
         <div className="overflow-y-auto px-5 py-5">
           {!picked && (
             <>
+              {notFoundLabel && (
+                <div className="mb-4 rounded-xl border border-primary/30 bg-primary/5 p-3">
+                  <p className="text-sm font-semibold text-foreground">
+                    Não encontramos uma bateria homologada para{" "}
+                    <span className="text-primary">{notFoundLabel}</span>.
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Refine a busca abaixo ou fale agora com um especialista.
+                  </p>
+                  <a
+                    href={buildWhatsAppUrl(notFoundLabel)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => onOpenChange(false)}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 py-2.5 text-sm font-bold text-white shadow-sm transition hover:brightness-110"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Falar no WhatsApp sobre {notFoundLabel}
+                  </a>
+                </div>
+              )}
+
               <VehicleAutocomplete
                 variant="inline"
                 suggestionsMode="list"
+                initialQuery={initialQuery ?? notFoundLabel ?? ""}
                 onSelect={() => onOpenChange(false)}
               />
 

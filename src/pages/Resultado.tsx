@@ -34,10 +34,21 @@ export default function Resultado() {
   const [searchParams] = useSearchParams();
   const vehicle = searchParams.get("v") ?? "";
   const codesParam = searchParams.get("codes") ?? "";
-  const codes = useMemo(
-    () => (codesParam ? codesParam.split(",").map((c) => c.trim()).filter(Boolean) : []),
-    [codesParam],
-  );
+  // Aceita vários separadores (vírgula, barra, ponto-e-vírgula, espaço, pipe)
+  // e remove duplicados/vazios para que nenhum código válido seja perdido.
+  const codes = useMemo(() => {
+    if (!codesParam) return [];
+    const seen = new Set<string>();
+    const out: string[] = [];
+    for (const raw of codesParam.split(/[,/;\s|]+/)) {
+      const c = raw.trim().toUpperCase();
+      if (!c) continue;
+      if (seen.has(c)) continue;
+      seen.add(c);
+      out.push(c);
+    }
+    return out;
+  }, [codesParam]);
 
   const [catalogReady, setCatalogReady] = useState(!vehicle);
 
