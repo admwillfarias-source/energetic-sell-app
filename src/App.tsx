@@ -23,6 +23,8 @@ const Amperage = lazy(() => import("./pages/Amperage.tsx"));
 const Blog = lazy(() => import("./pages/Blog.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
 const BlogTag = lazy(() => import("./pages/BlogTag.tsx"));
+const Catalogo = lazy(() => import("./pages/Catalogo.tsx"));
+const Servicos = lazy(() => import("./pages/Servicos.tsx"));
 
 const LazyToaster = lazy(() => import("@/components/LazyToaster"));
 
