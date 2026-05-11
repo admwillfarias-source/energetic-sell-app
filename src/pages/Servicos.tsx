@@ -13,7 +13,7 @@ import { stores } from "@/data/stores";
 import {
   breadcrumbLd, faqLd, organizationLd, SITE_URL, PHONE_E164,
 } from "@/lib/seoSchemas";
-import HowItWorks from "@/components/HowItWorks";
+import { HowItWorks } from "@/components/HowItWorks";
 import ManufacturerLogos from "@/components/ManufacturerLogos";
 
 const Footer = lazy(() => import("@/components/Footer").then((m) => ({ default: m.Footer })));
