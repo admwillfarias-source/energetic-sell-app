@@ -74,9 +74,14 @@ export default function HeroSection() {
   const [whatsVisible, setWhatsVisible] = useState(false);
   const sectionRef = useRef<HTMLElement>(null);
   const navigate = useNavigate();
+  const [chipLoading, setChipLoading] = useState<string | null>(null);
+  const [notFoundLabel, setNotFoundLabel] = useState<string | undefined>(undefined);
 
   const handleQuickSearch = async (item: { label: string; query: string }) => {
+    if (chipLoading) return;
     markEvent("quick_search_click");
+    setChipLoading(item.label);
+    setNotFoundLabel(undefined);
     try {
       await ensureCatalogLoaded();
     } catch {
@@ -87,10 +92,13 @@ export default function HeroSection() {
       navigate(
         `/resultado?codes=${encodeURIComponent(codes.join(","))}&v=${encodeURIComponent(item.query)}`,
       );
+      // Mantém o loader até o desmonte (navegação substitui a página).
       return;
     }
-    // fallback: abre overlay com a query
-    setInitialQuery(item.label);
+    // fallback: abre overlay já preenchido + CTA WhatsApp
+    setChipLoading(null);
+    setInitialQuery(item.query);
+    setNotFoundLabel(item.query);
     setOverlayOpen(true);
   };
   const overlayPrefetched = useRef(false);
