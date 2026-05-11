@@ -8,6 +8,8 @@ import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchBatteriesByVehicle, fetchBatteries } from "@/lib/api/batteries";
+import { parseCodesParam } from "@/lib/parseCodesParam";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 const ResultadoFAQ = lazy(() =>
   import("./Resultado.parts").then((m) => ({ default: m.ResultadoFAQ })),
 );
@@ -38,19 +40,7 @@ export default function Resultado() {
   const codesParam = searchParams.get("codes") ?? "";
   // Aceita vários separadores (vírgula, barra, ponto-e-vírgula, espaço, pipe)
   // e remove duplicados/vazios para que nenhum código válido seja perdido.
-  const codes = useMemo(() => {
-    if (!codesParam) return [];
-    const seen = new Set<string>();
-    const out: string[] = [];
-    for (const raw of codesParam.split(/[,/;\s|]+/)) {
-      const c = raw.trim().toUpperCase();
-      if (!c) continue;
-      if (seen.has(c)) continue;
-      seen.add(c);
-      out.push(c);
-    }
-    return out;
-  }, [codesParam]);
+  const codes = useMemo(() => parseCodesParam(codesParam), [codesParam]);
 
   const [catalogReady, setCatalogReady] = useState(!vehicle);
 
@@ -509,10 +499,7 @@ export default function Resultado() {
               );
             }
             if (sorted.length === 0) {
-              const waLabel = vehicle || "minha bateria";
-              const waUrl = `https://wa.me/5551993199486?text=${encodeURIComponent(
-                `Olá! Preciso de ajuda para encontrar a bateria do meu ${waLabel}.`,
-              )}`;
+              const waUrl = buildWhatsAppUrl({ vehicle, codes });
               return (
                 <div className="rounded-2xl border border-dashed border-border bg-card p-10 text-center">
                   <Search className="mx-auto mb-3 h-8 w-8 text-muted-foreground" />
