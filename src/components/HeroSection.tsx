@@ -231,18 +231,14 @@ export default function HeroSection() {
             <span className="text-xs font-semibold text-secondary-foreground/70">
               Buscas frequentes:
             </span>
-            {["Onix 2018", "HB20 2020", "Strada 2015", "Corolla 2017"].map((q) => (
+            {QUICK_SEARCHES.map((item) => (
               <button
-                key={q}
+                key={item.label}
                 type="button"
-                onClick={() => {
-                  setInitialQuery(q);
-                  markEvent("overlay_intent");
-                  setOverlayOpen(true);
-                }}
+                onClick={() => handleQuickSearch(item)}
                 className="rounded-full border border-secondary-foreground/20 bg-secondary-foreground/5 px-3 py-1 text-xs font-medium text-secondary-foreground hover:border-primary hover:text-primary transition-colors"
               >
-                {q}
+                {item.label}
               </button>
             ))}
           </div>
