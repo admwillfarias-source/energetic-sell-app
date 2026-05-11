@@ -22,6 +22,10 @@ import { cn } from "@/lib/utils";
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Pré-preenche o campo de busca quando o overlay abre. */
+  initialQuery?: string;
+  /** Quando informado, mostra um aviso "não encontramos para X" + CTA WhatsApp. */
+  notFoundLabel?: string;
 };
 
 const CURRENT_YEAR = new Date().getFullYear();
