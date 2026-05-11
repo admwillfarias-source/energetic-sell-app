@@ -35,7 +35,7 @@ const TRUCK_MODELS = new Set(["Strada", "Hilux"]);
 
 type StartStopChoice = "standard" | "start-stop";
 
-export default function SearchOverlay({ open, onOpenChange }: Props) {
+export default function SearchOverlay({ open, onOpenChange, initialQuery, notFoundLabel }: Props) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [picked, setPicked] = useState<TopVehicle | null>(null);
