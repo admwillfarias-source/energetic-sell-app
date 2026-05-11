@@ -52,7 +52,6 @@ const SERVICES = [
   },
   {
     icon: Clock,
-    function: undefined,
     title: "Plantão 6h às 22h",
     desc: "Inclusive sábados, domingos e feriados — porque pane elétrica não escolhe hora.",
   },
