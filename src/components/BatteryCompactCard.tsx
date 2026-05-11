@@ -127,7 +127,7 @@ export function BatteryCompactCard({ battery, highlight, vehicleLabel, priority 
             className="h-8 w-full min-w-0 gap-1 px-2 text-xs bg-primary text-primary-foreground hover:bg-primary/90"
           >
             <ShoppingCart className="h-3.5 w-3.5" />
-            <span className="truncate">Encomendar</span>
+            <span className="truncate">Peça agora.</span>
           </Button>
           <Button
             asChild
