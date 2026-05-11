@@ -1,7 +1,17 @@
 import { lazy, Suspense, useState, useEffect, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { Search, Car, Clock, Star, Truck, CreditCard, Award, AlertTriangle, MessageCircle } from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
 import { trackLead } from "@/lib/tracking";
+import { ensureCatalogLoaded } from "@/lib/catalogStore";
+import { getStrictVehicleCodes } from "@/lib/fitments";
+
+const QUICK_SEARCHES: { label: string; query: string }[] = [
+  { label: "Onix 2018", query: "Chevrolet Onix 2018" },
+  { label: "HB20 2020", query: "Hyundai HB20 2020" },
+  { label: "Strada 2015", query: "Fiat Strada 2015" },
+  { label: "Corolla 2017", query: "Toyota Corolla 2017" },
+];
 
 
 
