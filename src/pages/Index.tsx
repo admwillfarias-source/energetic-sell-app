@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { CartProvider } from "@/context/CartContext";
 import HeroSection from "@/components/HeroSection";
+import TrustBar from "@/components/TrustBar";
 import LazySection from "@/components/LazySection";
 import MobileActionBar from "@/components/MobileActionBar";
 import { isEmbedded } from "@/lib/isEmbedded";
