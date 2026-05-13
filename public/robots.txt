@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://awrbaterias.com.br/sitemap.xml
+Sitemap: https://energetic-sell-app.lovable.app/sitemap.xml
