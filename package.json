@@ -18,7 +18,9 @@
     "build:wp-fast": "bash scripts/build-wp-fast-theme.sh",
     "lint:orphans": "knip",
     "lint:test-pages": "node scripts/check-no-test-pages.mjs",
-    "predeploy": "npm run lint:test-pages && npm run lint:orphans"
+    "seo:check": "node scripts/seo-check.mjs",
+    "seo:check:preview": "node scripts/seo-check.mjs --base=https://energetic-sell-app.lovable.app",
+    "predeploy": "npm run lint:test-pages && npm run lint:orphans && npm run seo:check"
   },
   "dependencies": {
     "@fontsource/inter": "^5.2.8",
