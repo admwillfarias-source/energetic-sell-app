@@ -67,13 +67,13 @@ export function SEO({
     if (window.parent === window) return;
     try {
       window.parent.postMessage(
-        { type: "awr:seo", title, description, canonical, ogImage },
+        { type: "awr:seo", title, description, canonical: canonicalUrl, ogImage },
         "*"
       );
     } catch {
       /* ignore cross-origin failures */
     }
-  }, [title, description, canonical, ogImage]);
+  }, [title, description, canonicalUrl, ogImage]);
 
   return (
     <Helmet>
@@ -84,7 +84,7 @@ export function SEO({
       ) : (
         <meta name="robots" content="index,follow,max-image-preview:large" />
       )}
-      {canonical && <link rel="canonical" href={canonical} />}
+      {canonicalUrl && <link rel="canonical" href={canonicalUrl} />}
 
       {/* Open Graph */}
       <meta property="og:title" content={title} />
@@ -92,7 +92,7 @@ export function SEO({
       <meta property="og:type" content={ogType} />
       <meta property="og:site_name" content="AWR Baterias" />
       <meta property="og:locale" content="pt_BR" />
-      {canonical && <meta property="og:url" content={canonical} />}
+      {canonicalUrl && <meta property="og:url" content={canonicalUrl} />}
       <meta property="og:image" content={ogImage} />
       <meta property="og:image:alt" content={title} />
 
