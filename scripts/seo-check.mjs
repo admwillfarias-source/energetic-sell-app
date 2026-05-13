@@ -22,7 +22,7 @@
  * SEO server-side via awr_print_seo_tags(), então rodar contra
  * https://awrbaterias.com.br valida o head real por rota.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { JSDOM } from 'jsdom';
 
