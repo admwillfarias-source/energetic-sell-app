@@ -281,30 +281,36 @@ function phoneticKey(s: string): string {
 
 /**
  * Score do match de um token contra o nome do veículo.
- * Retorna -1 se nenhum tipo de match for encontrado.
- *  - igual exato: maior score
- *  - prefixo: alto
- *  - substring: médio
- *  - fuzzy (Levenshtein dentro do limite): baixo
- *  - fonético: baixo (tolera ph/f, k/c, y/i, letras duplicadas)
- *  - colado (haystack sem espaços contém o token): médio (cobre "L200" vs "L 200")
+ * Retorna { score: -1, strong: false } se nenhum match for encontrado.
+ *  - exact/prefix → "strong"
+ *  - substring (token ≥ 4 chars) / levenshtein dentro do limite → score literal
+ *  - fonético → apenas como fallback se nenhum match literal foi encontrado
  */
-function matchToken(token: string, hayTokens: string[], hayJoined: string): number {
+function matchToken(
+  token: string,
+  hayTokens: string[],
+  hayJoined: string,
+): { score: number; strong: boolean } {
   let best = -1;
-  if (hayJoined.includes(token)) best = Math.max(best, 4 + token.length);
+  let strong = false;
 
-  const tokenPhon = phoneticKey(token);
+  // Substring no haystack só vale para tokens com ≥ 4 caracteres
+  if (token.length >= 4 && hayJoined.includes(token)) {
+    best = Math.max(best, 4 + token.length);
+  }
 
   for (const h of hayTokens) {
     if (h === token) {
       best = Math.max(best, 12 + token.length);
+      strong = true;
       continue;
     }
     if (h.startsWith(token) || token.startsWith(h)) {
       best = Math.max(best, 8 + Math.min(h.length, token.length));
+      strong = true;
       continue;
     }
-    if (h.includes(token) || token.includes(h)) {
+    if (token.length >= 4 && (h.includes(token) || token.includes(h))) {
       best = Math.max(best, 5 + Math.min(h.length, token.length));
       continue;
     }
@@ -316,23 +322,28 @@ function matchToken(token: string, hayTokens: string[], hayJoined: string): numb
         continue;
       }
     }
-    // Match fonético: tolera variações de grafia comuns
-    if (tokenPhon.length >= 2) {
-      const hPhon = phoneticKey(h);
-      if (hPhon === tokenPhon) {
-        best = Math.max(best, 6 + Math.min(h.length, token.length));
-      } else if (hPhon.length >= 3 && (hPhon.startsWith(tokenPhon) || tokenPhon.startsWith(hPhon))) {
-        best = Math.max(best, 4 + Math.min(hPhon.length, tokenPhon.length));
-      } else if (hPhon.length >= 3 && tokenPhon.length >= 3) {
-        const phMax = maxEditsFor(tokenPhon);
-        if (Math.abs(hPhon.length - tokenPhon.length) <= phMax) {
-          const d = levenshtein(tokenPhon, hPhon, phMax);
-          if (d <= phMax) best = Math.max(best, 2 + tokenPhon.length - d);
+  }
+
+  // Fonético só como fallback (quando nenhum match literal foi achado).
+  if (best < 0) {
+    const tokenPhon = phoneticKey(token);
+    if (tokenPhon.length >= 3) {
+      for (const h of hayTokens) {
+        const hPhon = phoneticKey(h);
+        if (hPhon === tokenPhon) {
+          best = Math.max(best, 6 + Math.min(h.length, token.length));
+        } else if (hPhon.length >= 4 && tokenPhon.length >= 4) {
+          const phMax = maxEditsFor(tokenPhon);
+          if (phMax > 0 && Math.abs(hPhon.length - tokenPhon.length) <= phMax) {
+            const d = levenshtein(tokenPhon, hPhon, phMax);
+            if (d <= phMax) best = Math.max(best, 2 + tokenPhon.length - d);
+          }
         }
       }
     }
   }
-  return best;
+
+  return { score: best, strong };
 }
 
 function expandSynonyms(tokens: string[]): string[][] {
