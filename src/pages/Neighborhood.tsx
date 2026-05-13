@@ -46,8 +46,8 @@ export default function Neighborhood() {
   if (!n || !city) return <Navigate to="/" replace />;
 
   const canonical = `${SITE_URL}/baterias/${citySlug}/${n.slug}`;
-  const title = `Bateria ${n.name} ${n.city} | Entrega ${n.deliveryTime} | AWR`;
-  const description = `Bateria automotiva em ${n.name}, ${n.city}, com entrega e instalação ${n.deliveryTime}. Moura, Heliar, Zetta e Excell com garantia de fábrica. 10x sem juros, atendimento todos os dias.`;
+  const title = `Bateria ${n.name} ${n.city} | Entrega ${n.deliveryTime}`;
+  const description = `Bateria automotiva em ${n.name}, ${n.city}: entrega e instalação ${n.deliveryTime}. Moura, Heliar, Zetta e Excell com garantia. 10x sem juros.`;
 
   const faq = [
     {
