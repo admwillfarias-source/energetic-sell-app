@@ -1,0 +1,34 @@
+# AWR Baterias
+
+> Entrega e instalação de baterias automotivas em Porto Alegre e região metropolitana, em até 35 minutos. Marcas Moura, Heliar, Zetta e Excell com garantia de fábrica e pagamento em 10x sem juros.
+
+A AWR Baterias atua desde 2009 como revenda oficial Moura, Heliar, Zetta e Excell. Atendimento todos os dias das 6h às 22h em Porto Alegre, Canoas, Gravataí, Cachoeirinha, Esteio, Novo Hamburgo, São Leopoldo e região.
+
+## Pages
+
+- [Início](/): Busca de bateria por veículo + catálogo + atendimento.
+- [Catálogo](/catalogo): Todas as baterias disponíveis por modelo e amperagem.
+- [Serviços](/servicos): Entrega, instalação, teste de bateria e socorro.
+- [Blog](/blog): Dicas e guias sobre baterias automotivas.
+
+## Cidades atendidas
+
+- [Porto Alegre](/baterias/porto-alegre): Entrega expressa na capital.
+- [Canoas](/baterias/canoas): Bateria entregue e instalada em Canoas.
+- [Gravataí](/baterias/gravatai): Atendimento em Gravataí.
+- [Cachoeirinha](/baterias/cachoeirinha): Atendimento em Cachoeirinha.
+- [Esteio](/baterias/esteio): Atendimento em Esteio.
+- [Novo Hamburgo](/baterias/novo-hamburgo): Atendimento em Novo Hamburgo.
+- [São Leopoldo](/baterias/sao-leopoldo): Atendimento em São Leopoldo.
+
+## Marcas
+
+- [Moura](/baterias/marca/moura): Linha completa Moura.
+- [Heliar](/baterias/marca/heliar): Linha completa Heliar.
+- [Zetta](/baterias/marca/zetta): Linha completa Zetta.
+- [Excell](/baterias/marca/excell): Linha completa Excell.
+
+## Optional
+
+- [Blog – tags](/blog): Categorias de conteúdo.
+- [Confirmação de pedido](/pedido-confirmado): Página pós-checkout.
