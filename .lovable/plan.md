@@ -1,53 +1,76 @@
 ## Objetivo
 
-Deixar o app mais rápido quando carregado dentro do iframe do WordPress (parâmetro `?embed=1`), sem afetar a versão standalone.
+Entregar um **bloco HTML + CSS auto-contido** (sem shortcode, sem PHP) que embuta o app React (`https://energetic-sell-app.lovable.app`) dentro de qualquer página/post do WordPress, com:
 
-## Diagnóstico
+- altura cheia da viewport (`100vh`) com correção iOS Safari (`-webkit-fill-available`);
+- sem scroll lateral indesejado (`overflow-x:hidden` no body);
+- auto-resize opcional via `postMessage` (o app já envia `awr:height`), caindo de volta para `100vh` se o JS não rodar;
+- atributos de performance (`loading="lazy"`, `decoding="async"`, `fetchpriority="low"`, `referrerpolicy`, `allow`, `sandbox`);
+- preconnect ao domínio do app para encurtar handshake;
+- title acessível.
 
-Hoje, dentro do iframe, ainda pagamos custos que o tema WP já cobre ou que não fazem sentido no iframe:
+## Entregáveis
 
-1. **Header lazy** — sempre monta após idle, mesmo no iframe (parent já tem header próprio).
-2. **MobileActionBar** — sempre renderiza no topo; no iframe duplica a barra de contato do parent e ocupa espaço caro acima da dobra.
-3. **Pré-fetch de `HomeBottom`** — agendado em idle mesmo quando o bloco final é menos prioritário no iframe.
-4. **Preconnect a `awrbaterias.com.br`** — desperdiçado quando o iframe já está dentro desse domínio (handshake duplicado).
-5. **Fontes `@fontsource` (Inter 400/600 + Jakarta 700/800) via CSS `?url`** — `loadFontsDeferred` já pula no iframe ✓, mas o `index.html` ainda preloada Jakarta 800 e Inter 400/600 como `woff2` (3 requisições) que o parent normalmente já tem em cache de outra forma; podemos remover o preload de **Inter 400** no iframe (o fallback metrics-adjusted cobre). Manter Jakarta 800 + Inter 600 (LCP/H1).
-6. **CSS bundle** — atualmente o Vite injeta um único CSS para a app. Já é pequeno, manter.
-7. **JSON-LD organização** — já pulado no iframe ✓.
-8. **GTM/GA4/Ads** — já pulado no iframe ✓.
-9. **CartDrawer + portal** — montado sempre via Suspense; necessário (escuta `open-checkout`). Manter.
-10. **Hero shell estático no `#root`** — pinta antes do bundle; bom para LCP. Manter.
+1. **`wp-theme/_snippets/iframe-app.html`** — snippet único, copy-paste, com `<style>` + `<link rel="preconnect">` + `<iframe>` + `<script>` de auto-resize. É o arquivo "fonte da verdade" que o usuário cola no editor de bloco HTML do WordPress.
+2. **`wp-theme/_snippets/README.md`** — instruções curtas de uso (onde colar, como trocar a URL, como travar altura fixa em vez de viewport).
+3. Cópias do mesmo snippet em cada tema, para ficar versionado junto:
+   - `wp-theme/awr-baterias-fast/snippets/iframe-app.html`
+   - `wp-theme/awr-baterias-wc/snippets/iframe-app.html`
+   - `wp-theme/awr-baterias/snippets/iframe-app.html`
 
-## Mudanças propostas (apenas no caminho iframe)
+Nenhum arquivo PHP de tema, shortcode, `functions.php` ou enqueue será alterado — é só asset estático para colar.
 
-### 1. `src/pages/Index.tsx`
-- Não montar o `Header` quando `EMBEDDED` (remove o `useEffect` de `showHeader` no caso embed e o bloco JSX).
-- Não renderizar o `MobileActionBar` quando `EMBEDDED`.
-- Ajustar `pt-[116px] lg:pt-0` do `<main>` para `pt-0` quando `EMBEDDED` (sem header/mobile bar, não há altura fixa para compensar — ganha viewport útil acima da dobra).
-- Pré-fetch em idle: no iframe, pré-buscar só `HomeMiddle` (já é o caso para HomeBottom só no iframe? hoje busca os dois — manter HomeBottom também faz sentido pois o footer foi pedido; deixar como está).
+## Conteúdo do snippet (resumo)
 
-### 2. `src/lib/loadTracking.ts`
-- Já está ótimo no iframe (early return). Sem mudanças.
+```text
+<link rel="preconnect" href="https://energetic-sell-app.lovable.app" crossorigin>
+<style>
+  .lovable-fullscreen-wrapper{position:relative;width:100%;height:100vh;height:100dvh}
+  @supports (-webkit-touch-callout:none){
+    .lovable-fullscreen-wrapper{height:-webkit-fill-available}
+  }
+  .lovable-fullscreen-wrapper>iframe{
+    position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#fafafa
+  }
+  body{overflow-x:hidden}
+</style>
 
-### 3. `index.html`
-- Adicionar pequeno script inline **no topo do `<head>`** que detecta `?embed=1` e remove os `<link rel="preload">` de:
-  - `awrbaterias.com.br` (preconnect/dns-prefetch)
-  - `inter-400.woff2` (não usado em hero crítico do iframe)
-- Manter preloads do hero AVIF/WebP, Jakarta 800 e Inter 600 (são o LCP).
+<div class="lovable-fullscreen-wrapper">
+  <iframe
+    data-awr-app="1"
+    src="https://energetic-sell-app.lovable.app/?embed=1"
+    title="AWR Baterias"
+    loading="lazy" decoding="async" fetchpriority="low"
+    referrerpolicy="no-referrer-when-downgrade"
+    allow="clipboard-write; payment; geolocation"
+    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"></iframe>
+</div>
 
-### 4. `src/components/HeroSection.tsx` (se aplicável)
-- Verificar se há animações/efeitos que rodam só no iframe sem necessidade. Se houver `framer-motion` pesado no hero, considerar desabilitar transições no iframe para reduzir TBT (ajustar somente após confirmar pelo arquivo).
+<script>
+/* auto-resize opcional — se o app enviar awr:height, ajusta a altura
+   para o conteúdo real e libera o 100vh */
+(function(){
+  window.addEventListener('message',function(e){
+    var d=e.data;if(!d||typeof d!=='object'||d.type!=='awr:height')return;
+    var w=document.querySelector('.lovable-fullscreen-wrapper');
+    if(w&&typeof d.height==='number'&&d.height>200){
+      w.style.height=Math.ceil(d.height)+'px';
+    }
+  });
+})();
+</script>
+```
 
-### 5. `src/lib/iframeAutoResize.ts`
-- Substituir o envio bruto de `scrollHeight` em cada `ResizeObserver` por **debounce de 80ms** + comparação de altura, evitando rajadas de `postMessage` enquanto imagens carregam (reduz reflow no parent).
+## Detalhes técnicos
 
-## Não-objetivos
+- `100dvh` é incluído como progressive enhancement para navegadores modernos (resolve barra de URL móvel); `100vh` continua como fallback; `-webkit-fill-available` cobre Safari iOS legado.
+- `?embed=1` na URL faz o React entrar no caminho `EMBEDDED` (já presente em `src/pages/Index.tsx` e `src/lib/iframeAutoResize.ts`), evitando renderizar header/footer/SEO duplicado.
+- O listener de `awr:height` é compatível com o que `src/lib/iframeAutoResize.ts` já envia. Se a página WP já tem o listener do shortcode `[awr_app]`, este script extra não conflita (ambos só ajustam altura).
+- `body{overflow-x:hidden}` fica dentro do `<style>` colado, então só afeta páginas que receberem o snippet — sem efeito colateral global.
+- Para travar altura fixa (ex.: 900px) em vez de viewport, basta trocar `height:100vh;height:100dvh` por `height:900px` no `.lovable-fullscreen-wrapper` — instrução incluída no README.
 
-- Não mexer em design, copy, layout ou comportamento da versão standalone.
-- Não trocar libs nem alterar build/Vite.
-- Não tocar em backend, edge functions ou banco.
+## Fora de escopo
 
-## Validação
-
-- Abrir preview com `?embed=1` no preview URL e medir Lighthouse mobile (TBT, LCP) antes/depois.
-- Confirmar que header/mobile bar somem no iframe e seguem aparecendo no standalone.
-- Confirmar que o auto-resize continua reportando altura correta ao parent.
+- Não mexer em `perf-app-iframe.php` (shortcode `[awr_app]`) — continua funcionando para quem prefere shortcode.
+- Não alterar `functions.php`, enqueue de assets, nem o app React.
+- Sem mudanças de SEO, build ou edge functions.
