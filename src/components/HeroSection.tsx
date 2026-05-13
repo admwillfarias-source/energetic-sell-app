@@ -174,7 +174,8 @@ export default function HeroSection() {
             loading="eager"
           />
         </picture>
-        <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/80 to-secondary/40" />
+        <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/95 to-secondary/60" />
+        <div className="absolute inset-0 bg-black/20" />
       </div>
 
       <div className="container mx-auto px-4 relative z-10 py-2 md:py-6">
@@ -227,13 +228,17 @@ export default function HeroSection() {
               initialValue={initialQuery}
               onChange={setInitialQuery}
             />
-            <a
-              href="#mais-vendidos"
-              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-card px-4 text-sm md:text-base font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
+            <button
+              type="button"
+              onClick={() => {
+                markEvent("overlay_intent");
+                setOverlayOpen(true);
+              }}
+              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-primary px-4 text-sm md:text-base font-bold text-primary-foreground transition-colors hover:bg-primary/90"
             >
               <Car className="h-4 w-4" aria-hidden="true" />
-              Ver baterias mais vendidas
-            </a>
+              Peça agora a sua bateria
+            </button>
             <p className="mt-2 text-center text-xs sm:text-sm font-semibold text-awr-green">
               <span aria-hidden="true">🟢</span> Técnicos disponíveis agora · 10x sem juros
             </p>
