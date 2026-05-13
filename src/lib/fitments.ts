@@ -252,12 +252,11 @@ function levenshtein(a: string, b: string, max: number): number {
 }
 
 function maxEditsFor(token: string): number {
-  // Mais tolerante a erros de digitação: até 1 erro em palavras curtas e
-  // até 3 em palavras longas (cobre "honnda", "creeta", "volkswagem", etc.).
-  if (token.length <= 3) return 1;
-  if (token.length <= 5) return 2;
-  if (token.length <= 8) return 3;
-  return 4;
+  // Tolerância reduzida para evitar sugerir modelos não relacionados.
+  if (token.length <= 3) return 0;
+  if (token.length <= 5) return 1;
+  if (token.length <= 8) return 2;
+  return 2;
 }
 
 /**
