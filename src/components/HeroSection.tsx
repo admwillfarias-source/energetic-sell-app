@@ -177,9 +177,9 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/80 to-secondary/40" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10 py-4 md:py-8">
+      <div className="container mx-auto px-4 relative z-10 py-2 md:py-6">
         <div className="max-w-2xl">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-2 mb-2 md:mb-3">
             <div className="inline-flex items-center gap-2 bg-accent/20 border border-accent/40 rounded-full px-4 py-1.5" role="status">
               <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
               <span className="text-accent font-semibold text-sm">Porto Alegre: Plantão 6h às 22h</span>
