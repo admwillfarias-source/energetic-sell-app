@@ -6,7 +6,7 @@ import { toast } from "@/hooks/use-toast";
 import { BatteryImage } from "@/components/BatteryImage";
 import { COMPACT_SIZES } from "@/lib/imageSrcset";
 
-const WHATSAPP_NUMBER = "555135165472";
+const WHATSAPP_NUMBER = "5551993199486";
 
 type Props = {
   battery: Battery;
