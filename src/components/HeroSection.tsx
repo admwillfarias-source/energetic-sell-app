@@ -155,7 +155,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="inicio" className="relative pt-2 lg:pt-4">
+    <section ref={sectionRef} id="inicio" className="relative pt-1 lg:pt-2">
 
       <div className="absolute inset-0 z-0">
         <picture>
