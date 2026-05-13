@@ -206,13 +206,13 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-2">
+          <h1 className="font-display text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-1 md:mb-2">
             Sua bateria nova em até{" "}
             <span className="text-primary">35 minutos</span>{" "}
             — entregue e instalada
           </h1>
 
-          <p className="text-lg md:text-xl text-secondary-foreground/80 mb-3">
+          <p className="text-base md:text-xl text-secondary-foreground/80 mb-2 md:mb-3">
             Selecione o modelo ideal para o seu veículo e solicite agora.
             Atendemos Porto Alegre e região com{" "}
             <strong className="text-accent">Moura, Heliar, Zetta e Excell</strong>.
