@@ -45,7 +45,7 @@ function SearchPlaceholder({
       <input
         type="text"
         defaultValue={initialValue}
-        placeholder="Carro e ano (Ex: Onix 2018) ou modelo da bateria (Ex: M60GD)"
+        placeholder="Carro e ano (Ex: Onix 2018)"
         onFocus={onActivate}
         onClick={onActivate}
         onChange={(e) => {
