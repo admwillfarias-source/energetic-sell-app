@@ -383,31 +383,37 @@ export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
     });
   }
 
-  const scored: { row: Row; score: number; matchedYear: number }[] = [];
+  const scored: { row: Row; score: number; strongHits: number; matchedYear: number }[] = [];
   for (const row of rows) {
     const hay = normalize(`${row.brand} ${row.model}`);
     const hayTokens = hay.split(" ").filter(Boolean);
     const hayJoined = hay.replace(/\s+/g, "");
 
     let score = 0;
+    let strongHits = 0;
     let allMatch = true;
     for (const alts of tokenAlternatives) {
-      // Cada token (com seus sinônimos) precisa achar pelo menos um match.
       let bestForToken = -1;
+      let bestStrong = false;
       for (const alt of alts) {
-        const s = matchToken(alt, hayTokens, hayJoined);
-        if (s > bestForToken) bestForToken = s;
+        const r = matchToken(alt, hayTokens, hayJoined);
+        if (r.score > bestForToken) {
+          bestForToken = r.score;
+          bestStrong = r.strong;
+        } else if (r.score === bestForToken && r.strong) {
+          bestStrong = true;
+        }
       }
       if (bestForToken < 0) {
         allMatch = false;
         break;
       }
       score += bestForToken;
+      if (bestStrong) strongHits += 1;
     }
     if (!allMatch && tokenAlternatives.length > 0) continue;
     if (tokenAlternatives.length === 0 && !year) continue;
 
-    // Bônus se o primeiro token bate com o início do nome.
     if (tokenAlternatives.length > 0) {
       const firstAlts = tokenAlternatives[0];
       if (firstAlts.some((t) => hay.startsWith(t))) score += 3;
@@ -418,10 +424,23 @@ export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
       if (year < row.yStart || year > row.yEnd) continue;
       score += 5;
     }
-    scored.push({ row, score, matchedYear });
+    scored.push({ row, score, strongHits, matchedYear });
   }
 
   scored.sort((a, b) => b.score - a.score || b.row.yEnd - a.row.yEnd);
+
+  // Filtro relativo: se o melhor resultado tem match forte em todos os tokens,
+  // exigir o mesmo dos demais. Também descarta resultados muito abaixo do topo.
+  if (scored.length > 0 && tokenAlternatives.length > 0) {
+    const top = scored[0];
+    const minScore = Math.max(top.score * 0.6, top.score - 6);
+    const requireStrong = top.strongHits === tokenAlternatives.length;
+    for (let i = scored.length - 1; i >= 0; i--) {
+      const s = scored[i];
+      if (s.score < minScore) scored.splice(i, 1);
+      else if (requireStrong && s.strongHits < tokenAlternatives.length) scored.splice(i, 1);
+    }
+  }
 
   // Dedup por período exato (brand|model|yStart-yEnd).
   const seen = new Set<string>();
