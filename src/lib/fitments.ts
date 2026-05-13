@@ -252,12 +252,11 @@ function levenshtein(a: string, b: string, max: number): number {
 }
 
 function maxEditsFor(token: string): number {
-  // Mais tolerante a erros de digitação: até 1 erro em palavras curtas e
-  // até 3 em palavras longas (cobre "honnda", "creeta", "volkswagem", etc.).
-  if (token.length <= 3) return 1;
-  if (token.length <= 5) return 2;
-  if (token.length <= 8) return 3;
-  return 4;
+  // Tolerância reduzida para evitar sugerir modelos não relacionados.
+  if (token.length <= 3) return 0;
+  if (token.length <= 5) return 1;
+  if (token.length <= 8) return 2;
+  return 2;
 }
 
 /**
@@ -282,30 +281,36 @@ function phoneticKey(s: string): string {
 
 /**
  * Score do match de um token contra o nome do veículo.
- * Retorna -1 se nenhum tipo de match for encontrado.
- *  - igual exato: maior score
- *  - prefixo: alto
- *  - substring: médio
- *  - fuzzy (Levenshtein dentro do limite): baixo
- *  - fonético: baixo (tolera ph/f, k/c, y/i, letras duplicadas)
- *  - colado (haystack sem espaços contém o token): médio (cobre "L200" vs "L 200")
+ * Retorna { score: -1, strong: false } se nenhum match for encontrado.
+ *  - exact/prefix → "strong"
+ *  - substring (token ≥ 4 chars) / levenshtein dentro do limite → score literal
+ *  - fonético → apenas como fallback se nenhum match literal foi encontrado
  */
-function matchToken(token: string, hayTokens: string[], hayJoined: string): number {
+function matchToken(
+  token: string,
+  hayTokens: string[],
+  hayJoined: string,
+): { score: number; strong: boolean } {
   let best = -1;
-  if (hayJoined.includes(token)) best = Math.max(best, 4 + token.length);
+  let strong = false;
 
-  const tokenPhon = phoneticKey(token);
+  // Substring no haystack só vale para tokens com ≥ 4 caracteres
+  if (token.length >= 4 && hayJoined.includes(token)) {
+    best = Math.max(best, 4 + token.length);
+  }
 
   for (const h of hayTokens) {
     if (h === token) {
       best = Math.max(best, 12 + token.length);
+      strong = true;
       continue;
     }
     if (h.startsWith(token) || token.startsWith(h)) {
       best = Math.max(best, 8 + Math.min(h.length, token.length));
+      strong = true;
       continue;
     }
-    if (h.includes(token) || token.includes(h)) {
+    if (token.length >= 4 && (h.includes(token) || token.includes(h))) {
       best = Math.max(best, 5 + Math.min(h.length, token.length));
       continue;
     }
@@ -317,23 +322,28 @@ function matchToken(token: string, hayTokens: string[], hayJoined: string): numb
         continue;
       }
     }
-    // Match fonético: tolera variações de grafia comuns
-    if (tokenPhon.length >= 2) {
-      const hPhon = phoneticKey(h);
-      if (hPhon === tokenPhon) {
-        best = Math.max(best, 6 + Math.min(h.length, token.length));
-      } else if (hPhon.length >= 3 && (hPhon.startsWith(tokenPhon) || tokenPhon.startsWith(hPhon))) {
-        best = Math.max(best, 4 + Math.min(hPhon.length, tokenPhon.length));
-      } else if (hPhon.length >= 3 && tokenPhon.length >= 3) {
-        const phMax = maxEditsFor(tokenPhon);
-        if (Math.abs(hPhon.length - tokenPhon.length) <= phMax) {
-          const d = levenshtein(tokenPhon, hPhon, phMax);
-          if (d <= phMax) best = Math.max(best, 2 + tokenPhon.length - d);
+  }
+
+  // Fonético só como fallback (quando nenhum match literal foi achado).
+  if (best < 0) {
+    const tokenPhon = phoneticKey(token);
+    if (tokenPhon.length >= 3) {
+      for (const h of hayTokens) {
+        const hPhon = phoneticKey(h);
+        if (hPhon === tokenPhon) {
+          best = Math.max(best, 6 + Math.min(h.length, token.length));
+        } else if (hPhon.length >= 4 && tokenPhon.length >= 4) {
+          const phMax = maxEditsFor(tokenPhon);
+          if (phMax > 0 && Math.abs(hPhon.length - tokenPhon.length) <= phMax) {
+            const d = levenshtein(tokenPhon, hPhon, phMax);
+            if (d <= phMax) best = Math.max(best, 2 + tokenPhon.length - d);
+          }
         }
       }
     }
   }
-  return best;
+
+  return { score: best, strong };
 }
 
 function expandSynonyms(tokens: string[]): string[][] {
@@ -373,31 +383,37 @@ export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
     });
   }
 
-  const scored: { row: Row; score: number; matchedYear: number }[] = [];
+  const scored: { row: Row; score: number; strongHits: number; matchedYear: number }[] = [];
   for (const row of rows) {
     const hay = normalize(`${row.brand} ${row.model}`);
     const hayTokens = hay.split(" ").filter(Boolean);
     const hayJoined = hay.replace(/\s+/g, "");
 
     let score = 0;
+    let strongHits = 0;
     let allMatch = true;
     for (const alts of tokenAlternatives) {
-      // Cada token (com seus sinônimos) precisa achar pelo menos um match.
       let bestForToken = -1;
+      let bestStrong = false;
       for (const alt of alts) {
-        const s = matchToken(alt, hayTokens, hayJoined);
-        if (s > bestForToken) bestForToken = s;
+        const r = matchToken(alt, hayTokens, hayJoined);
+        if (r.score > bestForToken) {
+          bestForToken = r.score;
+          bestStrong = r.strong;
+        } else if (r.score === bestForToken && r.strong) {
+          bestStrong = true;
+        }
       }
       if (bestForToken < 0) {
         allMatch = false;
         break;
       }
       score += bestForToken;
+      if (bestStrong) strongHits += 1;
     }
     if (!allMatch && tokenAlternatives.length > 0) continue;
     if (tokenAlternatives.length === 0 && !year) continue;
 
-    // Bônus se o primeiro token bate com o início do nome.
     if (tokenAlternatives.length > 0) {
       const firstAlts = tokenAlternatives[0];
       if (firstAlts.some((t) => hay.startsWith(t))) score += 3;
@@ -408,10 +424,23 @@ export function searchVehicles(query: string, limit = 12): VehicleSuggestion[] {
       if (year < row.yStart || year > row.yEnd) continue;
       score += 5;
     }
-    scored.push({ row, score, matchedYear });
+    scored.push({ row, score, strongHits, matchedYear });
   }
 
   scored.sort((a, b) => b.score - a.score || b.row.yEnd - a.row.yEnd);
+
+  // Filtro relativo: se o melhor resultado tem match forte em todos os tokens,
+  // exigir o mesmo dos demais. Também descarta resultados muito abaixo do topo.
+  if (scored.length > 0 && tokenAlternatives.length > 0) {
+    const top = scored[0];
+    const minScore = Math.max(top.score * 0.6, top.score - 6);
+    const requireStrong = top.strongHits === tokenAlternatives.length;
+    for (let i = scored.length - 1; i >= 0; i--) {
+      const s = scored[i];
+      if (s.score < minScore) scored.splice(i, 1);
+      else if (requireStrong && s.strongHits < tokenAlternatives.length) scored.splice(i, 1);
+    }
+  }
 
   // Dedup por período exato (brand|model|yStart-yEnd).
   const seen = new Set<string>();
