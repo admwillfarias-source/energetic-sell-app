@@ -16,6 +16,32 @@ type Props = {
 };
 
 const DEFAULT_OG = "https://awrbaterias.com.br/og-image.jpg";
+const CANONICAL_ORIGIN = "https://awrbaterias.com.br";
+
+/**
+ * Normaliza canonical para sempre apontar ao domínio de produção
+ * (awrbaterias.com.br), evitando duplicidade com previews em lovable.app.
+ * - Aceita path relativo ("/foo"), URL absoluta de qualquer host, ou undefined
+ *   (usa pathname atual).
+ * - Sempre devolve URL absoluta no domínio canônico, sem query/hash.
+ */
+function normalizeCanonical(input?: string): string | undefined {
+  let pathname: string | undefined;
+  if (input) {
+    try {
+      const u = new URL(input, CANONICAL_ORIGIN);
+      pathname = u.pathname;
+    } catch {
+      pathname = input.startsWith("/") ? input : `/${input}`;
+    }
+  } else if (typeof window !== "undefined") {
+    pathname = window.location.pathname;
+  }
+  if (!pathname) return undefined;
+  // Remove trailing slash duplicado, mas mantém "/" raiz.
+  if (pathname.length > 1 && pathname.endsWith("/")) pathname = pathname.slice(0, -1);
+  return `${CANONICAL_ORIGIN}${pathname}`;
+}
 
 export function SEO({
   title,
@@ -32,6 +58,7 @@ export function SEO({
     : [];
   const ld = ldArray.filter((x): x is Record<string, unknown> => !!x);
   const ogImage = image || DEFAULT_OG;
+  const canonicalUrl = normalizeCanonical(canonical);
 
   // Em iframe (WP), notifica o parent para atualizar <title>, meta description
   // e canonical do documento hospedeiro durante navegação client-side.
