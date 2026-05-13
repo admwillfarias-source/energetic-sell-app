@@ -155,7 +155,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="inicio" className="relative pt-2 lg:pt-4">
+    <section ref={sectionRef} id="inicio" className="relative pt-1 lg:pt-2">
 
       <div className="absolute inset-0 z-0">
         <picture>
@@ -177,9 +177,9 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/80 to-secondary/40" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10 py-4 md:py-8">
+      <div className="container mx-auto px-4 relative z-10 py-2 md:py-6">
         <div className="max-w-2xl">
-          <div className="flex flex-wrap items-center gap-2 mb-3">
+          <div className="flex flex-wrap items-center gap-2 mb-2 md:mb-3">
             <div className="inline-flex items-center gap-2 bg-accent/20 border border-accent/40 rounded-full px-4 py-1.5" role="status">
               <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
               <span className="text-accent font-semibold text-sm">Porto Alegre: Plantão 6h às 22h</span>
@@ -206,19 +206,19 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-2">
+          <h1 className="font-display text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-1 md:mb-2">
             Sua bateria nova em até{" "}
             <span className="text-primary">35 minutos</span>{" "}
             — entregue e instalada
           </h1>
 
-          <p className="text-lg md:text-xl text-secondary-foreground/80 mb-3">
+          <p className="text-base md:text-xl text-secondary-foreground/80 mb-2 md:mb-3">
             Selecione o modelo ideal para o seu veículo e solicite agora.
             Atendemos Porto Alegre e região com{" "}
             <strong className="text-accent">Moura, Heliar, Zetta e Excell</strong>.
           </p>
 
-          <div className="mb-3 rounded-2xl bg-card p-4 shadow-lg md:p-5">
+          <div className="mb-3 rounded-2xl bg-card p-3 shadow-lg md:p-5">
             <SearchPlaceholder
               onActivate={() => {
                 markEvent("overlay_intent");
@@ -227,19 +227,15 @@ export default function HeroSection() {
               initialValue={initialQuery}
               onChange={setInitialQuery}
             />
-            <button
-              type="button"
-              onClick={() => {
-                markEvent("overlay_intent");
-                setOverlayOpen(true);
-              }}
-              className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base md:text-lg font-extrabold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring"
+            <a
+              href="#mais-vendidos"
+              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-card px-4 text-sm md:text-base font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
             >
-              <Car className="h-5 w-5" aria-hidden="true" />
-              Pedir minha bateria agora
-            </button>
-            <p className="mt-3 text-center text-xs sm:text-sm font-semibold text-awr-green">
-              <span aria-hidden="true">🟢</span> Técnicos disponíveis agora · Pagamento em 10x sem juros
+              <Car className="h-4 w-4" aria-hidden="true" />
+              Ver baterias mais vendidas
+            </a>
+            <p className="mt-2 text-center text-xs sm:text-sm font-semibold text-awr-green">
+              <span aria-hidden="true">🟢</span> Técnicos disponíveis agora · 10x sem juros
             </p>
           </div>
 

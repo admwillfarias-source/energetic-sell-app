@@ -216,6 +216,7 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
               <VehicleAutocomplete
                 variant="inline"
                 suggestionsMode="list"
+                placeholder="Carro e ano (Ex: Onix 2018)"
                 initialQuery={initialQuery ?? notFoundLabel ?? ""}
                 onSelect={() => onOpenChange(false)}
               />

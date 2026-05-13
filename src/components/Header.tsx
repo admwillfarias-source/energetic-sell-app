@@ -9,7 +9,7 @@ export function Header() {
 
   return (
     <header className="fixed inset-x-0 top-0 z-[70] bg-secondary border-b border-border">
-      <div className="container mx-auto px-4 h-16 flex items-center justify-between gap-3">
+      <div className="container mx-auto px-3 h-12 flex items-center justify-between gap-2">
         <div className="flex items-center gap-3 min-w-0">
           <a href="#inicio" className="font-display text-xl font-extrabold text-secondary-foreground whitespace-nowrap">
             AWR <span className="text-primary">Baterias</span>
