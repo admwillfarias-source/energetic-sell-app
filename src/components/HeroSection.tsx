@@ -155,7 +155,7 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section ref={sectionRef} id="inicio" className="relative min-h-[80vh] flex items-center pt-2 lg:pt-16">
+    <section ref={sectionRef} id="inicio" className="relative pt-2 lg:pt-4">
 
       <div className="absolute inset-0 z-0">
         <picture>
@@ -177,9 +177,9 @@ export default function HeroSection() {
         <div className="absolute inset-0 bg-gradient-to-r from-secondary/95 via-secondary/80 to-secondary/40" />
       </div>
 
-      <div className="container mx-auto px-4 relative z-10 py-12 md:py-20">
+      <div className="container mx-auto px-4 relative z-10 py-4 md:py-8">
         <div className="max-w-2xl">
-          <div className="flex flex-wrap items-center gap-2 mb-6">
+          <div className="flex flex-wrap items-center gap-2 mb-3">
             <div className="inline-flex items-center gap-2 bg-accent/20 border border-accent/40 rounded-full px-4 py-1.5" role="status">
               <Clock className="h-4 w-4 text-accent" aria-hidden="true" />
               <span className="text-accent font-semibold text-sm">Porto Alegre: Plantão 6h às 22h</span>
@@ -206,13 +206,13 @@ export default function HeroSection() {
             </div>
           </div>
 
-          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-4">
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-secondary-foreground leading-tight mb-2">
             Sua bateria nova em até{" "}
             <span className="text-primary">35 minutos</span>{" "}
             — entregue e instalada
           </h1>
 
-          <p className="text-lg md:text-xl text-secondary-foreground/80 mb-6">
+          <p className="text-lg md:text-xl text-secondary-foreground/80 mb-3">
             Selecione o modelo ideal para o seu veículo e solicite agora.
             Atendemos Porto Alegre e região com{" "}
             <strong className="text-accent">Moura, Heliar, Zetta e Excell</strong>.
