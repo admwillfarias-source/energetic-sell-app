@@ -36,6 +36,7 @@ const args = Object.fromEntries(
 const BASE = (args.base || 'https://awrbaterias.com.br').replace(/\/$/, '');
 const LIMIT = args.limit ? Number(args.limit) : Infinity;
 const WARN_ONLY = !!args.warn;
+const REPORT_DIR = typeof args.report === 'string' ? args.report : 'seo-report';
 
 const RULES = {
   titleMax: 60,
