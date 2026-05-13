@@ -11,6 +11,8 @@
  *   node scripts/seo-check.mjs --base=https://...  # base custom (preview)
  *   node scripts/seo-check.mjs --limit=20          # primeiras N rotas
  *   node scripts/seo-check.mjs --warn              # warnings não falham
+ *   node scripts/seo-check.mjs --report=dir        # grava report.md + report.json
+ *                                                  # (default: seo-report/)
  *
  * Requer: node 18+ (fetch nativo) e jsdom (já em devDependencies).
  *
