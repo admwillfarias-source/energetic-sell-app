@@ -21,3 +21,13 @@ jobs:
         run: npm run lint:orphans
       - name: Build
         run: npm run build
+      - name: SEO check (produção)
+        run: npm run seo:check -- --warn
+        continue-on-error: true
+      - name: Upload SEO report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: seo-report
+          path: seo-report/
+          if-no-files-found: ignore

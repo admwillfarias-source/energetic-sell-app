@@ -11,6 +11,8 @@
  *   node scripts/seo-check.mjs --base=https://...  # base custom (preview)
  *   node scripts/seo-check.mjs --limit=20          # primeiras N rotas
  *   node scripts/seo-check.mjs --warn              # warnings não falham
+ *   node scripts/seo-check.mjs --report=dir        # grava report.md + report.json
+ *                                                  # (default: seo-report/)
  *
  * Requer: node 18+ (fetch nativo) e jsdom (já em devDependencies).
  *
@@ -20,7 +22,7 @@
  * SEO server-side via awr_print_seo_tags(), então rodar contra
  * https://awrbaterias.com.br valida o head real por rota.
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { JSDOM } from 'jsdom';
 
@@ -34,6 +36,7 @@ const args = Object.fromEntries(
 const BASE = (args.base || 'https://awrbaterias.com.br').replace(/\/$/, '');
 const LIMIT = args.limit ? Number(args.limit) : Infinity;
 const WARN_ONLY = !!args.warn;
+const REPORT_DIR = typeof args.report === 'string' ? args.report : 'seo-report';
 
 const RULES = {
   titleMax: 60,
@@ -156,6 +159,96 @@ console.log(`\n— Resumo —`);
 console.log(`  páginas:  ${results.length}`);
 console.log(`  erros:    ${totalErr}`);
 console.log(`  warnings: ${totalWarn}`);
+
+// ---- 4. Relatórios (Markdown + JSON) -------------------------------------
+function writeReports() {
+  mkdirSync(REPORT_DIR, { recursive: true });
+  const generatedAt = new Date().toISOString();
+  const summary = {
+    generatedAt,
+    base: BASE,
+    pages: results.length,
+    errors: totalErr,
+    warnings: totalWarn,
+    rules: RULES,
+  };
+  const sorted = [...results].sort(
+    (a, b) => b.errors.length - a.errors.length || b.warnings.length - a.warnings.length,
+  );
+
+  // JSON
+  writeFileSync(
+    resolve(REPORT_DIR, 'report.json'),
+    JSON.stringify({ summary, results: sorted }, null, 2),
+  );
+
+  // Markdown
+  const fail = sorted.filter((r) => r.errors.length);
+  const warn = sorted.filter((r) => !r.errors.length && r.warnings.length);
+  const ok = sorted.filter((r) => !r.errors.length && !r.warnings.length);
+
+  const lines = [];
+  lines.push(`# Relatório SEO — pré-publish`);
+  lines.push('');
+  lines.push(`- Gerado: \`${generatedAt}\``);
+  lines.push(`- Base: \`${BASE}\``);
+  lines.push(`- Páginas: **${results.length}** · Erros: **${totalErr}** · Warnings: **${totalWarn}**`);
+  lines.push('');
+  lines.push(`| Status | Qtde |`);
+  lines.push(`|---|---:|`);
+  lines.push(`| ❌ FAIL | ${fail.length} |`);
+  lines.push(`| ⚠️ warn | ${warn.length} |`);
+  lines.push(`| ✅ ok   | ${ok.length} |`);
+  lines.push('');
+
+  if (fail.length) {
+    lines.push(`## ❌ Páginas com erros`);
+    lines.push('');
+    for (const r of fail) {
+      lines.push(`### ${r.url}`);
+      if (r.title) lines.push(`- title (${r.title.length}): \`${r.title.replace(/`/g, "'")}\``);
+      if (typeof r.descLen === 'number') lines.push(`- description: ${r.descLen} chars`);
+      lines.push('');
+      lines.push('**Erros:**');
+      for (const e of r.errors) lines.push(`- ✗ ${e}`);
+      if (r.warnings.length) {
+        lines.push('');
+        lines.push('**Warnings:**');
+        for (const w of r.warnings) lines.push(`- ! ${w}`);
+      }
+      lines.push('');
+    }
+  }
+
+  if (warn.length) {
+    lines.push(`## ⚠️ Páginas só com warnings`);
+    lines.push('');
+    for (const r of warn) {
+      lines.push(`### ${r.url}`);
+      for (const w of r.warnings) lines.push(`- ! ${w}`);
+      lines.push('');
+    }
+  }
+
+  if (ok.length) {
+    lines.push(`## ✅ Páginas OK (${ok.length})`);
+    lines.push('');
+    lines.push('<details><summary>Listar</summary>');
+    lines.push('');
+    for (const r of ok) lines.push(`- ${r.url}`);
+    lines.push('');
+    lines.push('</details>');
+  }
+
+  writeFileSync(resolve(REPORT_DIR, 'report.md'), lines.join('\n') + '\n');
+  console.log(`\nRelatório: ${REPORT_DIR}/report.md  ·  ${REPORT_DIR}/report.json`);
+}
+
+try {
+  writeReports();
+} catch (e) {
+  console.error(`\nFalha ao gravar relatório: ${e.message}`);
+}
 
 if (totalErr && !WARN_ONLY) {
   console.error('\nPublish bloqueado: corrija os erros acima.\n');
