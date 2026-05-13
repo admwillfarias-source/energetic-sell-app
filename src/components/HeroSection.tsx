@@ -218,7 +218,7 @@ export default function HeroSection() {
             <strong className="text-accent">Moura, Heliar, Zetta e Excell</strong>.
           </p>
 
-          <div className="mb-3 rounded-2xl bg-card p-4 shadow-lg md:p-5">
+          <div className="mb-3 rounded-2xl bg-card p-3 shadow-lg md:p-5">
             <SearchPlaceholder
               onActivate={() => {
                 markEvent("overlay_intent");
@@ -227,19 +227,15 @@ export default function HeroSection() {
               initialValue={initialQuery}
               onChange={setInitialQuery}
             />
-            <button
-              type="button"
-              onClick={() => {
-                markEvent("overlay_intent");
-                setOverlayOpen(true);
-              }}
-              className="mt-3 flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 text-base md:text-lg font-extrabold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring"
+            <a
+              href="#mais-vendidos"
+              className="mt-3 flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-card px-4 text-sm md:text-base font-bold text-primary transition-colors hover:bg-primary hover:text-primary-foreground"
             >
-              <Car className="h-5 w-5" aria-hidden="true" />
-              Pedir minha bateria agora
-            </button>
-            <p className="mt-3 text-center text-xs sm:text-sm font-semibold text-awr-green">
-              <span aria-hidden="true">🟢</span> Técnicos disponíveis agora · Pagamento em 10x sem juros
+              <Car className="h-4 w-4" aria-hidden="true" />
+              Ver baterias mais vendidas
+            </a>
+            <p className="mt-2 text-center text-xs sm:text-sm font-semibold text-awr-green">
+              <span aria-hidden="true">🟢</span> Técnicos disponíveis agora · 10x sem juros
             </p>
           </div>
 
