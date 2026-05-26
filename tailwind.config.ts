@@ -17,9 +17,9 @@ export default {
         xs: "420px",
       },
       fontFamily: {
-        sans: ["Inter", '"Inter Fallback"', "system-ui", "-apple-system", "sans-serif"],
-        display: ['"Plus Jakarta Sans"', '"Plus Jakarta Sans Fallback"', "Inter", "system-ui", "sans-serif"],
-        body: ["Inter", '"Inter Fallback"', "system-ui", "sans-serif"],
+        sans: ['"Hind"', '"Hind Fallback"', "system-ui", "-apple-system", "sans-serif"],
+        display: ['"Archivo Black"', '"Archivo Black Fallback"', "Arial Black", "system-ui", "sans-serif"],
+        body: ['"Hind"', '"Hind Fallback"', "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",

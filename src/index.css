@@ -1,22 +1,19 @@
-/* Fontes self-hosted via @fontsource — carregadas diferidas em main.tsx
-   para não bloquear o CSS crítico. Fallbacks ajustados abaixo evitam CLS. */
+/* Navy Trust redesign — Archivo Black headings, Hind body, paleta #0f1b3d / #1e3a5f / #3b6fa0 / #e8edf3 */
 
-/* Fallback metrics-adjusted para Inter — minimiza shift quando a fonte web entra */
 @font-face {
-  font-family: "Inter Fallback";
+  font-family: "Hind Fallback";
   src: local("Arial");
-  size-adjust: 107%;
-  ascent-override: 90%;
-  descent-override: 22%;
+  size-adjust: 104%;
+  ascent-override: 92%;
+  descent-override: 23%;
   line-gap-override: 0%;
 }
 
-/* Fallback metrics-adjusted para Plus Jakarta Sans */
 @font-face {
-  font-family: "Plus Jakarta Sans Fallback";
-  src: local("Arial");
-  size-adjust: 105%;
-  ascent-override: 95%;
+  font-family: "Archivo Black Fallback";
+  src: local("Arial Black"), local("Arial");
+  size-adjust: 100%;
+  ascent-override: 100%;
   descent-override: 25%;
   line-gap-override: 0%;
 }
@@ -27,80 +24,80 @@
 
 @layer base {
   :root {
-    --background: 0 0% 98%;
-    --foreground: 0 0% 8%;
+    --background: 214 25% 93%;
+    --foreground: 225 62% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    --card-foreground: 225 62% 15%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --popover-foreground: 225 62% 15%;
 
-    --primary: 0 85% 46%;
+    --primary: 209 46% 43%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 0 85% 56%;
+    --primary-glow: 209 46% 55%;
 
-    --secondary: 0 0% 10%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 225 62% 15%;
+    --secondary-foreground: 214 25% 93%;
 
-    --muted: 0 0% 94%;
-    --muted-foreground: 0 0% 35%;
+    --muted: 214 25% 88%;
+    --muted-foreground: 212 30% 35%;
 
-    --accent: 45 100% 42%;
-    --accent-foreground: 0 0% 5%;
+    --accent: 209 46% 43%;
+    --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 70% 40%;
+    --success: 142 70% 35%;
     --success-foreground: 0 0% 100%;
 
-    --border: 0 0% 88%;
-    --input: 0 0% 88%;
-    --ring: 0 85% 46%;
+    --border: 214 20% 82%;
+    --input: 214 20% 82%;
+    --ring: 209 46% 43%;
 
-    --radius: 0.5rem;
+    --radius: 1rem;
 
-    --awr-blue: 214 80% 52%;
+    --awr-blue: 209 46% 43%;
     --awr-blue-foreground: 0 0% 100%;
-    --awr-green: 142 70% 40%;
+    --awr-green: 142 70% 35%;
     --awr-green-foreground: 0 0% 100%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(0 0% 10%) 0%, hsl(0 85% 46%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(45 100% 50%) 0%, hsl(45 100% 42%) 100%);
-    --shadow-card: 0 4px 16px -4px hsl(0 0% 0% / 0.08);
-    --shadow-elevated: 0 12px 32px -8px hsl(0 0% 0% / 0.18);
+    --gradient-hero: linear-gradient(135deg, hsl(225 62% 15%) 0%, hsl(212 51% 25%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(209 46% 55%) 0%, hsl(209 46% 43%) 100%);
+    --shadow-card: 0 4px 16px -4px hsl(225 62% 15% / 0.08);
+    --shadow-elevated: 0 24px 60px -16px hsl(225 62% 15% / 0.35);
 
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-background: 214 25% 93%;
+    --sidebar-foreground: 225 62% 20%;
+    --sidebar-primary: 225 62% 15%;
     --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 214 25% 88%;
+    --sidebar-accent-foreground: 225 62% 15%;
+    --sidebar-border: 214 20% 82%;
+    --sidebar-ring: 209 46% 43%;
   }
 
   .dark {
-    --background: 0 0% 6%;
-    --foreground: 0 0% 95%;
-    --card: 0 0% 10%;
-    --card-foreground: 0 0% 95%;
-    --popover: 0 0% 10%;
-    --popover-foreground: 0 0% 95%;
-    --primary: 0 85% 50%;
+    --background: 225 62% 8%;
+    --foreground: 214 25% 95%;
+    --card: 225 50% 12%;
+    --card-foreground: 214 25% 95%;
+    --popover: 225 50% 12%;
+    --popover-foreground: 214 25% 95%;
+    --primary: 209 46% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 95%;
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
-    --accent: 45 100% 51%;
+    --secondary: 212 51% 25%;
+    --secondary-foreground: 214 25% 95%;
+    --muted: 225 40% 18%;
+    --muted-foreground: 214 25% 70%;
+    --accent: 209 46% 55%;
     --accent-foreground: 0 0% 8%;
-    --destructive: 0 62% 30%;
+    --destructive: 0 62% 40%;
     --destructive-foreground: 0 0% 95%;
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 85% 50%;
+    --border: 225 40% 22%;
+    --input: 225 40% 22%;
+    --ring: 209 46% 55%;
   }
 }
 
@@ -111,11 +108,11 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: Inter, "Inter Fallback", system-ui, -apple-system, sans-serif;
+    font-family: "Hind", "Hind Fallback", system-ui, -apple-system, sans-serif;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight;
+    @apply font-display tracking-tight uppercase;
   }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -127,7 +124,6 @@
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-destructive;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
   }
 }
-
