@@ -14,7 +14,7 @@ Ambos funcionam em bloco "HTML personalizado" (Gutenberg) ou widget HTML (Elemen
 
 ## `iframe-app.html` — só o app
 
-Embute o app `https://energetic-sell-app.lovable.app` em qualquer
+Embute o app `https://bateria-facil.lovable.app` em qualquer
 página/post do WordPress, ocupando a tela inteira.
 
 ## Como usar
@@ -28,7 +28,7 @@ página/post do WordPress, ocupando a tela inteira.
 ## Personalizações comuns
 
 ### Trocar a URL do app
-No `<iframe src="...">`, substitua `https://energetic-sell-app.lovable.app`
+No `<iframe src="...">`, substitua `https://bateria-facil.lovable.app`
 pelo seu domínio. Mantenha `?embed=1` no final — é isso que faz o React
 pular header/footer próprios.
 

@@ -37,7 +37,7 @@ Suba a pasta `awr-baterias-fast/` para `wp-content/themes/` e ative em Aparênci
 WordPress → **Aparência → Personalizar → AWR Fast — Performance**:
 
 - **GTM ID**: `GTM-XXXXX` (deixe vazio se não usa)
-- **URL do iframe Lovable**: `https://energetic-sell-app.lovable.app`
+- **URL do iframe Lovable**: `https://bateria-facil.lovable.app`
 - **Altura padrão do iframe (px)**: `900`
 - **Preload Font 1/2 (URL .woff2)**: opcional, URLs absolutas das suas fontes mais usadas
 - **Telefone / WhatsApp**: como aparecem no header
