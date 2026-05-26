@@ -17,13 +17,13 @@
  * Uso:
  *   [awr_app]                     — usa URL/altura do Customizer
  *   [awr_app height="1200"]
- *   [awr_app url="https://energetic-sell-app.lovable.app/?utm_source=wp"]
+ *   [awr_app url="https://bateria-facil.lovable.app/?utm_source=wp"]
  */
 if ( ! defined( 'ABSPATH' ) ) { exit; }
 
 function awrf_app_iframe_shortcode( $atts ) {
     $defaults = array(
-        'url'    => get_theme_mod( 'awrf_lovable_url', 'https://energetic-sell-app.lovable.app' ),
+        'url'    => get_theme_mod( 'awrf_lovable_url', 'https://bateria-facil.lovable.app' ),
         'height' => (int) get_theme_mod( 'awrf_iframe_height', 900 ),
         'title'  => 'AWR Baterias',
         'id'     => 'awr-app-' . wp_rand( 1000, 9999 ),

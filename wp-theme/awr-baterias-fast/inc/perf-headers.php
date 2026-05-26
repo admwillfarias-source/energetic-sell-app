@@ -22,8 +22,8 @@ add_action( 'send_headers', 'awrf_send_headers' );
 /* dns-prefetch + preconnect para origens críticas. */
 function awrf_resource_hints( $hints, $relation ) {
     $extras = array(
-        'dns-prefetch' => array( '//www.googletagmanager.com', '//www.google-analytics.com', '//energetic-sell-app.lovable.app' ),
-        'preconnect'   => array( array( 'href' => 'https://energetic-sell-app.lovable.app', 'crossorigin' => 'anonymous' ) ),
+        'dns-prefetch' => array( '//www.googletagmanager.com', '//www.google-analytics.com', '//bateria-facil.lovable.app' ),
+        'preconnect'   => array( array( 'href' => 'https://bateria-facil.lovable.app', 'crossorigin' => 'anonymous' ) ),
     );
     if ( isset( $extras[ $relation ] ) ) { $hints = array_merge( $hints, $extras[ $relation ] ); }
     return $hints;

@@ -88,7 +88,7 @@ function awrf_customize_register( $wp_customize ) {
 
     $fields = array(
         'awrf_gtm_id'        => array( 'GTM ID (ex.: GTM-XXXXX)', '', 'sanitize_text_field' ),
-        'awrf_lovable_url'   => array( 'URL do iframe Lovable', 'https://energetic-sell-app.lovable.app', 'esc_url_raw' ),
+        'awrf_lovable_url'   => array( 'URL do iframe Lovable', 'https://bateria-facil.lovable.app', 'esc_url_raw' ),
         'awrf_iframe_height' => array( 'Altura padrão do iframe (px)', '900', 'absint' ),
         'awrf_preload_font1' => array( 'Preload Font 1 (URL .woff2)', '', 'esc_url_raw' ),
         'awrf_preload_font2' => array( 'Preload Font 2 (URL .woff2)', '', 'esc_url_raw' ),
