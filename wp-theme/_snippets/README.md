@@ -1,10 +1,21 @@
-# Snippet: iframe do app React no WordPress
+# Snippets HTML para WordPress
 
-Arquivo: [`iframe-app.html`](./iframe-app.html)
-
-Bloco HTML + CSS + JS auto-contido para embutir o app
-`https://energetic-sell-app.lovable.app` em qualquer página/post do
+Snippets auto-contidos (HTML + CSS + JS) para embutir o app React no
 WordPress, **sem shortcode e sem PHP**.
+
+| Arquivo | Quando usar |
+|---|---|
+| [`iframe-app.html`](./iframe-app.html) | Só o **app em tela cheia** (100vh), sem nada ao redor. |
+| [`landing-completa.html`](./landing-completa.html) | **Landing page completa** Navy Trust: hero split-screen 60/40, trust bar, benefícios, como funciona, **iframe do app embutido no meio**, FAQ e CTA final. Inclui JSON-LD (AutomotiveBusiness + FAQPage). Ideal pra home / página de captação. |
+
+Ambos funcionam em bloco "HTML personalizado" (Gutenberg) ou widget HTML (Elementor).
+
+---
+
+## `iframe-app.html` — só o app
+
+Embute o app `https://energetic-sell-app.lovable.app` em qualquer
+página/post do WordPress, ocupando a tela inteira.
 
 ## Como usar
 

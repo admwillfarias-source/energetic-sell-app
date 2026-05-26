@@ -1,46 +1,71 @@
 ## Objetivo
-Eliminar sugestões pouco relacionadas que aparecem quando o cliente digita o modelo do carro no Hero. Hoje o autocomplete mostra também resultados muito tolerantes (fuzzy/fonético), o que polui as 3 opções exibidas.
 
-## Diagnóstico
-Em `src/lib/fitments.ts → searchVehicles / matchToken`:
+Gerar **um único arquivo HTML autocontido** que reproduz o visual Navy Trust da landing atual (hero split-screen 60/40, tipografia Archivo Black + Hind, paleta `#0f1b3d / #1e3a5f / #3b6fa0 / #e8edf3`) e embute o app React do Lovable via iframe. O usuário cola num bloco "HTML personalizado" do Gutenberg (ou widget HTML do Elementor) e tem a landing completa rodando dentro do WordPress, sem PHP nem shortcode.
 
-- A função aceita match fonético e Levenshtein com até **4 erros** em palavras longas — isso traz "primos distantes" (ex.: digitar "ONIX" pode trazer modelos não relacionados que casam no fonético).
-- Aceita também substring solta (ex.: token "GO" casa com "TIGGO", "JOGO", "ARGO", etc.).
-- Não há limiar mínimo de score nem comparação relativa: se o melhor resultado é 20 e o terceiro é 6, os três são exibidos.
+## O que será entregue
 
-## Mudanças (apenas em `src/lib/fitments.ts`)
+Arquivo novo: **`wp-theme/_snippets/landing-completa.html`**
 
-### 1. Reduzir tolerância do fuzzy
-Em `maxEditsFor`:
-```ts
-if (token.length <= 3) return 0; // antes 1
-if (token.length <= 5) return 1; // antes 2
-if (token.length <= 8) return 2; // antes 3
-return 2;                        // antes 4
+Estrutura do snippet (tudo inline, sem dependências externas exceto Google Fonts):
+
+```text
+1. <link> preconnect + Google Fonts (Archivo Black + Hind)
+2. <link> preconnect ao domínio do app Lovable
+3. <style> escopado em .awr-lp-* (não vaza pro tema WP)
+   - Tokens Navy Trust (CSS vars)
+   - Reset leve só dentro de .awr-lp-root
+   - Componentes: hero split 60/40, badges, search visual, trust stats,
+     benefits grid, FAQ accordion (via <details>), CTA WhatsApp
+4. <div class="awr-lp-root"> com as seções:
+   a) Hero split-screen 60/40
+      - Eyebrow "Porto Alegre & Região · Desde 2009"
+      - H1 "Bateria entregue e instalada em até 35 minutos"
+      - Parágrafo de apoio
+      - Caixa de busca VISUAL (input + botão) que faz scroll suave
+        até o iframe (o app é quem executa a busca real)
+      - Chips de buscas frequentes (links âncora pro iframe)
+      - CTA verde WhatsApp (wa.me direto)
+      - Trust stats: +15 anos / 10x sem juros / Desde 2009
+      - Lado visual 40%: imagem hero + badge flutuante de marcas
+   b) Faixa TrustBar (Moura, Heliar, Zetta, Excell)
+   c) Seção "Benefícios" (4 cards: entrega 35min, garantia, 10x sem
+      juros, atendimento 24/7)
+   d) Seção "Como funciona" (3 passos)
+   e) ★ Seção iframe do app (id="buscar-bateria")
+      - Wrapper responsivo, altura inicial 900px com auto-resize via
+        postMessage "awr:height" (igual ao snippet atual)
+      - src="https://energetic-sell-app.lovable.app/?embed=1"
+   f) FAQ (4-5 perguntas via <details>/<summary> — sem JS)
+   g) CTA final WhatsApp
+5. <script> mínimo:
+   - Listener postMessage pra auto-resize do iframe
+   - Scroll suave do botão "Buscar Bateria" do hero até #buscar-bateria
 ```
 
-### 2. Substring exigir token longo
-Em `matchToken`, só aceitar `includes` quando o token tem ≥ 4 caracteres (evita "GO", "S10" casando em qualquer lugar). Mantém prefixo e exato como hoje.
+## Decisões técnicas
 
-### 3. Match fonético só quando não houver match literal
-Aplicar fonético apenas se nenhum candidato literal (igual/prefixo/substring/levenshtein) foi encontrado para aquele token. Evita inflar score com "parecidos no som".
+- **Escopo de CSS**: tudo prefixado com `.awr-lp-` e dentro de `.awr-lp-root` pra não conflitar com CSS do tema WP / Elementor.
+- **Sem framework**: HTML + CSS puros + ~30 linhas de JS. Nenhum Tailwind, nenhum React no parent — o React fica só dentro do iframe.
+- **Tipografia**: Google Fonts (`Archivo Black` 400 + `Hind` 400/600/700) carregada com `display=swap`.
+- **Imagem hero**: usa `/wp-content/uploads/hero-bg.webp` por padrão, com fallback comentado pra apontar pro asset do app Lovable. O usuário troca a URL pra um upload do WP.
+- **Busca do hero**: o input do hero é decorativo/visual — submeter rola até o iframe e foca nele. A busca real acontece dentro do app. Isso evita ter que reimplementar o catálogo fora do iframe.
+- **Auto-resize do iframe**: reusa o protocolo `awr:height` que o app já emite (`src/lib/iframeAutoResize.ts`), idêntico ao `wp-theme/_snippets/iframe-app.html`.
+- **FAQ acessível**: `<details>`/`<summary>` nativos — sem JS, com schema JSON-LD `FAQPage` inline pra SEO.
+- **SEO**: JSON-LD `AutomotiveBusiness` + `FAQPage` inline no snippet. Title/meta description ficam por conta do WordPress (página onde o snippet é colado).
 
-### 4. Filtro relativo de score
-Após `scored.sort(...)`, antes de montar `out`:
-- Pegar `topScore = scored[0].score`.
-- Descartar resultados com `score < max(topScore * 0.6, topScore - 6)`.
-- Também descartar qualquer resultado cujo score venha apenas de fuzzy/fonético quando existir pelo menos um resultado com match exato/prefixo (marcar isso adicionando flag `hadStrongMatch` em `matchToken` retornando via objeto, ou usando threshold absoluto: `score >= 8 * tokens.length` quando `topScore` for forte).
+## Como o usuário vai usar
 
-Implementação simples: somar `strongHits` (quantos tokens tiveram match exato/prefixo). Se `topRow.strongHits === tokens.length`, exigir o mesmo dos demais antes de incluir.
+1. WordPress → Páginas → Adicionar nova → criar "Bateria em Porto Alegre".
+2. Inserir bloco **HTML personalizado** (Gutenberg) ou widget **HTML** (Elementor).
+3. Colar o conteúdo de `wp-theme/_snippets/landing-completa.html`.
+4. Trocar a URL da imagem hero (linha comentada no topo do `<style>`).
+5. Publicar.
 
-### 5. Manter limite de 3 (já está) e o modo "list" com 30.
+Opcional: usar a página como **front page** em Configurações → Leitura.
 
-## Resultado esperado
-- "ONIX 2018" → só Onix e variantes diretas, sem modelos foneticamente parecidos.
-- "PALIO" → só Palio (não Pálio + Stilo + Strada por substring/fuzzy).
-- Quando o cliente digita algo realmente ambíguo (ex.: "HB"), o fallback fuzzy ainda funciona porque não há match forte concorrente.
+## Arquivos alterados
 
-## Sem alterações em
-- UI (`VehicleAutocomplete.tsx` permanece intocado).
-- Modo `"list"` usado em "mais buscados".
-- Lógica de busca por SKU de bateria.
+- **Criar**: `wp-theme/_snippets/landing-completa.html`
+- **Atualizar**: `wp-theme/_snippets/README.md` — adicionar seção descrevendo o novo snippet, quando usar `iframe-app.html` (só iframe) vs `landing-completa.html` (página completa).
+
+Nenhum código React, build ou config existente é alterado.
