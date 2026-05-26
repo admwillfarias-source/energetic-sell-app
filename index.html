@@ -15,7 +15,7 @@
         }
       } catch(_) {}
     </script>
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#0f1b3d" />
     <meta name="color-scheme" content="light" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -25,11 +25,10 @@
     <link rel="preload" as="image" href="/hero-bg.avif" fetchpriority="high" type="image/avif" />
     <link rel="preload" as="image" href="/hero-bg.webp" fetchpriority="high" type="image/webp" />
 
-    <!-- Preload das fontes do HERO. Jakarta 800 (H1) e Inter 600 (subtítulos/CTA)
-         são críticos em ambos os modos. Inter 400 (corpo) só em standalone — no
-         iframe o fallback metrics-adjusted cobre sem custo extra. -->
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/jakarta-800.woff2" crossorigin />
-    <link rel="preload" as="font" type="font/woff2" href="/fonts/inter-600.woff2" crossorigin />
+    <!-- Tipografia Navy Trust: Archivo Black (headings) + Hind (body) via Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
     <!-- Supabase preconnect: necessário em ambos os modos (busca de baterias, cart, edge fns). -->
     <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
