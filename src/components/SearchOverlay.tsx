@@ -52,6 +52,18 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
   const [pickedYear, setPickedYear] = useState<number | null>(null);
   const [variants, setVariants] = useState<VehicleVariant[] | null>(null);
   const [notFound, setNotFound] = useState<{ year: number } | null>(null);
+  // Quando embedado no WordPress com iframe auto-redimensionado, o
+  // position:fixed do Radix se ancora no documento inteiro do iframe (que
+  // pode ter milhares de px de altura). Em vez disso, ancoramos o modal na
+  // faixa do iframe que está visível na janela do navegador do usuário.
+  const embedded = useMemo(() => isEmbedded(), []);
+  const [parentVp, setParentVp] = useState<ParentViewport | null>(
+    () => getParentViewport(),
+  );
+  useEffect(() => {
+    if (!embedded) return;
+    return subscribeParentViewport(setParentVp);
+  }, [embedded]);
 
   // Mede latência de abertura: do clique no campo de busca até este mount.
   useEffect(() => {
