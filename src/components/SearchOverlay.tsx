@@ -82,6 +82,16 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
       ensureCatalogLoaded()
         .then(() => markEvent("search_overlay_catalog_ready"))
         .catch(() => {});
+      // No iframe, garante que a área onde vamos ancorar o modal esteja
+      // visível: se já temos a faixa do parent, pede para rolar para o topo
+      // dela; se ainda não temos, pede ao parent para se anunciar.
+      if (embedded) {
+        const vp = parentVp;
+        if (vp) requestParentScrollTo(vp.top);
+        try {
+          window.parent?.postMessage({ type: "awr:requestViewport" }, "*");
+        } catch { /* noop */ }
+      }
       requestAnimationFrame(() => {
         markEvent("search_overlay_visible");
         try {
@@ -101,7 +111,8 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
       setNotFound(null);
       setResolving(false);
     }
-  }, [open]);
+  }, [open, embedded, parentVp]);
+
 
   const finishWithCodes = (
     vehicleLabel: string,
