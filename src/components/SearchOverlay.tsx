@@ -171,15 +171,32 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
     finishWithCodes(label, variant.skus);
   };
 
+  // Em iframe embedado, recalcula posição/altura do modal usando a faixa
+  // visível enviada pelo parent. Sem isso, position:fixed do Radix se ancora
+  // no documento inteiro do iframe (que pode ter milhares de px), levando o
+  // modal a aparecer fora da viewport do usuário.
+  const embedStyle: React.CSSProperties | undefined =
+    embedded && parentVp
+      ? {
+          position: "absolute",
+          top: `${parentVp.top + Math.max(16, Math.round(parentVp.height * 0.04))}px`,
+          left: "50%",
+          transform: "translate3d(-50%, 0, 0)",
+          maxHeight: `${Math.max(320, parentVp.height - 32)}px`,
+        }
+      : undefined;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        style={embedStyle}
         className="max-w-3xl p-0 gap-0 sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col"
         onOpenAutoFocus={(e) => {
           // Deixa o input do autocomplete cuidar do foco
           e.preventDefault();
         }}
       >
+
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
