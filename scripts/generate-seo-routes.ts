@@ -12,7 +12,7 @@ const { neighborhoodPages } = await import(resolve(root, "src/data/neighborhoodC
 const { cityPages } = await import(resolve(root, "src/data/cityContent.ts"));
 const { brandPages } = await import(resolve(root, "src/data/brandContent.ts"));
 const { amperagePages } = await import(resolve(root, "src/data/amperageContent.ts"));
-const { blogPosts } = await import(resolve(root, "src/data/blogPosts.ts"));
+
 
 type Route = { title: string; description: string; jsonLd?: unknown };
 const routes: Record<string, Route> = {};
