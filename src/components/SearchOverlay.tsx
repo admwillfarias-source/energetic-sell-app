@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Car, Truck, ChevronLeft, Sparkles, MessageCircle } from "lucide-react";
@@ -19,6 +19,13 @@ import { toast } from "@/hooks/use-toast";
 import { markEvent, measureBetween } from "@/lib/perfMetrics";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { isEmbedded } from "@/lib/isEmbedded";
+import {
+  getParentViewport,
+  requestParentScrollTo,
+  subscribeParentViewport,
+  type ParentViewport,
+} from "@/lib/parentViewport";
 
 type Props = {
   open: boolean;
@@ -45,6 +52,18 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
   const [pickedYear, setPickedYear] = useState<number | null>(null);
   const [variants, setVariants] = useState<VehicleVariant[] | null>(null);
   const [notFound, setNotFound] = useState<{ year: number } | null>(null);
+  // Quando embedado no WordPress com iframe auto-redimensionado, o
+  // position:fixed do Radix se ancora no documento inteiro do iframe (que
+  // pode ter milhares de px de altura). Em vez disso, ancoramos o modal na
+  // faixa do iframe que está visível na janela do navegador do usuário.
+  const embedded = useMemo(() => isEmbedded(), []);
+  const [parentVp, setParentVp] = useState<ParentViewport | null>(
+    () => getParentViewport(),
+  );
+  useEffect(() => {
+    if (!embedded) return;
+    return subscribeParentViewport(setParentVp);
+  }, [embedded]);
 
   // Mede latência de abertura: do clique no campo de busca até este mount.
   useEffect(() => {
@@ -63,6 +82,16 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
       ensureCatalogLoaded()
         .then(() => markEvent("search_overlay_catalog_ready"))
         .catch(() => {});
+      // No iframe, garante que a área onde vamos ancorar o modal esteja
+      // visível: se já temos a faixa do parent, pede para rolar para o topo
+      // dela; se ainda não temos, pede ao parent para se anunciar.
+      if (embedded) {
+        const vp = parentVp;
+        if (vp) requestParentScrollTo(vp.top);
+        try {
+          window.parent?.postMessage({ type: "awr:requestViewport" }, "*");
+        } catch { /* noop */ }
+      }
       requestAnimationFrame(() => {
         markEvent("search_overlay_visible");
         try {
@@ -82,7 +111,8 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
       setNotFound(null);
       setResolving(false);
     }
-  }, [open]);
+  }, [open, embedded, parentVp]);
+
 
   const finishWithCodes = (
     vehicleLabel: string,
@@ -152,15 +182,32 @@ export default function SearchOverlay({ open, onOpenChange, initialQuery, initia
     finishWithCodes(label, variant.skus);
   };
 
+  // Em iframe embedado, recalcula posição/altura do modal usando a faixa
+  // visível enviada pelo parent. Sem isso, position:fixed do Radix se ancora
+  // no documento inteiro do iframe (que pode ter milhares de px), levando o
+  // modal a aparecer fora da viewport do usuário.
+  const embedStyle: React.CSSProperties | undefined =
+    embedded && parentVp
+      ? {
+          position: "absolute",
+          top: `${parentVp.top + Math.max(16, Math.round(parentVp.height * 0.04))}px`,
+          left: "50%",
+          transform: "translate3d(-50%, 0, 0)",
+          maxHeight: `${Math.max(320, parentVp.height - 32)}px`,
+        }
+      : undefined;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        style={embedStyle}
         className="max-w-3xl p-0 gap-0 sm:rounded-2xl max-h-[92vh] overflow-hidden flex flex-col"
         onOpenAutoFocus={(e) => {
           // Deixa o input do autocomplete cuidar do foco
           e.preventDefault();
         }}
       >
+
         <DialogHeader className="px-5 pt-5 pb-3 border-b border-border">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">

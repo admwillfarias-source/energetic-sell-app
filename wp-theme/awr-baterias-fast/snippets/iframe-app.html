@@ -4,7 +4,16 @@
   ou em um widget HTML do Elementor. Não requer shortcode nem PHP.
 
   O iframe carrega https://bateria-facil.lovable.app/?embed=1 em tela cheia,
-  com auto-resize via postMessage (evento "awr:height") quando disponível.
+  com:
+   • auto-resize: o app envia { type:"awr:height", height:N } e este script
+     ajusta a altura real do wrapper (sem scroll interno, sem espaço vazio).
+   • sincronia de viewport: o app pode pedir { type:"awr:requestViewport" }
+     e recebe { type:"awr:viewport", top, height } com a faixa do iframe
+     que está visível no navegador — necessário para que modais (busca,
+     checkout) apareçam centrados na área que o usuário enxerga, e não
+     no centro geométrico do iframe.
+   • scroll assistido: o app pode pedir { type:"awr:scrollTo", y } para
+     rolar a janela do WordPress até um ponto específico do iframe.
 -->
 <link rel="preconnect" href="https://bateria-facil.lovable.app" crossorigin>
 <link rel="dns-prefetch" href="https://bateria-facil.lovable.app">
@@ -44,19 +53,77 @@
 </div>
 
 <script>
-/* Auto-resize: o app envia { type:"awr:height", height:N } via postMessage.
-   Se chegar, ajustamos a altura real para evitar scroll interno e espaço
-   vazio. Se o JS não rodar ou a mensagem não chegar, o iframe permanece
-   em viewport cheia (100dvh). */
 (function(){
   if (typeof window === "undefined") return;
+
+  var wrapper = document.querySelector(".lovable-fullscreen-wrapper");
+  var iframe  = wrapper && wrapper.querySelector("iframe[data-awr-app='1']");
+  if (!wrapper || !iframe) return;
+
+  /* ---------- 1) Auto-resize do iframe ----------
+     O app envia { type:"awr:height", height:N }. Ajustamos a altura real
+     para evitar scroll interno e espaço vazio. */
+  function onHeight(d){
+    if (typeof d.height !== "number" || d.height < 200) return;
+    wrapper.style.height = Math.ceil(d.height) + "px";
+  }
+
+  /* ---------- 2) Sincronia de viewport parent → iframe ----------
+     Calcula qual faixa do iframe está visível no viewport do navegador
+     (em coordenadas do PRÓPRIO iframe) e envia para o app. Reenvia a cada
+     scroll/resize (throttled via rAF). */
+  var lastTop = -1, lastH = -1, vpFrame = 0, vpEnabled = false;
+  function sendViewport(){
+    vpFrame = 0;
+    if (!vpEnabled) return;
+    var rect = iframe.getBoundingClientRect();
+    var winH = window.innerHeight || document.documentElement.clientHeight || 0;
+    // Faixa visível em coords do iframe: top do iframe = -rect.top quando
+    // o usuário rolou abaixo do início do iframe.
+    var top = Math.max(0, -rect.top);
+    var bottom = Math.min(rect.height, winH - rect.top);
+    var visibleH = Math.max(0, bottom - top);
+    if (visibleH < 80) return; // iframe ainda fora da tela
+    if (top === lastTop && visibleH === lastH) return;
+    lastTop = top; lastH = visibleH;
+    try {
+      iframe.contentWindow && iframe.contentWindow.postMessage(
+        { type: "awr:viewport", top: top, height: visibleH }, "*"
+      );
+    } catch(_){}
+  }
+  function scheduleViewport(){
+    if (vpFrame) return;
+    vpFrame = (window.requestAnimationFrame || function(cb){return setTimeout(cb,16);})(sendViewport);
+  }
+  function enableViewportSync(){
+    if (vpEnabled) { sendViewport(); return; }
+    vpEnabled = true;
+    window.addEventListener("scroll", scheduleViewport, { passive: true });
+    window.addEventListener("resize", scheduleViewport, { passive: true });
+    sendViewport();
+  }
+
+  /* ---------- 3) Scroll assistido ----------
+     O app pede { type:"awr:scrollTo", y } (y em coords do iframe). Rolamos
+     a janela do WP de modo que esse y fique perto do topo da viewport. */
+  function onScrollTo(d){
+    if (typeof d.y !== "number") return;
+    var rect = iframe.getBoundingClientRect();
+    var pageY = window.pageYOffset || document.documentElement.scrollTop || 0;
+    var iframePageTop = rect.top + pageY;
+    var targetY = iframePageTop + Math.max(0, d.y) - 12;
+    try { window.scrollTo({ top: targetY, behavior: "smooth" }); }
+    catch(_) { window.scrollTo(0, targetY); }
+  }
+
   window.addEventListener("message", function(e){
     var d = e && e.data;
-    if (!d || typeof d !== "object" || d.type !== "awr:height") return;
-    var w = document.querySelector(".lovable-fullscreen-wrapper");
-    if (w && typeof d.height === "number" && d.height > 200){
-      w.style.height = Math.ceil(d.height) + "px";
-    }
+    if (!d || typeof d !== "object" || typeof d.type !== "string") return;
+    if (e.source && e.source !== iframe.contentWindow) return;
+    if (d.type === "awr:height")          onHeight(d);
+    else if (d.type === "awr:requestViewport") enableViewportSync();
+    else if (d.type === "awr:scrollTo")   onScrollTo(d);
   }, false);
 })();
 </script>
