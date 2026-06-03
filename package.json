@@ -9,17 +9,10 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
-    "test:watch": "vitest",
-    "lh": "node scripts/lighthouse.mjs",
-    "lh:mobile": "node scripts/lighthouse.mjs --mobile",
-    "lh:desktop": "node scripts/lighthouse.mjs --desktop",
-    "lh:median": "node scripts/lighthouse.mjs --runs=3",
     "build:wp-fast": "bash scripts/build-wp-fast-theme.sh",
     "lint:orphans": "knip",
     "lint:test-pages": "node scripts/check-no-test-pages.mjs",
     "seo:check": "node scripts/seo-check.mjs",
-    "seo:check:preview": "node scripts/seo-check.mjs --base=https://energetic-sell-app.lovable.app",
     "predeploy": "npm run lint:test-pages && npm run lint:orphans && npm run seo:check"
   },
   "dependencies": {
