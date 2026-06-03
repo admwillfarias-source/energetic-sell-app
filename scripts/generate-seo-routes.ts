@@ -12,7 +12,7 @@ const { neighborhoodPages } = await import(resolve(root, "src/data/neighborhoodC
 const { cityPages } = await import(resolve(root, "src/data/cityContent.ts"));
 const { brandPages } = await import(resolve(root, "src/data/brandContent.ts"));
 const { amperagePages } = await import(resolve(root, "src/data/amperageContent.ts"));
-const { blogPosts } = await import(resolve(root, "src/data/blogPosts.ts"));
+
 
 type Route = { title: string; description: string; jsonLd?: unknown };
 const routes: Record<string, Route> = {};
@@ -47,16 +47,6 @@ for (const a of amperagePages as Array<{ slug: string; ah: number; description: 
   };
 }
 
-for (const p of blogPosts as Array<{ slug: string; title: string; excerpt?: string; description?: string }>) {
-  routes[`/blog/${p.slug}`] = {
-    title: `${p.title} | Blog AWR Baterias`,
-    description: clip(p.excerpt || p.description || p.title, 158),
-  };
-}
-routes["/blog"] = {
-  title: "Blog AWR Baterias — Dicas, garantia e instalação de baterias",
-  description: "Conteúdo sobre baterias automotivas: como escolher, sintomas de bateria fraca, garantia, instalação e dicas para Gravataí, Porto Alegre e região.",
-};
 
 // PHP map
 const phpEntries = Object.entries(routes)
@@ -88,7 +78,6 @@ ${phpEntries}
 `;
 
 const targets = [
-  "wp-theme/awr-baterias/inc",
   "wp-theme/awr-baterias-fast/inc",
 ];
 for (const rel of targets) {
