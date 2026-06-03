@@ -15,7 +15,7 @@
         }
       } catch(_) {}
     </script>
-    <meta name="theme-color" content="#0f1b3d" />
+    <meta name="theme-color" content="#1e40af" />
     <meta name="color-scheme" content="light" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -25,10 +25,10 @@
     <link rel="preload" as="image" href="/hero-bg.avif" fetchpriority="high" type="image/avif" />
     <link rel="preload" as="image" href="/hero-bg.webp" fetchpriority="high" type="image/webp" />
 
-    <!-- Tipografia Navy Trust: Archivo Black (headings) + Hind (body) via Google Fonts -->
+    <!-- Tipografia Speedy: Plus Jakarta Sans (headings) + Inter (body) via Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet" />
 
     <!-- Supabase preconnect: necessário em ambos os modos (busca de baterias, cart, edge fns). -->
     <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
@@ -46,7 +46,6 @@
           if (attrs) for (var k in attrs) l.setAttribute(k, attrs[k]);
           head.appendChild(l);
         };
-        add('preload', '/fonts/inter-400.woff2', { as:'font', type:'font/woff2', crossorigin:'' });
         add('preconnect', 'https://awrbaterias.com.br', { crossorigin:'' });
         add('dns-prefetch', 'https://awrbaterias.com.br');
       })();
@@ -56,25 +55,20 @@
       *,*::before,*::after{box-sizing:border-box}
       html,body{margin:0;padding:0}
       :root{
-        --background:214 25% 93%;--foreground:225 62% 15%;
-        --card:0 0% 100%;--card-foreground:225 62% 15%;
-        --primary:209 46% 43%;--primary-foreground:0 0% 100%;
-        --secondary:225 62% 15%;--secondary-foreground:214 25% 93%;
-        --muted-foreground:212 30% 35%;
-        --accent:209 46% 43%;--accent-foreground:0 0% 100%;
-        --border:214 20% 82%;--ring:209 46% 43%;--radius:1rem;
-        --awr-green:142 70% 35%;
+        --background:0 0% 100%;--foreground:225 39% 14%;
+        --primary:225 73% 40%;--primary-foreground:0 0% 100%;
+        --accent-yellow:48 96% 53%;--urgency:20 91% 53%;
       }
       body{
         background:hsl(var(--background));color:hsl(var(--foreground));
-        font-family:"Hind","Hind Fallback",system-ui,-apple-system,"Segoe UI",sans-serif;
+        font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
         -webkit-font-smoothing:antialiased;
         font-size:16px;line-height:1.5;
       }
       #root{min-height:100vh}
-      h1,h2,h3{font-family:"Archivo Black","Archivo Black Fallback","Arial Black",system-ui,sans-serif;letter-spacing:-0.01em;margin:0;text-transform:uppercase}
-      section#inicio{position:relative;display:flex;align-items:center;min-height:80vh;padding:32px 16px;background:hsl(214 25% 93%)}
+      h1,h2,h3{font-family:"Plus Jakarta Sans","Inter",system-ui,sans-serif;font-weight:800;letter-spacing:-0.01em;line-height:1.15;margin:0}
     </style>
+
 
     <!-- dataLayer + gtag stub (carregamento real em src/lib/loadTracking.ts, diferido) -->
     <script>
