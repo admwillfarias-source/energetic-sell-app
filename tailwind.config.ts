@@ -17,9 +17,9 @@ export default {
         xs: "420px",
       },
       fontFamily: {
-        sans: ['"Hind"', '"Hind Fallback"', "system-ui", "-apple-system", "sans-serif"],
-        display: ['"Archivo Black"', '"Archivo Black Fallback"', "Arial Black", "system-ui", "sans-serif"],
-        body: ['"Hind"', '"Hind Fallback"', "system-ui", "sans-serif"],
+        sans: ['"Inter"', "system-ui", "-apple-system", "sans-serif"],
+        display: ['"Plus Jakarta Sans"', '"Inter"', "system-ui", "sans-serif"],
+        body: ['"Inter"', "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -31,6 +31,7 @@ export default {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
           glow: "hsl(var(--primary-glow))",
+          dark: "hsl(var(--primary-dark))",
         },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
@@ -60,6 +61,16 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        whatsapp: {
+          DEFAULT: "hsl(var(--whatsapp))",
+          dark: "hsl(var(--whatsapp-dark))",
+        },
+        urgency: {
+          DEFAULT: "hsl(var(--urgency))",
+          dark: "hsl(var(--urgency-dark))",
+        },
+        "accent-yellow": "hsl(var(--accent-yellow))",
+        "bg-light": "hsl(var(--bg-light))",
         "awr-blue": {
           DEFAULT: "hsl(var(--awr-blue))",
           foreground: "hsl(var(--awr-blue-foreground))",

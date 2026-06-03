@@ -15,7 +15,7 @@
         }
       } catch(_) {}
     </script>
-    <meta name="theme-color" content="#0f1b3d" />
+    <meta name="theme-color" content="#1e40af" />
     <meta name="color-scheme" content="light" />
     <meta name="format-detection" content="telephone=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -25,10 +25,10 @@
     <link rel="preload" as="image" href="/hero-bg.avif" fetchpriority="high" type="image/avif" />
     <link rel="preload" as="image" href="/hero-bg.webp" fetchpriority="high" type="image/webp" />
 
-    <!-- Tipografia Navy Trust: Archivo Black (headings) + Hind (body) via Google Fonts -->
+    <!-- Tipografia Speedy: Plus Jakarta Sans (headings) + Inter (body) via Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Hind:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@500;700;800&display=swap" rel="stylesheet" />
 
     <!-- Supabase preconnect: necessário em ambos os modos (busca de baterias, cart, edge fns). -->
     <link rel="dns-prefetch" href="https://mkkehvaclefoxkdlcmqm.supabase.co" />
@@ -46,7 +46,6 @@
           if (attrs) for (var k in attrs) l.setAttribute(k, attrs[k]);
           head.appendChild(l);
         };
-        add('preload', '/fonts/inter-400.woff2', { as:'font', type:'font/woff2', crossorigin:'' });
         add('preconnect', 'https://awrbaterias.com.br', { crossorigin:'' });
         add('dns-prefetch', 'https://awrbaterias.com.br');
       })();
@@ -56,25 +55,20 @@
       *,*::before,*::after{box-sizing:border-box}
       html,body{margin:0;padding:0}
       :root{
-        --background:214 25% 93%;--foreground:225 62% 15%;
-        --card:0 0% 100%;--card-foreground:225 62% 15%;
-        --primary:209 46% 43%;--primary-foreground:0 0% 100%;
-        --secondary:225 62% 15%;--secondary-foreground:214 25% 93%;
-        --muted-foreground:212 30% 35%;
-        --accent:209 46% 43%;--accent-foreground:0 0% 100%;
-        --border:214 20% 82%;--ring:209 46% 43%;--radius:1rem;
-        --awr-green:142 70% 35%;
+        --background:0 0% 100%;--foreground:225 39% 14%;
+        --primary:225 73% 40%;--primary-foreground:0 0% 100%;
+        --accent-yellow:48 96% 53%;--urgency:20 91% 53%;
       }
       body{
         background:hsl(var(--background));color:hsl(var(--foreground));
-        font-family:"Hind","Hind Fallback",system-ui,-apple-system,"Segoe UI",sans-serif;
+        font-family:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
         -webkit-font-smoothing:antialiased;
         font-size:16px;line-height:1.5;
       }
       #root{min-height:100vh}
-      h1,h2,h3{font-family:"Archivo Black","Archivo Black Fallback","Arial Black",system-ui,sans-serif;letter-spacing:-0.01em;margin:0;text-transform:uppercase}
-      section#inicio{position:relative;display:flex;align-items:center;min-height:80vh;padding:32px 16px;background:hsl(214 25% 93%)}
+      h1,h2,h3{font-family:"Plus Jakarta Sans","Inter",system-ui,sans-serif;font-weight:800;letter-spacing:-0.01em;line-height:1.15;margin:0}
     </style>
+
 
     <!-- dataLayer + gtag stub (carregamento real em src/lib/loadTracking.ts, diferido) -->
     <script>
@@ -115,23 +109,17 @@
       height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- End Google Tag Manager (noscript) -->
     <div id="root"><!-- Hero shell estático: pinta antes do bundle JS. React substitui ao montar. -->
-      <div style="min-height:100vh;background:hsl(214 25% 93%);padding:16px">
-        <div style="max-width:1280px;margin:0 auto;background:hsl(225 62% 15%);border-radius:32px;overflow:hidden;display:flex;flex-direction:column;min-height:80vh;box-shadow:0 24px 60px -16px hsl(225 62% 15% / 0.35);position:relative">
-          <div style="width:100%;padding:48px 32px;color:#fff;display:flex;flex-direction:column;justify-content:center">
-            <div style="display:inline-flex;align-items:center;gap:12px;margin-bottom:24px">
-              <span style="display:block;height:1px;width:40px;background:hsl(209 46% 55%)"></span>
-              <span style="color:hsl(209 46% 60%);font-weight:700;letter-spacing:0.2em;font-size:11px;text-transform:uppercase">Porto Alegre & Região</span>
-            </div>
-            <h1 style="font-family:'Archivo Black','Archivo Black Fallback','Arial Black',system-ui,sans-serif;font-size:clamp(2rem,5vw,3.75rem);line-height:1.1;color:#fff;margin:0 0 24px;text-transform:uppercase">Bateria entregue e instalada em até <span style="color:hsl(209 46% 60%)">35 minutos</span></h1>
-            <p style="font-size:1.125rem;color:rgba(232,237,243,0.7);margin:0 0 32px;max-width:36rem">Sua bateria parou? Encontre o modelo ideal para seu carro e receba agora mesmo onde você estiver.</p>
-            <div style="background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);padding:8px;border-radius:16px;max-width:36rem;display:flex;gap:8px;flex-wrap:wrap">
-              <input type="text" placeholder="Carro e ano (Ex: Onix 2018)" style="flex:1 1 200px;min-height:48px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.05);border-radius:12px;padding:0 16px;font-size:14px;color:#fff" aria-label="Buscar veículo" />
-              <button style="min-height:48px;background:hsl(209 46% 43%);color:#fff;border:0;border-radius:12px;padding:0 32px;font-weight:700;font-size:14px">Buscar Bateria</button>
-            </div>
+      <div style="min-height:100vh;background:#fff">
+        <section style="position:relative;padding:80px 16px 48px;background:linear-gradient(135deg,#0f172a 0%,#1e3a8a 100%);color:#fff">
+          <div style="max-width:768px;margin:0 auto">
+            <span style="display:inline-flex;align-items:center;gap:8px;background:#f97316;color:#fff;font-weight:700;font-size:13px;padding:8px 16px;border-radius:9999px;margin-bottom:14px">Plantão das 6h às 22h</span>
+            <h1 style="font-family:'Plus Jakarta Sans','Inter',system-ui,sans-serif;font-weight:800;font-size:clamp(1.875rem,5vw,3.75rem);line-height:1.1;margin:0 0 12px">Bateria Entregue e Instalada em até <span style="display:block;color:#facc15">35 Minutos</span></h1>
+            <p style="font-size:1.125rem;color:rgba(226,232,240,0.9);margin:0 0 18px;max-width:36rem">Bateria com entrega rápida em Porto Alegre. Pagamento em até 10x sem juros. Instalação gratuita e garantida.</p>
           </div>
-        </div>
+        </section>
       </div>
     </div>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

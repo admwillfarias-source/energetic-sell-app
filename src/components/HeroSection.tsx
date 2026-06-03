@@ -1,6 +1,17 @@
 import { lazy, Suspense, useState, useEffect, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Search, ShieldCheck, Loader2, MessageCircle } from "lucide-react";
+import {
+  Search,
+  Loader2,
+  MessageCircle,
+  Phone,
+  Clock,
+  CheckCircle2,
+  Shield,
+  Star,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 import { markEvent } from "@/lib/perfMetrics";
 import { trackLead } from "@/lib/tracking";
 import { ensureCatalogLoaded } from "@/lib/catalogStore";
@@ -24,8 +35,10 @@ function getLiveDeliveries() {
 }
 
 const SearchOverlay = lazy(() => import("@/components/SearchOverlay"));
-
-const heroBg = "/hero-bg.webp";
+const PHONE = "(51) 99319-9486";
+const PHONE_HREF = "tel:+5551993199486";
+const WHATSAPP_HREF =
+  "https://wa.me/5551993199486?text=Ol%C3%A1!%20Preciso%20de%20uma%20bateria.";
 
 export default function HeroSection() {
   const [overlayOpen, setOverlayOpen] = useState(false);
@@ -78,7 +91,6 @@ export default function HeroSection() {
     }
   };
 
-  // Pré-fetch do chunk do SearchOverlay quando o herói entra em viewport
   useEffect(() => {
     if (overlayPrefetched.current) return;
     const prefetch = () => {
@@ -88,11 +100,14 @@ export default function HeroSection() {
     };
     const el = sectionRef.current;
     if (typeof IntersectionObserver === "undefined" || !el) {
-      const w = window as unknown as { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number };
+      const w = window as unknown as {
+        requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      };
       const schedule = w.requestIdleCallback ?? ((cb: () => void) => setTimeout(cb, 1000));
       const id = schedule(prefetch, { timeout: 2500 });
       return () => {
-        const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void }).cancelIdleCallback;
+        const cancel = (window as unknown as { cancelIdleCallback?: (id: number) => void })
+          .cancelIdleCallback;
         if (cancel) cancel(id as number);
       };
     }
@@ -113,64 +128,105 @@ export default function HeroSection() {
     <section
       ref={sectionRef}
       id="inicio"
-      className="min-h-screen w-full flex items-center justify-center bg-background p-4 lg:p-8"
+      className="relative pt-16 sm:pt-20 md:pt-24"
     >
-      <div className="w-full max-w-7xl bg-secondary rounded-[2rem] lg:rounded-[3rem] overflow-hidden flex flex-col lg:flex-row shadow-elevated relative">
-        {/* Decorative blurred orbs */}
-        <div className="absolute -top-24 -left-24 w-64 h-64 bg-primary/30 rounded-full blur-[120px] opacity-40 pointer-events-none" />
-        <div className="absolute -bottom-24 -right-24 w-64 h-64 bg-primary rounded-full blur-[120px] opacity-20 pointer-events-none" />
+      {/* Background image with dark overlay */}
+      <div className="absolute inset-0 z-0">
+        <picture>
+          <source type="image/avif" srcSet="/hero-bg.avif" />
+          <source type="image/webp" srcSet="/hero-bg.webp" />
+          <img
+            src="/hero-bg.webp"
+            alt="Instalação de bateria automotiva em Porto Alegre"
+            className="h-full w-full object-cover"
+            width={1600}
+            height={1024}
+            // @ts-expect-error fetchpriority is a valid HTML attribute
+            fetchpriority="high"
+            decoding="async"
+            loading="eager"
+          />
+        </picture>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-900/95 via-slate-900/90 to-slate-900/80" />
+      </div>
 
-        {/* Content Side (60%) */}
-        <div className="w-full lg:w-[60%] p-8 lg:p-20 flex flex-col justify-center relative z-10">
-          <div className="inline-flex items-center gap-3 mb-6">
-            <span className="h-px w-10 bg-primary" />
-            <span className="text-primary font-bold tracking-[0.2em] text-xs uppercase">
-              Porto Alegre & Região · Desde 2009
+      <div className="container relative z-10 mx-auto max-w-3xl px-4 pb-10 pt-4 sm:px-6 sm:pb-14 sm:pt-6 md:pb-16 md:pt-8">
+        <span className="mb-3 inline-flex items-center gap-2 rounded-full bg-urgency px-4 py-2 text-sm font-bold text-white shadow-lg">
+          <Clock className="h-4 w-4" />
+          Plantão das 6h às 22h
+        </span>
+
+        <h1 className="mb-3 font-display text-3xl font-extrabold leading-tight text-white sm:text-4xl md:text-5xl lg:text-6xl">
+          Bateria Entregue e Instalada em até{" "}
+          <span className="block text-accent-yellow">35 Minutos</span>
+        </h1>
+
+        <p className="mb-4 hidden text-base leading-relaxed text-slate-200 sm:block sm:text-lg md:text-xl">
+          Bateria com entrega rápida em Porto Alegre. Pagamento em até 10x sem juros. Instalação
+          gratuita e garantida.
+        </p>
+
+        <ul className="mb-5 flex flex-wrap gap-x-5 gap-y-2">
+          {["Pague somente na entrega", "Instalação gratuita", "Até 10x sem juros"].map((b) => (
+            <li
+              key={b}
+              className="flex items-center gap-2 text-sm font-medium text-slate-200"
+            >
+              <CheckCircle2 className="h-4 w-4 text-green-400" />
+              {b}
+            </li>
+          ))}
+        </ul>
+
+        {/* INFORMATIVO — pesquise e encomende online */}
+        <div className="mb-4 flex items-start gap-3 rounded-2xl border border-accent-yellow/40 bg-accent-yellow/95 px-4 py-3 text-slate-900 shadow-lg">
+          <Zap className="mt-0.5 h-5 w-5 shrink-0" />
+          <p className="text-sm font-semibold leading-snug sm:text-base">
+            Pesquise e encomende sua bateria online em segundos.
+            <span className="block text-xs font-medium text-slate-800 sm:text-sm">
+              Informe a marca e o modelo do carro — mostramos o que você precisa, com preço, e
+              você pede na hora pelo WhatsApp.
             </span>
-          </div>
-
-          <h1 className="font-display text-4xl lg:text-6xl text-secondary-foreground leading-[1.1] mb-6">
-            Bateria entregue e instalada em até{" "}
-            <span className="text-primary">35 minutos</span>
-          </h1>
-
-          <p className="text-secondary-foreground/70 text-lg lg:text-xl mb-10 max-w-lg font-light leading-relaxed">
-            Sua bateria parou? Encontre o modelo ideal para seu carro e receba agora mesmo onde você estiver.
           </p>
+        </div>
 
-          {/* Search Component */}
-          <div className="bg-white/5 backdrop-blur-md border border-white/10 p-2 rounded-2xl max-w-xl shadow-xl">
-            <div className="flex flex-col md:flex-row gap-2">
-              <div className="flex-1 flex items-center px-5 bg-white/10 rounded-xl border border-white/5 focus-within:border-primary transition-all">
-                <Search className="w-5 h-5 text-primary mr-3 shrink-0" aria-hidden="true" />
-                <input
-                  type="text"
-                  placeholder="Carro e ano (Ex: Onix 2018)"
-                  defaultValue={initialQuery}
-                  onFocus={openOverlay}
-                  onClick={openOverlay}
-                  onChange={(e) => {
-                    setInitialQuery(e.target.value);
-                    openOverlay();
-                  }}
-                  className="w-full py-4 bg-transparent border-none focus:ring-0 text-secondary-foreground placeholder-white/40 outline-none text-sm"
-                  aria-label="Buscar veículo ou modelo da bateria"
-                />
-              </div>
-              <button
-                type="button"
+        {/* BUSCA */}
+        <div className="relative mb-5 rounded-2xl bg-white/95 p-3 shadow-xl ring-2 ring-accent-yellow/70 backdrop-blur supports-[backdrop-filter]:bg-white/90">
+          <span className="absolute -top-3 left-4 inline-flex items-center gap-1.5 rounded-full bg-urgency px-3 py-1 text-[11px] font-bold uppercase tracking-wide text-white shadow-md sm:text-xs">
+            <Sparkles className="h-3.5 w-3.5" />
+            Encomende agora • Entrega em 35 min
+          </span>
+
+          <div className="flex flex-col gap-2 pt-2 sm:flex-row">
+            <div className="flex flex-1 items-center rounded-xl border-2 border-border bg-white px-4 focus-within:border-primary">
+              <Search className="mr-2 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+              <input
+                type="text"
+                placeholder="Carro e ano (Ex: Onix 2018)"
+                defaultValue={initialQuery}
+                onFocus={openOverlay}
                 onClick={openOverlay}
-                className="bg-primary hover:bg-primary/80 text-primary-foreground font-bold py-4 px-10 rounded-xl transition-all active:scale-95 shadow-lg whitespace-nowrap"
-              >
-                Buscar Bateria
-              </button>
+                onChange={(e) => {
+                  setInitialQuery(e.target.value);
+                  openOverlay();
+                }}
+                className="w-full bg-transparent py-3 text-sm text-foreground placeholder-muted-foreground outline-none"
+                aria-label="Buscar veículo ou modelo da bateria"
+              />
             </div>
+            <button
+              type="button"
+              onClick={openOverlay}
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-primary-foreground shadow-md transition hover:bg-primary-dark active:scale-95"
+            >
+              Buscar Bateria
+            </button>
           </div>
 
           {/* Quick searches */}
-          <div className="mt-6 flex flex-wrap items-center gap-2">
-            <span className="text-xs font-semibold text-secondary-foreground/60 uppercase tracking-wider">
-              Buscas frequentes:
+          <div className="mt-3 flex flex-wrap items-center gap-1.5">
+            <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+              Frequentes:
             </span>
             {QUICK_SEARCHES.map((item) => {
               const isLoading = chipLoading === item.label;
@@ -182,11 +238,11 @@ export default function HeroSection() {
                   onClick={() => handleQuickSearch(item)}
                   disabled={disabled}
                   aria-busy={isLoading}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-colors ${
+                  className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors ${
                     isLoading
-                      ? "border-primary bg-primary/20 text-primary"
-                      : "border-white/15 bg-white/5 text-secondary-foreground/80 hover:border-primary hover:text-primary"
-                  } disabled:opacity-50 disabled:cursor-not-allowed`}
+                      ? "border-primary bg-primary/10 text-primary"
+                      : "border-border bg-white text-foreground hover:border-primary hover:text-primary"
+                  } disabled:cursor-not-allowed disabled:opacity-50`}
                 >
                   {isLoading && <Loader2 className="h-3 w-3 animate-spin" aria-hidden="true" />}
                   {item.label}
@@ -195,97 +251,66 @@ export default function HeroSection() {
             })}
           </div>
 
-          {/* WhatsApp CTA */}
-          <a
-            href="https://wa.me/5551993199486?text=Ol%C3%A1!%20Solicito%20a%20minha%20bateria."
-            target="_top"
-            rel="noopener noreferrer"
-            onClick={() => trackLead("hero-below-search")}
-            className="mt-6 inline-flex items-center justify-center gap-2 w-full sm:w-fit rounded-xl bg-awr-green hover:bg-awr-green/90 text-awr-green-foreground font-bold text-sm h-12 px-6 shadow-md transition-colors"
-            aria-label="Peça sua bateria pelo WhatsApp"
-          >
-            <MessageCircle className="h-5 w-5" />
-            Peça pelo WhatsApp
-          </a>
-
-          {/* Trust Indicators */}
-          <div className="mt-12 flex flex-wrap items-center gap-8 lg:gap-10 opacity-90">
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-secondary-foreground">+15 anos</span>
-              <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
-                Experiência
-              </span>
-            </div>
-            <div className="h-10 w-px bg-white/10" />
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-secondary-foreground">10x</span>
-              <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
-                Sem Juros
-              </span>
-            </div>
-            <div className="h-10 w-px bg-white/10" />
-            <div className="flex flex-col">
-              <span className="text-2xl font-bold text-secondary-foreground">Desde 2009</span>
-              <span className="text-[10px] uppercase tracking-widest text-primary font-bold">
-                Em Porto Alegre
-              </span>
-            </div>
-            {liveDeliveries > 0 && (
-              <>
-                <div className="h-10 w-px bg-white/10 hidden md:block" />
-                <div className="flex flex-col" aria-live="polite">
-                  <span className="text-2xl font-bold text-awr-green">{liveDeliveries}</span>
-                  <span className="text-[10px] uppercase tracking-widest text-awr-green/80 font-bold">
-                    Entregas agora
-                  </span>
-                </div>
-              </>
-            )}
-          </div>
+          <p className="mt-2 text-center text-xs font-medium text-muted-foreground">
+            <Search className="mr-1 inline h-3.5 w-3.5" />
+            Sem cadastro. Você recebe o preço na hora.
+          </p>
         </div>
 
-        {/* Visual Side (40%) */}
-        <div className="w-full lg:w-[40%] min-h-[400px] relative">
-          <div className="absolute inset-0 bg-gradient-to-t lg:bg-gradient-to-r from-secondary via-transparent to-transparent z-10" />
-          <picture>
-            <source type="image/avif" srcSet="/hero-bg.avif" />
-            <source type="image/webp" srcSet="/hero-bg.webp" />
-            <img
-              src={heroBg}
-              alt="Técnico instalando bateria automotiva AWR em Porto Alegre"
-              className="w-full h-full object-cover"
-              width={800}
-              height={1200}
-              sizes="(max-width: 1024px) 100vw, 40vw"
-              // @ts-expect-error fetchpriority is a valid HTML attribute
-              fetchpriority="high"
-              decoding="async"
-              loading="eager"
-            />
-          </picture>
+        {/* CTAs */}
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:gap-4">
+          <a
+            href={PHONE_HREF}
+            rel="noopener"
+            onClick={() => trackLead("hero-phone")}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-8 py-4 text-lg font-bold text-primary-foreground shadow-lg transition hover:-translate-y-0.5 hover:bg-primary-dark"
+          >
+            <Phone className="h-5 w-5" />
+            Ligar {PHONE}
+          </a>
+          <a
+            href={WHATSAPP_HREF}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => trackLead("hero-whatsapp")}
+            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-whatsapp px-8 py-4 text-lg font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-whatsapp-dark"
+          >
+            <MessageCircle className="h-5 w-5" />
+            WhatsApp
+          </a>
+        </div>
 
-          {/* Floating Brand Badge */}
-          <div className="absolute bottom-8 right-8 bg-secondary/90 backdrop-blur-xl border border-white/10 p-6 rounded-[2rem] z-20 shadow-2xl hidden lg:block max-w-xs">
-            <div className="flex items-center gap-4 mb-4">
-              <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0">
-                <ShieldCheck className="w-5 h-5 text-primary-foreground" aria-hidden="true" />
-              </div>
-              <span className="text-secondary-foreground font-bold text-sm tracking-tight leading-tight">
-                Garantia de fábrica Moura, Heliar, Zetta & Excell
-              </span>
-            </div>
-            <div className="flex justify-between items-center gap-2 opacity-60">
-              <span className="text-[10px] font-bold text-secondary-foreground tracking-widest">
-                MOURA
-              </span>
-              <span className="text-[10px] font-bold text-secondary-foreground tracking-widest">
-                HELIAR
-              </span>
-              <span className="text-[10px] font-bold text-secondary-foreground tracking-widest">
-                ZETTA
-              </span>
-            </div>
+        {/* Confiança pagamento */}
+        <div className="mb-6 flex items-start gap-2 rounded-xl border border-white/15 bg-white/10 px-3 py-2 text-xs text-slate-100 backdrop-blur sm:text-sm">
+          <Shield className="mt-0.5 h-4 w-4 shrink-0 text-accent-yellow" />
+          <span>
+            <strong className="font-semibold text-white">Pague só na entrega</strong>, após a
+            instalação — Pix, Cartão de Crédito ou Débito. Preço já com a devolução do casco usado.
+          </span>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex gap-0.5">
+            {[...Array(5)].map((_, i) => (
+              <Star
+                key={i}
+                className="h-5 w-5 fill-accent-yellow text-accent-yellow"
+              />
+            ))}
           </div>
+          <span className="text-sm font-medium text-slate-200">
+            <strong className="font-bold text-white">4.9/5</strong> · Mais de 1.500 clientes
+            satisfeitos
+          </span>
+          {liveDeliveries > 0 && (
+            <span
+              aria-live="polite"
+              className="ml-auto inline-flex items-center gap-1.5 rounded-full bg-whatsapp/20 px-3 py-1 text-xs font-bold text-green-300"
+            >
+              <span className="h-2 w-2 animate-pulse rounded-full bg-green-400" />
+              {liveDeliveries} entregas agora
+            </span>
+          )}
         </div>
       </div>
 
