@@ -1,7 +1,10 @@
 <!--
-  AWR Baterias — embed do app React em qualquer página/post WordPress.
+  AWR Baterias — Embed do app React no WordPress.
   Cole este bloco inteiro em um bloco "HTML personalizado" do Gutenberg
-  (ou em um widget HTML do Elementor). Não requer shortcode nem PHP.
+  ou em um widget HTML do Elementor. Não requer shortcode nem PHP.
+
+  O iframe carrega https://bateria-facil.lovable.app/?embed=1 em tela cheia,
+  com auto-resize via postMessage (evento "awr:height") quando disponível.
 -->
 <link rel="preconnect" href="https://bateria-facil.lovable.app" crossorigin>
 <link rel="dns-prefetch" href="https://bateria-facil.lovable.app">
@@ -10,11 +13,11 @@
   .lovable-fullscreen-wrapper{
     position:relative;
     width:100%;
-    /* 100vh como fallback; 100dvh resolve barra de URL no mobile moderno */
-    height:100vh;
-    height:100dvh;
+    height:100vh;      /* fallback */
+    height:100dvh;     /* viewport real no mobile moderno */
+    min-height:560px;  /* evita colapso em containers estreitos do tema */
   }
-  /* iOS Safari legado — usa o espaço visível real */
+  /* iOS Safari legado */
   @supports (-webkit-touch-callout:none){
     .lovable-fullscreen-wrapper{height:-webkit-fill-available;}
   }
@@ -32,20 +35,19 @@
   <iframe
     data-awr-app="1"
     src="https://bateria-facil.lovable.app/?embed=1"
-    title="AWR Baterias"
+    title="AWR Baterias — Busca e pedido"
     loading="lazy"
     decoding="async"
-    fetchpriority="low"
     referrerpolicy="no-referrer-when-downgrade"
     allow="clipboard-write; payment; geolocation"
     sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"></iframe>
 </div>
 
 <script>
-/* Auto-resize opcional: o app envia { type:"awr:height", height:N } via
-   postMessage. Se chegar, libera o 100vh e ajusta para a altura real do
-   conteúdo — sem scroll interno e sem espaço vazio. Se o JS não rodar,
-   o iframe permanece em viewport cheia. */
+/* Auto-resize: o app envia { type:"awr:height", height:N } via postMessage.
+   Se chegar, ajustamos a altura real para evitar scroll interno e espaço
+   vazio. Se o JS não rodar ou a mensagem não chegar, o iframe permanece
+   em viewport cheia (100dvh). */
 (function(){
   if (typeof window === "undefined") return;
   window.addEventListener("message", function(e){
