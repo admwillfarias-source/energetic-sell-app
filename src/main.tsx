@@ -5,6 +5,7 @@ import "./index.css";
 import { initDeferredTracking } from "@/lib/loadTracking";
 import { isEmbedded } from "@/lib/isEmbedded";
 import { startIframeAutoResize } from "@/lib/iframeAutoResize";
+import { startParentViewportSync } from "@/lib/parentViewport";
 
 // Fontes carregadas de forma diferida e NÃO bloqueante.
 // Pegamos as URLs hashadas dos CSS do @fontsource via ?url (não injeta <link>),
@@ -77,6 +78,10 @@ createRoot(document.getElementById("root")!).render(
 
 // Auto-resize do iframe (no-op fora de iframe).
 startIframeAutoResize();
+// Sincroniza viewport visível do parent (no-op fora de iframe).
+// Necessário para ancorar modais (SearchOverlay, etc.) na faixa visível
+// quando o iframe está redimensionado para a altura total do conteúdo.
+startParentViewportSync();
 
 // Inicializa GTM/GA4/Ads de forma diferida (após interação ou idle).
 // Posterga o registro dos próprios listeners para idle, liberando o caminho do LCP.
