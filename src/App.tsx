@@ -65,13 +65,9 @@ const App = () => (
             <Route path="/baterias-para/:slug/:year" element={wrap(<VehicleSeo />)} />
             <Route path="/baterias/marca/:slug" element={wrap(<Brand />)} />
             <Route path="/baterias/amperagem/:ah" element={wrap(<Amperage />)} />
-            <Route path="/blog" element={wrap(<Blog />)} />
-            <Route path="/blog/tag/:slug" element={wrap(<BlogTag />)} />
-            <Route path="/blog/:slug" element={wrap(<BlogPost />)} />
             <Route path="/bateria/:sku" element={wrap(<BatterySku />)} />
             <Route path="/auth" element={wrap(<Auth />)} />
             <Route path="/admin" element={wrap(<Admin />)} />
-            <Route path="/admin/whatsapp-logs" element={wrap(<WhatsappLogs />)} />
             <Route path="/pedido-confirmado" element={wrap(<PedidoConfirmado />)} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
