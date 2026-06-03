@@ -11,7 +11,6 @@ const TooltipProvider = lazy(() =>
 // Todas as outras páginas: lazy. Não viajam no bundle inicial da home.
 const Auth = lazy(() => import("./pages/Auth.tsx"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
-const WhatsappLogs = lazy(() => import("./pages/WhatsappLogs.tsx"));
 const BatterySku = lazy(() => import("./pages/BatterySku.tsx"));
 const Resultado = lazy(() => import("./pages/Resultado.tsx"));
 const PedidoConfirmado = lazy(() => import("./pages/PedidoConfirmado.tsx"));
@@ -20,9 +19,6 @@ const Neighborhood = lazy(() => import("./pages/Neighborhood.tsx"));
 const VehicleSeo = lazy(() => import("./pages/VehicleSeo.tsx"));
 const Brand = lazy(() => import("./pages/Brand.tsx"));
 const Amperage = lazy(() => import("./pages/Amperage.tsx"));
-const Blog = lazy(() => import("./pages/Blog.tsx"));
-const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
-const BlogTag = lazy(() => import("./pages/BlogTag.tsx"));
 const Catalogo = lazy(() => import("./pages/Catalogo.tsx"));
 const Servicos = lazy(() => import("./pages/Servicos.tsx"));
 
