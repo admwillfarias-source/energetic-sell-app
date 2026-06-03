@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Car, Truck, ChevronLeft, Sparkles, MessageCircle } from "lucide-react";
@@ -19,6 +19,13 @@ import { toast } from "@/hooks/use-toast";
 import { markEvent, measureBetween } from "@/lib/perfMetrics";
 import { cn } from "@/lib/utils";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { isEmbedded } from "@/lib/isEmbedded";
+import {
+  getParentViewport,
+  requestParentScrollTo,
+  subscribeParentViewport,
+  type ParentViewport,
+} from "@/lib/parentViewport";
 
 type Props = {
   open: boolean;
