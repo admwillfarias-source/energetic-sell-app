@@ -1,22 +1,4 @@
-/* Navy Trust redesign — Archivo Black headings, Hind body, paleta #0f1b3d / #1e3a5f / #3b6fa0 / #e8edf3 */
-
-@font-face {
-  font-family: "Hind Fallback";
-  src: local("Arial");
-  size-adjust: 104%;
-  ascent-override: 92%;
-  descent-override: 23%;
-  line-gap-override: 0%;
-}
-
-@font-face {
-  font-family: "Archivo Black Fallback";
-  src: local("Arial Black"), local("Arial");
-  size-adjust: 100%;
-  ascent-override: 100%;
-  descent-override: 25%;
-  line-gap-override: 0%;
-}
+/* Visual style ported from Speedy Battery Connect — Plus Jakarta Sans + Inter, paleta #1e40af / amarelo / verde whatsapp */
 
 @tailwind base;
 @tailwind components;
@@ -24,80 +6,92 @@
 
 @layer base {
   :root {
-    --background: 214 25% 93%;
-    --foreground: 225 62% 15%;
+    --background: 0 0% 100%;
+    --foreground: 225 39% 14%;
 
     --card: 0 0% 100%;
-    --card-foreground: 225 62% 15%;
+    --card-foreground: 225 39% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 225 62% 15%;
+    --popover-foreground: 225 39% 14%;
 
-    --primary: 209 46% 43%;
+    /* Brand primary = #1e40af */
+    --primary: 225 73% 40%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 209 46% 55%;
+    --primary-dark: 225 73% 33%;
+    --primary-glow: 225 73% 55%;
 
-    --secondary: 225 62% 15%;
-    --secondary-foreground: 214 25% 93%;
+    --secondary: 220 24% 97%;
+    --secondary-foreground: 225 39% 14%;
 
-    --muted: 214 25% 88%;
-    --muted-foreground: 212 30% 35%;
+    --muted: 220 24% 97%;
+    --muted-foreground: 220 9% 40%;
 
-    --accent: 209 46% 43%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 220 24% 97%;
+    --accent-foreground: 225 39% 14%;
 
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 45%;
     --destructive-foreground: 0 0% 100%;
 
     --success: 142 70% 35%;
     --success-foreground: 0 0% 100%;
 
-    --border: 214 20% 82%;
-    --input: 214 20% 82%;
-    --ring: 209 46% 43%;
+    --border: 218 18% 88%;
+    --input: 218 18% 88%;
+    --ring: 225 73% 40%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    --awr-blue: 209 46% 43%;
+    /* Brand extras (Speedy palette) */
+    --whatsapp: 142 70% 49%;
+    --whatsapp-dark: 142 70% 39%;
+    --urgency: 20 91% 53%;
+    --urgency-dark: 20 91% 43%;
+    --accent-yellow: 48 96% 53%;
+    --bg-light: 210 40% 98%;
+
+    /* Legacy aliases (preserva componentes antigos) */
+    --awr-blue: 225 73% 40%;
     --awr-blue-foreground: 0 0% 100%;
-    --awr-green: 142 70% 35%;
+    --awr-green: 142 70% 49%;
     --awr-green-foreground: 0 0% 100%;
 
-    --gradient-hero: linear-gradient(135deg, hsl(225 62% 15%) 0%, hsl(212 51% 25%) 100%);
-    --gradient-accent: linear-gradient(135deg, hsl(209 46% 55%) 0%, hsl(209 46% 43%) 100%);
-    --shadow-card: 0 4px 16px -4px hsl(225 62% 15% / 0.08);
-    --shadow-elevated: 0 24px 60px -16px hsl(225 62% 15% / 0.35);
+    --gradient-hero: linear-gradient(135deg, hsl(225 73% 28%) 0%, hsl(225 73% 40%) 100%);
+    --gradient-accent: linear-gradient(135deg, hsl(225 73% 55%) 0%, hsl(225 73% 40%) 100%);
+    --shadow-card: 0 4px 16px -4px hsl(225 39% 14% / 0.08);
+    --shadow-elevated: 0 24px 60px -16px hsl(225 39% 14% / 0.25);
 
-    --sidebar-background: 214 25% 93%;
-    --sidebar-foreground: 225 62% 20%;
-    --sidebar-primary: 225 62% 15%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 214 25% 88%;
-    --sidebar-accent-foreground: 225 62% 15%;
-    --sidebar-border: 214 20% 82%;
-    --sidebar-ring: 209 46% 43%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 225 39% 14%;
+    --sidebar-primary: 225 73% 40%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 24% 97%;
+    --sidebar-accent-foreground: 225 39% 14%;
+    --sidebar-border: 218 18% 88%;
+    --sidebar-ring: 225 73% 40%;
   }
 
   .dark {
-    --background: 225 62% 8%;
-    --foreground: 214 25% 95%;
-    --card: 225 50% 12%;
-    --card-foreground: 214 25% 95%;
-    --popover: 225 50% 12%;
-    --popover-foreground: 214 25% 95%;
-    --primary: 209 46% 55%;
+    --background: 225 39% 8%;
+    --foreground: 0 0% 98%;
+    --card: 225 30% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 225 30% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 225 73% 55%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 212 51% 25%;
-    --secondary-foreground: 214 25% 95%;
-    --muted: 225 40% 18%;
-    --muted-foreground: 214 25% 70%;
-    --accent: 209 46% 55%;
-    --accent-foreground: 0 0% 8%;
-    --destructive: 0 62% 40%;
-    --destructive-foreground: 0 0% 95%;
-    --border: 225 40% 22%;
-    --input: 225 40% 22%;
-    --ring: 209 46% 55%;
+    --primary-dark: 225 73% 40%;
+    --secondary: 225 24% 18%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 225 24% 18%;
+    --muted-foreground: 220 9% 65%;
+    --accent: 225 24% 18%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 225 24% 22%;
+    --input: 225 24% 22%;
+    --ring: 225 73% 55%;
   }
 }
 
@@ -105,25 +99,41 @@
   * {
     @apply border-border;
   }
-
+  html {
+    scroll-behavior: smooth;
+  }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Hind", "Hind Fallback", system-ui, -apple-system, sans-serif;
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   }
-
   h1, h2, h3, h4, h5, h6 {
-    @apply font-display tracking-tight uppercase;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    html {
-      scroll-behavior: smooth;
-    }
+    font-family: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+    font-weight: 800;
+    line-height: 1.15;
+    letter-spacing: -0.01em;
   }
 }
 
 @layer utilities {
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-glow;
   }
+  /* Defer rendering work for long below-the-fold sections (helps INP/TBT). */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 1px 600px;
+  }
+  .safe-pb {
+    padding-bottom: max(env(safe-area-inset-bottom, 12px), 12px);
+  }
+}
+
+@keyframes pulse-whatsapp {
+  0%, 100% { box-shadow: 0 0 0 0 hsl(var(--whatsapp) / 0.7); }
+  50%      { box-shadow: 0 0 0 14px hsl(var(--whatsapp) / 0); }
+}
+.pulse-whatsapp { animation: pulse-whatsapp 2s infinite; }
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse-whatsapp { animation: none; }
 }
