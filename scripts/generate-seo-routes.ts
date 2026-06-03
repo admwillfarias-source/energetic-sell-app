@@ -78,7 +78,6 @@ ${phpEntries}
 `;
 
 const targets = [
-  "wp-theme/awr-baterias/inc",
   "wp-theme/awr-baterias-fast/inc",
 ];
 for (const rel of targets) {
